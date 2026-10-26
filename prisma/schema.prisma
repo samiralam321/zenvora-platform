@@ -122,6 +122,7 @@ model Tool {
   description String
   tag         String?
   url         String
+  youtubeUrl  String?  // Optional YouTube tutorial/playlist link for this tool
   showOnHome  Boolean  @default(true)
   order       Int      @default(0)
   createdAt   DateTime @default(now())

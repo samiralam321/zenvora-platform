@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    let { name, logo, oneLiner, description, tag, url, showOnHome } = body;
+    let { name, logo, oneLiner, description, tag, url, youtubeUrl, showOnHome } = body;
 
     // Auto-fetch logo from URL domain if not provided
     if (!logo && url) {
@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
         description: description || "",
         tag: tag || "Tool",
         url,
+        youtubeUrl: youtubeUrl || null,
         showOnHome: Boolean(showOnHome),
       },
     });
@@ -65,7 +66,7 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const { id, name, logo, oneLiner, description, tag, url, showOnHome, order } = await req.json();
+    const { id, name, logo, oneLiner, description, tag, url, youtubeUrl, showOnHome, order } = await req.json();
 
     const tool = await prisma.tool.update({
       where: { id },
@@ -76,6 +77,7 @@ export async function PUT(req: NextRequest) {
         description,
         tag,
         url,
+        youtubeUrl: youtubeUrl || null,
         showOnHome: Boolean(showOnHome),
         order: order !== undefined ? order : undefined,
       },

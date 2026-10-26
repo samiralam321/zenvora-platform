@@ -14,6 +14,7 @@ import {
   Loader2,
   CheckCircle2,
   X,
+  Youtube,
 } from "lucide-react";
 
 export default function AdminToolsPage() {
@@ -48,6 +49,7 @@ export default function AdminToolsPage() {
       description: "",
       tag: "Code Editor",
       url: "",
+      youtubeUrl: "",
       showOnHome: true,
       order: tools.length + 1,
     });
@@ -185,15 +187,28 @@ export default function AdminToolsPage() {
             </div>
 
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-              <a
-                href={tool.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-[#1D64EC] font-semibold flex items-center gap-1 hover:underline"
-              >
-                <span>Visit Tool</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
+              <div className="flex items-center gap-3">
+                <a
+                  href={tool.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-[#1D64EC] font-semibold flex items-center gap-1 hover:underline"
+                >
+                  <span>Visit Tool</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+                {tool.youtubeUrl && (
+                  <a
+                    href={tool.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-rose-600 font-semibold flex items-center gap-1 hover:underline"
+                    title="YouTube tutorial"
+                  >
+                    <Youtube className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
 
               <div className="flex items-center gap-1.5">
                 <button
@@ -340,6 +355,26 @@ export default function AdminToolsPage() {
                   }
                   className="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-[#1D64EC]"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                  <Youtube className="w-3.5 h-3.5 text-rose-600" />
+                  YouTube Tutorial / Playlist URL
+                  <span className="text-slate-400 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="url"
+                  value={editingTool.youtubeUrl || ""}
+                  onChange={(e) =>
+                    setEditingTool({ ...editingTool, youtubeUrl: e.target.value })
+                  }
+                  placeholder="https://youtube.com/playlist?list=... or https://youtu.be/..."
+                  className="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-[#1D64EC]"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  When set, a YouTube icon appears next to "Visit Tool" so users can learn how to use this tool.
+                </p>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">

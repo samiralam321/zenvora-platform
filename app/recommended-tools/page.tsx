@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
-import { ExternalLink, Wrench } from "lucide-react";
+import { ExternalLink, Wrench, Youtube } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -104,7 +104,7 @@ export default async function RecommendedToolsPage() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
                   <a
                     href={tool.url}
                     target="_blank"
@@ -114,6 +114,18 @@ export default async function RecommendedToolsPage() {
                     <span>Visit Tool</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
+
+                  {tool.youtubeUrl && (
+                    <a
+                      href={tool.youtubeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Watch tutorial on YouTube"
+                      className="flex items-center justify-center w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 transition text-rose-600 border border-rose-200"
+                    >
+                      <Youtube className="w-4 h-4" />
+                    </a>
+                  )}
                 </div>
               </div>
             ))}
