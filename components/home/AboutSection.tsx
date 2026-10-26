@@ -38,7 +38,7 @@ export default function AboutSection({ data = {} }: AboutSectionProps) {
   const secondaryUrl = data.secondaryUrl || "/opportunities";
   const collabHeading =
     data.collabHeading || "SUGGEST A LECTURE OR ROADMAP";
-  const email = data.email || "hello@zenvora.com";
+  const email = data.email || "contactzenvora9@gmail.com";
   const photoUrl = data.photoUrl || "/images/zenvora-about.jpg";
 
   return (
