@@ -48,7 +48,7 @@ npm run prisma:push
 npm run dev
 ```
 
-Visit [zenvora-platform.vercel.app](zenvora-platform.vercel.app) to explore.
+Visit [zenvora-platform.vercel.app](https://zenvora-platform.vercel.app) to explore.
 
 ---
 
