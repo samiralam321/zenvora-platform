@@ -48,7 +48,7 @@ npm run prisma:push
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to explore.
+Visit [zenvora-platform.vercel.app](zenvora-platform.vercel.app) to explore.
 
 ---
 
