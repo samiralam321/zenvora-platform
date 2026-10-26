@@ -3,7 +3,6 @@ import prisma from "@/lib/prisma";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
-import Image from "next/image";
 import { ExternalLink, Wrench } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -42,13 +41,13 @@ export default async function RecommendedToolsPage() {
 
       <main className="flex-1 pt-28 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-10 text-left">
-          <span className="text-xs uppercase tracking-wider text-[#1D64EC] font-bold">
-            Curated Developer Stack
+          <span className="text-[11px] uppercase tracking-wider text-[#1D64EC] font-bold">
+            STUDENT TOOLCHAIN &amp; IDES
           </span>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mt-2">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mt-1">
             Recommended Tools
           </h1>
-          <p className="text-slate-500 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
+          <p className="text-slate-500 text-sm sm:text-base mt-1.5 max-w-2xl leading-relaxed">
             Essential software, developer tools, libraries, and resources recommended to speed up your engineering workflow.
           </p>
         </div>
@@ -58,59 +57,64 @@ export default async function RecommendedToolsPage() {
             <p className="text-slate-500 font-medium">No tools listed yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tools.map((tool) => (
               <div
                 key={tool.id}
-                className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
+                className="bg-white rounded-2xl border border-slate-200 shadow-2xs hover:shadow-xs transition p-6 flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-center gap-3 mb-3">
-                    {tool.iconUrl ? (
-                      <div className="w-10 h-10 rounded-xl relative overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0 flex items-center justify-center">
-                        <Image
-                          src={tool.iconUrl}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden relative">
+                      {tool.logo ? (
+                        <img
+                          src={tool.logo}
                           alt={tool.name}
                           width={28}
                           height={28}
-                          className="object-contain"
+                          className="w-7 h-7 object-contain"
+                          loading="lazy"
                         />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100/60 flex items-center justify-center flex-shrink-0">
-                        <Wrench className="w-5 h-5 text-[#1D64EC]" />
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-base">{tool.name}</h3>
-                      {tool.category && (
-                        <span className="text-[11px] font-semibold text-[#1D64EC]">
-                          {tool.category}
-                        </span>
+                      ) : (
+                        <Wrench className="w-5 h-5 text-slate-400" />
                       )}
                     </div>
+
+                    {tool.tag && (
+                      <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-[#EEF4FF] text-[#1D64EC]">
+                        {tool.tag}
+                      </span>
+                    )}
                   </div>
 
+                  <h3 className="text-base font-bold text-slate-900 mb-1">
+                    {tool.name}
+                  </h3>
+
+                  {tool.oneLiner && (
+                    <p className="text-xs font-semibold text-slate-700 mb-2">
+                      {tool.oneLiner}
+                    </p>
+                  )}
+
                   {tool.description && (
-                    <p className="text-slate-500 text-xs leading-relaxed mb-4">
+                    <p className="text-xs text-slate-500 leading-relaxed mb-6 line-clamp-3">
                       {tool.description}
                     </p>
                   )}
                 </div>
 
-                {tool.affiliateUrl && (
-                  <div className="pt-3 border-t border-slate-100 mt-2">
-                    <a
-                      href={tool.affiliateUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-semibold text-[#1D64EC] hover:underline inline-flex items-center gap-1.5"
-                    >
-                      <span>Visit Tool</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                )}
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                  <a
+                    href={tool.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold text-[#1D64EC] flex items-center gap-1.5 hover:underline"
+                  >
+                    <span>Visit Tool</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
               </div>
             ))}
           </div>

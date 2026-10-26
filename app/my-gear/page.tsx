@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import Image from "next/image";
+import { ExternalLink } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -32,7 +33,7 @@ export default async function MyGearPage() {
   } catch (e) {}
 
   return (
-    <div className="flex flex-col min-h-screen bg-white text-slate-900">
+    <div className="flex flex-col min-h-screen bg-white text-slate-900 font-sans">
       <Header
         brandName={settings.brandName || "Zenvora"}
         avatarUrl={settings.avatarUrl || "/images/zenvora-logo.png"}
@@ -41,14 +42,14 @@ export default async function MyGearPage() {
 
       <main className="flex-1 pt-28 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-10 text-left">
-          <span className="text-xs uppercase tracking-wider text-[#1D64EC] font-bold">
-            Equipment & Tools
+          <span className="text-[11px] uppercase tracking-wider text-[#1D64EC] font-bold">
+            EQUIPMENT &amp; WORKSTATION
           </span>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mt-2">
-            My Gear & Setup
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mt-1">
+            Developer Setup &amp; Gear
           </h1>
-          <p className="text-slate-500 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
-            The hardware, studio equipment, and productivity gear I use daily to record lectures, write code, and build projects.
+          <p className="text-slate-500 text-sm sm:text-base mt-1.5 max-w-2xl leading-relaxed">
+            The hardware, peripherals, and workstation tools I use daily to engineer software and record courses.
           </p>
         </div>
 
@@ -61,42 +62,54 @@ export default async function MyGearPage() {
             {gearItems.map((item) => (
               <div
                 key={item.id}
-                className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
+                className="bg-white rounded-2xl border border-slate-200 shadow-2xs hover:shadow-xs transition p-6 flex flex-col justify-between"
               >
                 <div>
-                  {item.imageUrl && (
-                    <div className="w-full h-48 relative rounded-xl overflow-hidden mb-4 bg-slate-50">
+                  {(item.image || item.imageUrl) && (
+                    <div className="w-full h-48 relative rounded-xl overflow-hidden mb-4 bg-slate-50 border border-slate-100">
                       <Image
-                        src={item.imageUrl}
+                        src={item.image || item.imageUrl}
                         alt={item.name}
                         fill
                         className="object-cover"
                       />
                     </div>
                   )}
-                  {item.category && (
-                    <span className="text-[11px] font-bold text-[#1D64EC] uppercase tracking-wider block mb-1">
-                      {item.category}
-                    </span>
-                  )}
-                  <h3 className="font-bold text-slate-900 text-lg mb-1">{item.name}</h3>
+
+                  <div className="flex items-center justify-between mb-2">
+                    {item.category && (
+                      <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-[#EEF4FF] text-[#1D64EC]">
+                        {item.category}
+                      </span>
+                    )}
+                    {item.price && (
+                      <span className="text-xs font-semibold text-slate-700">
+                        {item.price}
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-base font-bold text-slate-900 mb-2">
+                    {item.name}
+                  </h3>
+
                   {item.description && (
-                    <p className="text-slate-500 text-xs leading-relaxed mb-4">
+                    <p className="text-xs text-slate-500 leading-relaxed mb-6">
                       {item.description}
                     </p>
                   )}
                 </div>
 
-                {item.buyUrl && (
-                  <div className="pt-3 border-t border-slate-100 mt-2">
+                {(item.url || item.buyUrl) && (
+                  <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                     <a
-                      href={item.buyUrl}
+                      href={item.url || item.buyUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs font-semibold text-[#1D64EC] hover:underline inline-flex items-center gap-1"
+                      className="text-xs font-semibold text-[#1D64EC] flex items-center gap-1.5 hover:underline"
                     >
                       <span>View Product</span>
-                      <span>&rarr;</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </div>
                 )}

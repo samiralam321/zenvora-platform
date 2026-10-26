@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { ExternalLink, Wrench } from "lucide-react";
 
 interface ToolItem {
@@ -10,6 +9,7 @@ interface ToolItem {
   name: string;
   logo: string;
   oneLiner: string;
+  description?: string | null;
   url: string;
   tag?: string | null;
 }
@@ -40,48 +40,57 @@ export default function ToolsSection({
   const renderToolCard = (tool: ToolItem) => (
     <div
       key={tool.id}
-      className="bg-[#EEF4FF]/70 rounded-2xl p-6 border border-blue-100/60 hover:border-blue-200 hover:shadow-xs transition-all flex flex-col justify-between"
+      className="bg-white rounded-2xl border border-slate-200 shadow-2xs hover:shadow-xs transition p-6 flex flex-col justify-between"
     >
       <div>
-        {/* White rounded logo container */}
         <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-xl bg-white shadow-xs flex items-center justify-center p-2 overflow-hidden border border-slate-100">
-            <Image
-              src={tool.logo || "https://icons.duckduckgo.com/ip3/github.com.ico"}
-              alt={tool.name}
-              width={32}
-              height={32}
-              className="w-full h-full object-contain"
-            />
+          <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden relative">
+            {tool.logo ? (
+              <img
+                src={tool.logo}
+                alt={tool.name}
+                width={28}
+                height={28}
+                className="w-7 h-7 object-contain"
+                loading="lazy"
+              />
+            ) : (
+              <Wrench className="w-5 h-5 text-slate-400" />
+            )}
           </div>
 
           {tool.tag && (
-            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-white text-[#1D64EC] border border-blue-100">
+            <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-[#EEF4FF] text-[#1D64EC]">
               {tool.tag}
             </span>
           )}
         </div>
 
-        {/* Tool Name */}
-        <h3 className="font-bold text-slate-900 text-lg sm:text-xl mb-1.5">
+        <h3 className="text-base font-bold text-slate-900 mb-1">
           {tool.name}
         </h3>
 
-        {/* Description */}
-        <p className="text-slate-500 text-sm leading-relaxed mb-4">
-          {tool.oneLiner}
-        </p>
+        {tool.oneLiner && (
+          <p className="text-xs font-semibold text-slate-700 mb-2">
+            {tool.oneLiner}
+          </p>
+        )}
+
+        {tool.description && (
+          <p className="text-xs text-slate-500 leading-relaxed mb-6 line-clamp-3">
+            {tool.description}
+          </p>
+        )}
       </div>
 
-      {/* View Link */}
-      <div>
+      <div className="flex items-center justify-between pt-4 border-t border-slate-100">
         <a
           href={tool.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#1D64EC] font-semibold text-sm hover:underline inline-flex items-center gap-1"
+          className="text-xs font-semibold text-[#1D64EC] flex items-center gap-1.5 hover:underline"
         >
-          <span>Explore Tool</span>
+          <span>Visit Tool</span>
           <ExternalLink className="w-3.5 h-3.5" />
         </a>
       </div>
@@ -93,10 +102,13 @@ export default function ToolsSection({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-10 text-left">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-2">
+          <span className="text-[11px] uppercase tracking-wider text-[#1D64EC] font-bold">
+            CURATED DEVELOPER STACK
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mt-1 mb-2">
             {heading}
           </h2>
-          <p className="text-slate-500 text-base">
+          <p className="text-slate-500 text-sm sm:text-base max-w-2xl leading-relaxed">
             {subheading}
           </p>
         </div>
