@@ -171,6 +171,7 @@ export default function OpportunitiesClient({
   const restoredRef = useRef(false);
 
   // Restore persisted state + scroll position on mount (client-only, after hydration)
+  // Only restore scroll when navigating back from a detail page — not on fresh navbar clicks.
   useLayoutEffect(() => {
     if (restoredRef.current) return;
     restoredRef.current = true;
@@ -186,11 +187,19 @@ export default function OpportunitiesClient({
     if (saved.showHistorical !== undefined) setShowHistorical(saved.showHistorical);
     if (saved.filtersOpen !== undefined) setFiltersOpen(saved.filtersOpen);
 
+    // Only jump to saved scroll position when the user came back from a detail page.
+    // Fresh navigation (navbar click, direct URL) always starts at the top.
+    const cameFromDetail =
+      typeof document !== "undefined" &&
+      document.referrer.includes("/opportunities/");
+
     const y = saved.scrollY ?? 0;
-    if (y > 0) {
+    if (cameFromDetail && y > 0) {
       requestAnimationFrame(() => {
         window.scrollTo({ top: y, behavior: "instant" });
       });
+    } else {
+      window.scrollTo({ top: 0, behavior: "instant" });
     }
   }, []); // only on mount
 
