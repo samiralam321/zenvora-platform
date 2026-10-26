@@ -45,3 +45,7 @@ yarn-error.log*
 
 # Misc
 *.pem
+
+# SQLite local database (never commit to repo)
+prisma/*.db
+prisma/*.db-journal
