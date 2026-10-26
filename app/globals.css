@@ -1,0 +1,306 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #FFFFFF;
+  --foreground: #0F172A;
+  --primary-blue: #1D64EC;
+  --primary-hover: #1554C8;
+  --navy-dark: #0B1B3D;
+  --card-light-blue: #EEF4FF;
+  --border-subtle: #E2E8F0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: light;
+}
+
+body {
+  background-color: #FFFFFF;
+  color: #0F172A;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Primary Blue Button matching screenshots */
+.btn-primary {
+  background-color: #1D64EC;
+  color: #FFFFFF;
+  font-weight: 500;
+  padding: 0.65rem 1.4rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.btn-primary:hover {
+  background-color: #1554C8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(29, 100, 236, 0.25);
+}
+
+/* Secondary Button with clean border */
+.btn-secondary {
+  background-color: #FFFFFF;
+  color: #1E293B;
+  border: 1px solid #CBD5E1;
+  font-weight: 500;
+  padding: 0.65rem 1.4rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #F8FAFC;
+  border-color: #94A3B8;
+  color: #0F172A;
+}
+
+/* Hero Secondary Button (Transparent on dark blue hero) */
+.btn-hero-secondary {
+  background-color: transparent;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+  padding: 0.65rem 1.4rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.btn-hero-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #FFFFFF;
+}
+
+/* White Clean Cards with soft drop shadow */
+.clean-card {
+  background: #FFFFFF;
+  border: 1px solid #F1F5F9;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clean-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+}
+
+/* Soft Light Blue Tinted Tool & Sponsor Cards */
+.blue-tint-card {
+  background-color: #EEF4FF;
+  border: 1px solid rgba(219, 234, 254, 0.7);
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.blue-tint-card:hover {
+  background-color: #E8F0FE;
+  border-color: #BFDBFE;
+  transform: translateY(-2px);
+}
+
+/* Floating Scroll-to-top button */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 6px;
+  background-color: #1D64EC;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(29, 100, 236, 0.3);
+  z-index: 50;
+  transition: all 0.2s ease;
+}
+
+.scroll-top-btn:hover {
+  background-color: #1554C8;
+  transform: translateY(-2px);
+}
+
+/* Light SaaS Luxury Card & Gold Button Mappings */
+.luxury-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.luxury-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Tactile 3D Bevel & Emboss Card Effect (Explore Domains grid only) ── */
+.card-bevel-emboss {
+  background: linear-gradient(160deg, #eef3ff 0%, #e2ecff 55%, #d0e2ff 100%); /* default — overridden per-card via inline style */
+  border: 1px solid rgba(147, 197, 253, 0.7);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  border-bottom-color: rgba(99, 162, 252, 0.5);
+  box-shadow: 
+    /* Top light catch (Bevel Highlight) */
+    inset 0 1.5px 0 0 rgba(255, 255, 255, 1),
+    /* Left light edge */
+    inset 1.5px 0 0 0 rgba(255, 255, 255, 0.9),
+    /* Bottom shaded lip with cool blue tint */
+    inset 0 -2.5px 1px 0 rgba(29, 100, 236, 0.10),
+    /* Right shaded lip */
+    inset -1px 0 1px 0 rgba(191, 219, 254, 0.30),
+    /* Bottom 3D physical ledge extrusion */
+    0 3px 0 0 rgba(191, 219, 254, 0.65),
+    /* Outer elevated ambient drop shadow */
+    0 12px 28px -4px rgba(29, 100, 236, 0.07),
+    0 4px 10px -2px rgba(15, 23, 42, 0.04);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+}
+
+.card-bevel-emboss:hover {
+  transform: translateY(-5px);
+  border-color: rgba(147, 197, 253, 0.9);
+  border-top-color: #ffffff;
+  border-bottom-color: rgba(96, 165, 250, 0.6);
+  box-shadow: 
+    /* Highlight glow on top */
+    inset 0 2px 0 0 rgba(255, 255, 255, 1),
+    inset 1.5px 0 0 0 rgba(255, 255, 255, 0.95),
+    /* Active bottom rim with blue tint */
+    inset 0 -3px 2px 0 rgba(29, 100, 236, 0.16),
+    /* Bottom 3D ledge with soft blue */
+    0 4.5px 0 0 rgba(191, 219, 254, 0.75),
+    /* Elevated glow */
+    0 20px 36px -6px rgba(29, 100, 236, 0.16),
+    0 8px 16px -2px rgba(15, 23, 42, 0.06);
+}
+
+.gold-btn {
+  background-color: #1D64EC;
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.gold-btn:hover {
+  background-color: #1554C8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(29, 100, 236, 0.25);
+}
+
+/* Admin Light SaaS Theme Overrides */
+.secondary-pill {
+  background-color: #FFFFFF;
+  color: #1E293B;
+  border: 1px solid #E2E8F0;
+  font-weight: 600;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.secondary-pill:hover {
+  background-color: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+
+/* Force modern sans font for headings */
+.font-serif {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* Admin forms and table readability */
+.bg-ink-card {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  color: #0F172A !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+.text-ivory {
+  color: #0F172A !important;
+}
+
+.text-muted {
+  color: #64748B !important;
+}
+
+.text-gold {
+  color: #1D64EC !important;
+}
+
+.border-gold\/10,
+.border-gold\/15,
+.border-gold\/20,
+.border-gold\/30,
+.border-gold\/40 {
+  border-color: #E2E8F0 !important;
+}
+
+/* Admin input backgrounds & borders */
+input, select, textarea {
+  border-color: #CBD5E1;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #1D64EC !important;
+}
+
+/* ─── Scrollbar utilities ───────────────────────────────────────────────────
+   Use .scrollbar-hide on any horizontally scrollable container where the
+   native scrollbar should be invisible but scroll functionality preserved.
+   Content remains scrollable via trackpad, touch, and mouse wheel.
+   DO NOT apply to data tables or code blocks where a scrollbar aids usability.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.scrollbar-hide {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE / Edge legacy */
+  -ms-overflow-style: none;
+}
+
+/* WebKit (Chrome, Safari, new Edge, Opera) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}

@@ -1,0 +1,270 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   // JSON string
+  updatedAt DateTime @updatedAt
+}
+
+model NavItem {
+  id        String   @id @default(cuid())
+  area      String   @default("header") // "header" or "footer"
+  label     String
+  url       String
+  order     Int      @default(0)
+  visible   Boolean  @default(true)
+  isButton  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Page {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  metaDescription String?
+  ogImage         String?
+  content         String?  // Rich text or markdown
+  updatedAt       DateTime @updatedAt
+}
+
+model Section {
+  id        String   @id @default(cuid())
+  page      String   @default("home")
+  type      String   // hero, categories, tutorials, tools, banner, reels, about, cta, footer
+  order     Int      @default(0)
+  visible   Boolean  @default(true)
+  data      String   // JSON string
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id          String         @id @default(cuid())
+  name        String
+  slug        String         @unique
+  icon        String?        // Lucide icon name or emoji
+  description String?
+  link        String?
+  order       Int            @default(0)
+  playlists   Playlist[]
+  videos      Video[]
+  resources   ResourceItem[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Playlist {
+  id          String    @id @default(cuid())
+  youtubeId   String?   // optional YouTube playlist ID (e.g. PL...)
+  title       String
+  slug        String    @unique
+  channelName String?   // e.g. "take U forward", "CodeHelp", "CampusX"
+  channelUrl  String?
+  thumbnail   String?
+  description String?
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  videos      Video[]
+  order       Int       @default(0)
+  featured    Boolean   @default(false)
+  visible     Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Video {
+  id          String         @id @default(cuid())
+  youtubeId   String         @unique
+  title       String
+  description String?
+  thumbnail   String
+  publishedAt DateTime?
+  duration    String?
+  views       Int            @default(0)
+  isShort     Boolean        @default(false)
+  categoryId  String?
+  category    Category?      @relation(fields: [categoryId], references: [id])
+  playlistId  String?
+  playlist    Playlist?      @relation(fields: [playlistId], references: [id], onDelete: SetNull)
+  channelName String?
+  featured    Boolean        @default(false)
+  visible     Boolean        @default(true)
+  order       Int            @default(0)
+  overridden  String?        // JSON string storing fields overridden manually e.g. ["title", "category"]
+  status      String         @default("available") // "available", "unavailable"
+  resources   ResourceItem[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Tool {
+  id          String   @id @default(cuid())
+  name        String
+  logo        String
+  oneLiner    String
+  description String
+  tag         String?
+  url         String
+  showOnHome  Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GearItem {
+  id          String   @id @default(cuid())
+  name        String
+  image       String
+  description String
+  price       String?
+  url         String
+  category    String   @default("Audio & Recording") // Audio, Workstation, Camera, Accessories
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ResourceItem {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  videoId     String?
+  video       Video?    @relation(fields: [videoId], references: [id])
+  promptText  String?
+  fileUrl     String?
+  locked      Boolean   @default(true)
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Reel {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  url         String
+  cover       String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  interest  String?
+  source    String   @default("resources_modal")
+  consent   Boolean  @default(true)
+  status    String   @default("New") // "New", "Contacted", "Converted", "Not interested"
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Enquiry {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  budget    String?
+  service   String?
+  message   String
+  consent   Boolean  @default(true)
+  status    String   @default("New") // "New", "Contacted", "Closed"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  size      Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model SyncLog {
+  id           String   @id @default(cuid())
+  startedAt    DateTime @default(now())
+  finishedAt   DateTime?
+  newCount     Int      @default(0)
+  updatedCount Int      @default(0)
+  error        String?
+}
+
+model Opportunity {
+  id                     String    @id @default(cuid())
+  slug                   String    @unique
+  title                  String
+  organization           String
+  category               String    // "Hackathons" | "Open Source" | "Internships" | "Coding Contests" | "Opportunities for Girls"
+  categories             String?   // JSON array string: e.g. ["Internships", "Opportunities for Girls"]
+  summary                String
+  content                String
+  contentType            String    @default("manual") // "manual", "video", "combined"
+  youtubeUrl             String?
+  youtubeId              String?
+  thumbnail              String?
+
+  // Mandatory Academic Year & Eligibility
+  academicYears          String?   // JSON array string: ["1st Year", "2nd Year", "3rd Year", "4th Year", "Final Year", "Recent Graduates", "All Eligible Students"]
+  eligibleDegrees        String?   // e.g. "B.Tech, B.E., BCA, MCA, M.Tech"
+  eligibleBranches       String?   // e.g. "CSE, IT, ECE, Electrical, All Branches"
+  genderEligibility      String?   @default("All Genders") // "All Genders" | "Women Only / Female Candidates"
+  geographicRestrictions String?   @default("India & Global")
+  minQualifications      String?
+  eligibility            String?   // General eligibility summary
+  participationType      String?   @default("Individual") // "Individual" | "Team" | "Mentorship"
+  difficulty             String?   @default("Beginner Friendly") // "Beginner Friendly" | "Intermediate" | "Advanced"
+
+  // Benefits & Process
+  keyBenefit             String?
+  benefits               String?
+  prerequisites          String?
+  howItWorks             String?
+  prepGuide              String?
+  applyProcess           String?
+
+  // Verification & Status (No upcoming dates/countdowns)
+  availabilityStatus     String    @default("Information Available") // "Applications Open" | "Applications Closed" | "Year-Round" | "Historical Program" | "Information Available" | "Availability Unverified"
+  status                 String    @default("Open") // legacy compat
+  dates                  String?
+  isHistorical           Boolean   @default(false)
+  lastVerified           String?
+
+  // URLs & Resources
+  applicationUrl         String?
+  sourceUrl              String?
+  tags                   String?
+  tips                   String?
+  faq                    String?
+
+  featured               Boolean   @default(false)
+  published              Boolean   @default(false)
+  publishedAt            DateTime?
+  order                  Int       @default(0)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
