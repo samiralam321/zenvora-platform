@@ -116,7 +116,7 @@
       "type": "hero",
       "order": 1,
       "visible": 1,
-      "data": "{\"h1\":\"Learn Tech the simplest way possible\",\"subtext\":\"Curated roadmaps, step-by-step lectures, and practical project resources for students and self-taught developers. Stop getting lost in tutorial hell.\",\"primaryBtn\":\"Explore Domains\",\"primaryUrl\":\"/#domains\",\"secondaryBtn\":\"Student Resources\",\"secondaryUrl\":\"/resources\"}",
+      "data": "{\"h1\":\"Learn Tech the simplest way possible\",\"subtext\":\"Curated roadmaps, step-by-step lectures, and practical project resources for students and self-taught developers. Stop getting lost in tutorial hell.\",\"primaryBtn\":\"Explore Domains\",\"primaryUrl\":\"/#domains\",\"secondaryBtn\":\"Student Resources\",\"secondaryUrl\":\"/watch-tutorials\"}",
       "createdAt": 1792921380026,
       "updatedAt": 1792921380026
     },
@@ -166,7 +166,7 @@
       "type": "about",
       "order": 6,
       "visible": 1,
-      "data": "{\"heading\":\"Why Zenvora?\",\"paragraph1\":\"Every year, millions of students start learning to code—only to get stuck in tutorial hell, outdated videos, or disjointed crash courses. Zenvora was created to provide a single, crystal-clear learning sanctuary.\",\"paragraph2\":\"We curate the highest-signal lectures, battle-tested roadmaps, and production starter repos across Web Dev, Backend, Full Stack, AI/ML and GenAI so you can spend less time searching and more time building.\",\"primaryBtn\":\"Browse Lectures\",\"primaryUrl\":\"/watch-tutorials\",\"secondaryBtn\":\"Student Resources\",\"secondaryUrl\":\"/resources\",\"collabHeading\":\"SUGGEST A LECTURE OR ROADMAP\",\"email\":\"contactzenvora9@gmail.com\"}",
+      "data": "{\"heading\":\"Why Zenvora?\",\"paragraph1\":\"Every year, millions of students start learning to code—only to get stuck in tutorial hell, outdated videos, or disjointed crash courses. Zenvora was created to provide a single, crystal-clear learning sanctuary.\",\"paragraph2\":\"We curate the highest-signal lectures, battle-tested roadmaps, and production starter repos across Web Dev, Backend, Full Stack, AI/ML and GenAI so you can spend less time searching and more time building.\",\"primaryBtn\":\"Browse Lectures\",\"primaryUrl\":\"/watch-tutorials\",\"secondaryBtn\":\"Student Resources\",\"secondaryUrl\":\"/watch-tutorials\",\"collabHeading\":\"SUGGEST A LECTURE OR ROADMAP\",\"email\":\"contactzenvora9@gmail.com\"}",
       "createdAt": 1792921380041,
       "updatedAt": 1792921380041
     },

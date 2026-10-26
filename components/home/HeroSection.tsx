@@ -38,7 +38,7 @@ export default function HeroSection({
   const primaryBtn = data.primaryBtn || "Explore Domains";
   const primaryUrl = data.primaryUrl || "/#domains";
   const secondaryBtn = data.secondaryBtn || "Student Resources";
-  const secondaryUrl = data.secondaryUrl || "/resources";
+  const secondaryUrl = data.secondaryUrl || "/watch-tutorials";
 
   // Split headline: bold prefix + gradient suffix
   const gradientPhrase = "simplest way possible";
