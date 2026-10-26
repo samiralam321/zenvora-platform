@@ -114,7 +114,7 @@ export default function CategorySection({
   };
 
   return (
-    <section id="domains" className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <section id="domains" className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
         {categories.map((cat) => {
           const destination = cat.link || `/watch-tutorials?category=${cat.slug}`;
