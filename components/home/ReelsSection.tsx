@@ -29,10 +29,10 @@ export default function ReelsSection({
   const heading = data.heading || "Instagram";
   const blurb =
     data.blurb ||
-    "Quick ad breakdowns, Andromeda bidding insights, and behind-the-scenes tests at Growth Sahayta.";
+    "Quick coding tips, DSA breakdowns, and developer insights.";
   const buttonText = data.buttonText || "Follow on Instagram";
   const buttonUrl =
-    data.buttonUrl || "https://www.instagram.com/growth_sahayta";
+    data.buttonUrl || "https://www.instagram.com/zenvora";
 
   const displayReels = reels.slice(0, 2);
 

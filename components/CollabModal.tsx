@@ -19,7 +19,7 @@ export default function CollabModal({
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
   const [budget, setBudget] = useState("$2,000 - $5,000");
-  const [service, setService] = useState("Agency Ad Management");
+  const [service, setService] = useState("Student Community Partnership");
   const [message, setMessage] = useState("");
   const [consent, setConsent] = useState(true);
   const [honeypot, setHoneypot] = useState("");
@@ -202,7 +202,7 @@ export default function CollabModal({
                     onChange={(e) => setService(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-[#1D64EC]"
                   >
-                    <option value="Agency Ad Management">Growth Sahayta (Agency Ads)</option>
+                    <option value="Student Community Partnership">Student Community Partnership</option>
                     <option value="YouTube Sponsorship">YouTube Video Sponsorship</option>
                     <option value="Consulting & Strategy">1-on-1 Strategy Consulting</option>
                     <option value="Other Project">Other Collaboration</option>

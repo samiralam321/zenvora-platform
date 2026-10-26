@@ -4,11 +4,11 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding Zenvora database...');
+  console.log('Seeding Zenvora Education Platform database...');
 
   // 1. Admin User
   const adminEmail = process.env.ADMIN_EMAIL || 'samir@zenvora.com';
-  const rawPassword = process.env.ADMIN_PASSWORD || 'ChangeMeOnFirstLogin';
+  const rawPassword = process.env.ADMIN_PASSWORD || 'SamirZenvora@2026';
   const passwordHash = await bcrypt.hash(rawPassword, 10);
 
   await prisma.adminUser.upsert({
@@ -36,10 +36,10 @@ async function main() {
     avatarUrl: '/images/zenvora-logo.png',
     aboutPhotoUrl: '/images/zenvora-about.jpg',
     faviconUrl: '/favicon.ico',
-    ogImageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80',
+    ogImageUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&auto=format&fit=crop&q=80',
     youtubeUrl: 'https://youtube.com',
     youtubeChannelId: '',
-    instagramUrl: 'https://instagram.com',
+    instagramUrl: 'https://instagram.com/zenvora',
     instagramHandle: '@zenvora',
     telegramUrl: '',
     whatsappNumber: '',
@@ -47,9 +47,9 @@ async function main() {
     agencyName: 'Zenvora',
     footerText: 'Empowering students and self-taught developers to learn tech the simplest way possible.',
     affiliateDisclosureEnabled: true,
-    affiliateDisclosureText: 'Some links on this site are affiliate links. If you make a purchase through them, I may earn a small commission at no additional cost to you. I only recommend tools I personally use and test.',
+    affiliateDisclosureText: 'Some links on this site may be resource partnerships. We only recommend tools battle-tested by modern engineers.',
     scrollToTopEnabled: true,
-    unlockMode: 'required', // 'required', 'optional', 'public'
+    unlockMode: 'required',
     shortsEnabled: true,
     watchModalEnabled: false,
     metaPixelId: '',
@@ -69,12 +69,13 @@ async function main() {
 
   // 3. Navigation Items
   const navItems = [
-    { area: 'header', label: 'Watch Tutorials', url: '/watch-tutorials', order: 1, visible: true, isButton: false },
-    { area: 'header', label: 'Recommended Tools', url: '/recommended-tools', order: 2, visible: true, isButton: false },
-    { area: 'header', label: 'My Gear', url: '/my-gear', order: 3, visible: true, isButton: false },
-    { area: 'header', label: 'Resources', url: '/resources', order: 4, visible: true, isButton: false },
-    { area: 'header', label: 'Instagram', url: 'https://www.instagram.com/growth_sahayta', order: 5, visible: true, isButton: false },
-    { area: 'header', label: 'Free resources', url: '/resources', order: 6, visible: true, isButton: true },
+    { area: 'header', label: 'Explore Domains', url: '/#domains', order: 1, visible: true, isButton: false },
+    { area: 'header', label: 'Lectures', url: '/watch-tutorials', order: 2, visible: true, isButton: false },
+    { area: 'header', label: 'System Design', url: '/system-design', order: 3, visible: true, isButton: false },
+    { area: 'header', label: 'Competitive Programming', url: '/competitive-programming', order: 4, visible: true, isButton: false },
+    { area: 'header', label: 'Opportunities', url: '/opportunities', order: 5, visible: true, isButton: false },
+    { area: 'header', label: 'Developer Tools', url: '/recommended-tools', order: 6, visible: true, isButton: false },
+    { area: 'header', label: 'Free Resources', url: '/resources', order: 7, visible: true, isButton: true },
   ];
 
   await prisma.navItem.deleteMany({});
@@ -82,39 +83,71 @@ async function main() {
     await prisma.navItem.create({ data: item });
   }
 
-  // 4. Categories
+  // 4. Learning Domains / Categories
   const categoriesData = [
     {
-      name: 'Meta Ads',
-      slug: 'meta-ads',
-      icon: 'Target',
-      description: 'Proven Facebook and Instagram advertising frameworks for high ROAS and scalable acquisition.',
-      link: '/watch-tutorials?category=meta-ads',
+      name: 'Data Structures & Algorithms',
+      slug: 'dsa',
+      icon: 'Trophy',
+      description: 'Master foundational problem solving, patterns, trees, graphs, and dynamic programming for coding interviews.',
+      link: '/watch-tutorials?category=dsa',
       order: 1,
     },
     {
-      name: 'Andromeda Ads 2026',
-      slug: 'andromeda-2026',
-      icon: 'Sparkles',
-      description: 'Cutting-edge algorithmic bidding, broad targeting, and AI-driven creative architectures.',
-      link: '/watch-tutorials?category=andromeda-2026',
+      name: 'Full Stack & Web Dev',
+      slug: 'web-development',
+      icon: 'Layers',
+      description: 'Build end-to-end modern web applications with Next.js, React, Tailwind CSS, TypeScript, and Prisma.',
+      link: '/watch-tutorials?category=web-development',
       order: 2,
     },
     {
-      name: 'AI Agents & Automation',
-      slug: 'ai-agents',
-      icon: 'Bot',
-      description: 'Building custom marketing workflows, automated creative iteration, and conversational agents.',
-      link: '/watch-tutorials?category=ai-agents',
+      name: 'Backend Engineering',
+      slug: 'backend-engineering',
+      icon: 'Server',
+      description: 'Design scalable distributed systems, RESTful and GraphQL APIs, caching, and microservices architectures.',
+      link: '/watch-tutorials?category=backend-engineering',
       order: 3,
     },
     {
-      name: 'Agency & Client Work',
-      slug: 'agency-work',
-      icon: 'Briefcase',
-      description: 'Scaling Growth Sahayta, managing client ad spend, and landing high-ticket retainer contracts.',
-      link: 'https://www.instagram.com/growth_sahayta',
+      name: 'System Design',
+      slug: 'system-design',
+      icon: 'Cpu',
+      description: 'Learn high-level and low-level architectural patterns for building high-scale real-world applications.',
+      link: '/system-design',
       order: 4,
+    },
+    {
+      name: 'Machine Learning & AI',
+      slug: 'machine-learning',
+      icon: 'Sparkles',
+      description: 'Understand neural networks, computer vision, NLP, and train practical models from scratch to deployment.',
+      link: '/watch-tutorials?category=machine-learning',
+      order: 5,
+    },
+    {
+      name: 'Generative AI & LLMs',
+      slug: 'generative-ai',
+      icon: 'Bot',
+      description: 'Build autonomous agents, RAG pipelines, fine-tuned models, and intelligent AI-powered applications.',
+      link: '/watch-tutorials?category=generative-ai',
+      order: 6,
+    },
+    {
+      name: 'Competitive Programming',
+      slug: 'competitive-programming',
+      icon: 'Trophy',
+      description: 'Level up on Codeforces, LeetCode, and contest algorithms with structured problem sets and editorial breakdowns.',
+      link: '/competitive-programming',
+      order: 7,
+    },
+    {
+      name: 'CS Fundamentals',
+      slug: 'cs-fundamentals',
+      icon: 'Database',
+      description: 'Core computer science essentials: Operating Systems, DBMS, Computer Networks, and Object-Oriented Design.',
+      link: '/watch-tutorials?category=cs-fundamentals',
+      order: 8,
     },
   ];
 
@@ -125,85 +158,153 @@ async function main() {
     createdCategories[cat.slug] = c;
   }
 
-  // 5. Seed Videos
+  // 5. Curated Playlists
+  const playlistsData = [
+    {
+      title: "Striver's A2Z DSA Course",
+      slug: 'strivers-a2z-dsa',
+      channelName: 'take U forward',
+      channelUrl: 'https://youtube.com/@takeUforward',
+      thumbnail: 'https://images.unsplash.com/photo-1516116211227-bbc141e97d4d?w=800&auto=format&fit=crop&q=80',
+      description: 'The definitive complete roadmap for Data Structures & Algorithms from basics to advanced interview problems.',
+      categoryId: createdCategories['dsa'].id,
+      order: 1,
+      featured: true,
+      visible: true,
+    },
+    {
+      title: 'Full Stack Next.js 14 Masterclass',
+      slug: 'fullstack-nextjs-masterclass',
+      channelName: 'CodeHelp',
+      channelUrl: 'https://youtube.com/@CodeHelp',
+      thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80',
+      description: 'Comprehensive hands-on guide to building full stack production web applications with React, Next.js, and TypeScript.',
+      categoryId: createdCategories['web-development'].id,
+      order: 2,
+      featured: true,
+      visible: true,
+    },
+    {
+      title: 'Backend Engineering & Distributed Systems',
+      slug: 'backend-distributed-systems',
+      channelName: 'Hussein Nasser',
+      channelUrl: 'https://youtube.com/@HusseinNasser-software-engineering',
+      thumbnail: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
+      description: 'Deep dive into networking protocols, HTTP/2, WebSockets, database indexing, and backend architectures.',
+      categoryId: createdCategories['backend-engineering'].id,
+      order: 3,
+      featured: true,
+      visible: true,
+    },
+    {
+      title: 'System Design for Tech Interviews',
+      slug: 'system-design-primer',
+      channelName: 'Gaurav Sen',
+      channelUrl: 'https://youtube.com/@gkcs',
+      thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80',
+      description: 'High-level architecture design patterns: load balancing, caching, database sharding, and message queues.',
+      categoryId: createdCategories['system-design'].id,
+      order: 4,
+      featured: true,
+      visible: true,
+    },
+    {
+      title: 'Generative AI & LLM Engineering',
+      slug: 'generative-ai-engineering',
+      channelName: 'CampusX',
+      channelUrl: 'https://youtube.com/@campusx-official',
+      thumbnail: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?w=800&auto=format&fit=crop&q=80',
+      description: 'Build production-ready LLM applications, retrieval-augmented generation (RAG) pipelines, and autonomous agents.',
+      categoryId: createdCategories['generative-ai'].id,
+      order: 5,
+      featured: true,
+      visible: true,
+    },
+  ];
+
+  await prisma.playlist.deleteMany({});
+  const createdPlaylists = {};
+  for (const p of playlistsData) {
+    const pl = await prisma.playlist.create({ data: p });
+    createdPlaylists[p.slug] = pl;
+  }
+
+  // 6. Curated Video Lectures
   const sampleVideos = [
     {
-      youtubeId: 'bX7jP-1_l_E',
-      title: 'Meta Ads in 2026: Complete Step-by-Step Blueprint for Beginners',
-      description: 'Everything you need to set up, test, and scale profitable Facebook and Instagram ad campaigns from zero.',
-      thumbnail: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
-      duration: '24:18',
-      views: 14200,
+      youtubeId: '0bHoB3568eE',
+      title: 'Complete Roadmap to Master DSA in 2026',
+      description: 'Step-by-step roadmap for mastering Data Structures and Algorithms with top patterns and interview strategies.',
+      thumbnail: 'https://images.unsplash.com/photo-1516116211227-bbc141e97d4d?w=800&auto=format&fit=crop&q=80',
+      duration: '32:40',
+      views: 145000,
       isShort: false,
-      categoryId: createdCategories['meta-ads'].id,
+      channelName: 'take U forward',
+      categoryId: createdCategories['dsa'].id,
+      playlistId: createdPlaylists['strivers-a2z-dsa'].id,
       featured: true,
       visible: true,
       order: 1,
     },
     {
-      youtubeId: '3JZ_D3ELwOQ',
-      title: 'Andromeda Algorithm Explained: How Meta Bids in 2026',
-      description: 'Forget narrow audience targeting. Learn how AI broad bidding and dynamic creative clusters drive 5x ROAS.',
-      thumbnail: 'https://images.unsplash.com/photo-1618172193763-c511deb635ca?w=800&auto=format&fit=crop&q=80',
-      duration: '18:45',
-      views: 9800,
+      youtubeId: 'V9PbhzZlV5U',
+      title: 'Full Stack Web Development with Next.js 14, Tailwind & Prisma',
+      description: 'Hands-on architectural guide to building a modern production web application from scratch.',
+      thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80',
+      duration: '45:12',
+      views: 92000,
       isShort: false,
-      categoryId: createdCategories['andromeda-2026'].id,
+      channelName: 'CodeHelp',
+      categoryId: createdCategories['web-development'].id,
+      playlistId: createdPlaylists['fullstack-nextjs-masterclass'].id,
       featured: true,
       visible: true,
       order: 2,
     },
     {
-      youtubeId: 'kJQP7kiw5Fk',
-      title: 'How I Built an AI Marketing Agent to Write 100 Ad Copies',
-      description: 'Step-by-step walkthrough creating an autonomous marketing agent using Claude and custom prompt workflows.',
-      thumbnail: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=800&auto=format&fit=crop&q=80',
-      duration: '15:20',
-      views: 7400,
+      youtubeId: 'k1rn7v3pZc4',
+      title: 'How Backend Systems Scale to 1 Million Concurrent Users',
+      description: 'Deep dive into load balancing, horizontal scaling, caching strategies with Redis, and message queues.',
+      thumbnail: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
+      duration: '28:15',
+      views: 68000,
       isShort: false,
-      categoryId: createdCategories['ai-agents'].id,
+      channelName: 'Hussein Nasser',
+      categoryId: createdCategories['backend-engineering'].id,
+      playlistId: createdPlaylists['backend-distributed-systems'].id,
       featured: true,
       visible: true,
       order: 3,
     },
     {
-      youtubeId: 'fJ9rUzIMcZQ',
-      title: 'Scaling an E-Commerce Brand to $50k/Month with Advantage+ Campaigns',
-      description: 'Real client case study breakdown from Growth Sahayta: creative angles, budget scaling rules, and attribution.',
-      thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-      duration: '21:05',
-      views: 11200,
+      youtubeId: 'M7XhD7v1v4Q',
+      title: 'System Design Primer: Designing URL Shortener (TinyURL)',
+      description: 'The quintessential system design interview problem: hashing, database schema, rate limiting, and analytics.',
+      thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80',
+      duration: '22:30',
+      views: 115000,
       isShort: false,
-      categoryId: createdCategories['agency-work'].id,
+      channelName: 'Gaurav Sen',
+      categoryId: createdCategories['system-design'].id,
+      playlistId: createdPlaylists['system-design-primer'].id,
       featured: false,
       visible: true,
       order: 4,
     },
     {
-      youtubeId: 'C0DPdy98e4c',
-      title: 'Google Ads vs Meta Ads: Which Channel Should You Launch First?',
-      description: 'Search intent versus algorithmic push: an objective breakdown for founders and local businesses.',
-      thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80',
-      duration: '13:50',
-      views: 6500,
+      youtubeId: 'L8gP9n6tV4c',
+      title: 'Building Autonomous AI Agents with LangChain & Claude',
+      description: 'Step-by-step masterclass on tool calling, agent memory, and reasoning loops with modern LLMs.',
+      thumbnail: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?w=800&auto=format&fit=crop&q=80',
+      duration: '35:48',
+      views: 48000,
       isShort: false,
-      categoryId: createdCategories['meta-ads'].id,
+      channelName: 'CampusX',
+      categoryId: createdCategories['generative-ai'].id,
+      playlistId: createdPlaylists['generative-ai-engineering'].id,
       featured: false,
       visible: true,
       order: 5,
-    },
-    {
-      youtubeId: 'sBws8MSXN7A',
-      title: '3 UGC Ad Hooks That Never Stop Converting',
-      description: 'Stop using boring openers. Use these 3 proven hook templates in your next short-form video ad.',
-      thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80',
-      duration: '0:58',
-      views: 28400,
-      isShort: true,
-      categoryId: createdCategories['meta-ads'].id,
-      featured: false,
-      visible: true,
-      order: 6,
     },
   ];
 
@@ -214,55 +315,55 @@ async function main() {
     createdVideos.push(vid);
   }
 
-  // 6. Tools
+  // 7. Recommended Developer Tools
   const toolsData = [
     {
-      name: 'Meta Ads Library',
-      logo: 'https://icons.duckduckgo.com/ip3/facebook.com.ico',
-      oneLiner: 'Analyze high-performing competitor creative hooks and active campaigns.',
-      description: 'The definitive free database for inspecting active ad sets, creative formats, copy variants, and landing page angles across any brand or industry.',
-      tag: 'Research',
-      url: 'https://www.facebook.com/ads/library/',
+      name: 'VS Code',
+      logo: 'https://icons.duckduckgo.com/ip3/code.visualstudio.com.ico',
+      oneLiner: 'The industry-standard extensible code editor for modern software engineering.',
+      description: 'Unmatched ecosystem of extensions, intelligent autocompletion, integrated terminal, and debugging workflows.',
+      tag: 'Editor',
+      url: 'https://code.visualstudio.com',
       showOnHome: true,
       order: 1,
     },
     {
-      name: 'Triple Whale',
-      logo: 'https://icons.duckduckgo.com/ip3/triplewhale.com.ico',
-      oneLiner: 'First-party attribution, pixel tracking, and true blended ROAS dashboard.',
-      description: 'The golden standard for multi-channel e-commerce media buyers. Accurately tracks buyer journeys and eliminates attribution blindspots.',
-      tag: 'Attribution',
-      url: 'https://www.triplewhale.com',
+      name: 'Postman',
+      logo: 'https://icons.duckduckgo.com/ip3/postman.com.ico',
+      oneLiner: 'Build, inspect, test, and document REST and GraphQL APIs seamlessly.',
+      description: 'The leading API collaboration platform for backend engineers to automate tests, simulate requests, and debug endpoints.',
+      tag: 'API Testing',
+      url: 'https://www.postman.com',
       showOnHome: true,
       order: 2,
     },
     {
-      name: 'ElevenLabs',
-      logo: 'https://icons.duckduckgo.com/ip3/elevenlabs.io.ico',
-      oneLiner: 'Generate hyper-realistic voiceovers for UGC and video sales letters.',
-      description: 'The most realistic AI voice generator for fast-paced video ads, multilingual customer acquisition, and dynamic audio scripts.',
-      tag: 'AI Audio',
-      url: 'https://elevenlabs.io',
+      name: 'Docker',
+      logo: 'https://icons.duckduckgo.com/ip3/docker.com.ico',
+      oneLiner: 'Containerize applications for reproducible dev and cloud deployment.',
+      description: 'Isolate dependencies, spin up databases instantly, and ensure code runs identically across dev, test, and production.',
+      tag: 'DevOps',
+      url: 'https://www.docker.com',
       showOnHome: true,
       order: 3,
     },
     {
-      name: 'Canva Pro',
-      logo: 'https://icons.duckduckgo.com/ip3/canva.com.ico',
-      oneLiner: 'Rapidly design scroll-stopping statics, hook cards, and story creatives.',
-      description: 'The best agile tool for creating rapid visual iterations, high-contrast typography stickers, and branded thumbnails without Photoshop bloat.',
-      tag: 'Design',
-      url: 'https://www.canva.com',
+      name: 'GitHub',
+      logo: 'https://icons.duckduckgo.com/ip3/github.com.ico',
+      oneLiner: 'Version control, open-source collaboration, and automated CI/CD actions.',
+      description: 'Host repositories, collaborate on open source projects, track issues, and deploy automatically with GitHub Actions.',
+      tag: 'VCS & CI/CD',
+      url: 'https://github.com',
       showOnHome: true,
       order: 4,
     },
     {
-      name: 'Notion',
-      logo: 'https://icons.duckduckgo.com/ip3/notion.so.ico',
-      oneLiner: 'Organize creative pipelines, client briefs, and campaign testing boards.',
-      description: 'The ultimate workspace for media buying teams to track hypothesis logs, weekly creative drops, budget pacing, and client roadmaps.',
-      tag: 'Workflow',
-      url: 'https://www.notion.so',
+      name: 'Neon & Supabase',
+      logo: 'https://icons.duckduckgo.com/ip3/neon.tech.ico',
+      oneLiner: 'Serverless PostgreSQL databases built for modern cloud and serverless apps.',
+      description: 'Instant branching, autoscaling, connection pooling, and seamless integration with Prisma and Next.js.',
+      tag: 'Database',
+      url: 'https://neon.tech',
       showOnHome: true,
       order: 5,
     },
@@ -273,42 +374,42 @@ async function main() {
     await prisma.tool.create({ data: t });
   }
 
-  // 7. Gear Items
+  // 8. Developer Gear
   const gearData = [
     {
-      name: 'Shure SM7B Vocal Microphone',
-      image: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=800&auto=format&fit=crop&q=80',
-      description: 'Legendary broadcast vocal microphone delivering warm, crystal-clear tone and shielding against background fan or AC hum.',
-      price: '₹34,999',
-      url: 'https://www.amazon.in/s?k=Shure+SM7B',
-      category: 'Audio',
+      name: 'Keychron Q1 Pro Mechanical Keyboard',
+      image: 'https://images.unsplash.com/photo-1595225476474-87563907a212?w=800&auto=format&fit=crop&q=80',
+      description: 'Full aluminum body with tactile switches for satisfying, fatigue-free coding sessions.',
+      price: '₹14,999',
+      url: 'https://keychron.in',
+      category: 'Workstation',
       order: 1,
     },
     {
-      name: 'Sony Alpha a6700 Camera',
-      image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&auto=format&fit=crop&q=80',
-      description: 'Ultra-fast AI-powered subject eye autofocus, cinematic 10-bit color science, and 4K 60fps recording for YouTube masterclasses.',
-      price: '₹1,24,990',
-      url: 'https://www.amazon.in/s?k=Sony+a6700',
-      category: 'Camera',
+      name: 'Dell UltraSharp 27" 4K Monitor',
+      image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=800&auto=format&fit=crop&q=80',
+      description: 'Crisp text rendering and expansive screen real estate for multi-window code editors and docs.',
+      price: '₹42,990',
+      url: 'https://www.dell.com',
+      category: 'Workstation',
       order: 2,
+    },
+    {
+      name: 'Sony WH-1000XM5 Headphones',
+      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
+      description: 'Industry-leading active noise cancellation for staying locked in deep flow state while programming.',
+      price: '₹26,990',
+      url: 'https://www.sony.co.in',
+      category: 'Audio',
+      order: 3,
     },
     {
       name: 'Apple MacBook Pro M3 Max',
       image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80',
-      description: 'Smooth timeline scrubbing, instantaneous 4K multi-layer exports in DaVinci Resolve, and all-day battery efficiency.',
+      description: 'Blazing-fast local builds, instantaneous Docker startup, and all-day battery efficiency.',
       price: '₹2,49,900',
       url: 'https://www.apple.com/in/macbook-pro/',
       category: 'Workstation',
-      order: 3,
-    },
-    {
-      name: 'Godox SL60W Studio Continuous Light',
-      image: 'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=800&auto=format&fit=crop&q=80',
-      description: 'Soft 5600K daylight-balanced illumination paired with a 90cm octabox for an even, cinematic wrap across the face.',
-      price: '₹11,499',
-      url: 'https://www.amazon.in/s?k=Godox+SL60W',
-      category: 'Lighting',
       order: 4,
     },
   ];
@@ -318,97 +419,77 @@ async function main() {
     await prisma.gearItem.create({ data: g });
   }
 
-  // 8. Resource Items
+  // 9. Free Student Resources
   const resourcesData = [
     {
-      title: 'Meta Ad Hook Master Generator (AI Prompt)',
-      description: 'Generate 20 scroll-stopping video hooks, emotional pain-point openers, and curiosity loops tailored to any niche.',
-      categoryId: createdCategories['meta-ads'].id,
+      title: 'DSA Pattern Master Sheet & Interview Guide',
+      description: 'Curated 75 essential algorithmic problem patterns (Sliding Window, Two Pointers, DFS/BFS, DP).',
+      categoryId: createdCategories['dsa'].id,
       videoId: createdVideos[0].id,
-      promptText: `Act as a world-class direct-response copywriter who has spent over $10M on Meta Ads.
-I am selling [INSERT PRODUCT/SERVICE] to [INSERT TARGET AUDIENCE].
-The primary problem they face is [INSERT MAIN PAIN POINT].
-The unique solution I provide is [INSERT CORE BENEFIT].
-
-Generate 20 high-converting video ad hooks across these 4 specific categories:
-1. Negative Contradiction ("Stop doing X if you want Y")
-2. Secret / Curiosity Gap ("The real reason your ads are failing...")
-3. Call-out / Direct Identifier ("Attention e-commerce brand owners...")
-4. Visual / Physical Demo ("Watch what happens when we tested this...")
-
-For each hook, explain the psychological trigger and the exact on-screen visual pairing.`,
+      promptText: `DSA Pattern Checklist:
+1. Two Pointers & Sliding Window: Trapping Rain Water, Longest Substring Without Repeating Characters.
+2. Fast & Slow Pointers: Linked List Cycle Detection, Happy Number.
+3. Trees & Graphs: Level-order traversal, Number of Islands, Topological Sort.
+4. Dynamic Programming: 0/1 Knapsack, Coin Change, Longest Common Subsequence.`,
       fileUrl: '',
       locked: true,
       order: 1,
     },
     {
-      title: 'Andromeda 2026 Campaign Architecture Checklist',
-      description: 'Complete campaign launch blueprint: broad targeting settings, dynamic creative groupings, and AI budget pacing.',
-      categoryId: createdCategories['andromeda-2026'].id,
-      videoId: createdVideos[1].id,
-      promptText: `System Prompt for Campaign Audit:
-Analyze my existing Meta Ads campaign configuration against Andromeda 2026 algorithmic principles:
-- Account Structure: Consolidate to maximum 2-3 active campaigns.
-- Audience Setup: Broad targeting (Age, Gender, Geo only) with zero interest/lookalike fragmentation.
-- Creative Diversity: Minimum 3 distinct angles per DCT (Dynamic Creative Test).
-- Attribution Window: 7-day click / 1-day view with CAPI (Conversions API) deduplication.`,
+      title: 'System Design Interview Architectural Blueprint',
+      description: 'Comprehensive high-level & low-level architecture template with capacity planning formulas.',
+      categoryId: createdCategories['system-design'].id,
+      videoId: createdVideos[3].id,
+      promptText: `System Design Template:
+1. Requirement Gathering: Functional vs Non-Functional (Throughput, Latency, Availability).
+2. Capacity Estimation: QPS, Daily Storage, Bandwidth calculations.
+3. High Level Architecture: Client -> CDN -> Load Balancer -> Microservices -> Cache -> DB Cluster.
+4. Bottleneck Analysis: Single points of failure, partition tolerance, and replication lag.`,
       fileUrl: '',
       locked: true,
       order: 2,
     },
     {
-      title: 'AI Marketing Copywriter Agent Persona',
-      description: 'Custom system prompt to turn Claude or ChatGPT into a ruthless Meta Ad copy tester with strict character counts.',
-      categoryId: createdCategories['ai-agents'].id,
-      videoId: createdVideos[2].id,
-      promptText: `You are AD-GENIUS-2026, an autonomous senior copywriter.
-Rules:
-1. Never use corporate jargon ("revolutionize", "game-changing", "unleash").
-2. Write in conversational 6th-grade reading level.
-3. Keep primary text punchy: Hook (under 80 chars), Body (1-3 crisp bullet points), Single call to action.
-4. Output 5 primary text variants and 5 headline variants under 45 characters.`,
+      title: 'Full Stack Next.js Production Starter Template',
+      description: 'Production-ready starter boilerplate with NextAuth, Prisma, Tailwind CSS, and TypeScript.',
+      categoryId: createdCategories['web-development'].id,
+      videoId: createdVideos[1].id,
+      promptText: `Stack Overview:
+- Next.js 14 App Router with Server Actions & API Routes
+- Authentication via NextAuth.js
+- Prisma ORM configured for PostgreSQL / SQLite
+- Tailwind CSS with responsive layout components
+- Full TypeScript type safety and error boundaries`,
       fileUrl: '',
       locked: true,
       order: 3,
     },
     {
-      title: 'High-ROAS Retargeting & Exclusion Matrix',
-      description: 'Setup guidelines to prevent wasting spend on existing purchasers and maximize cold acquisition volume.',
-      categoryId: createdCategories['meta-ads'].id,
-      videoId: createdVideos[0].id,
-      promptText: `Exclusion Matrix Guidelines:
-1. Exclude 30-day Purchasers from all Prospecting / Top-of-Funnel sets.
-2. Build 180-day Customer List audience and apply across Advantage+ Shopping Campaigns.
-3. For retargeting, limit budget to maximum 15% of total account spend.`,
+      title: 'CS Fundamentals Quick Revision Notes',
+      description: 'High-signal summary of Operating Systems, DBMS (ACID, Indexes), and Computer Networks (OSI, TCP/IP).',
+      categoryId: createdCategories['cs-fundamentals'].id,
+      videoId: createdVideos[2].id,
+      promptText: `CS Fundamentals Core Notes:
+1. Operating Systems: Process vs Thread, Deadlock Conditions, Virtual Memory & Paging.
+2. DBMS: ACID Properties, B-Tree Indexes vs Hash Indexes, Normalization (1NF to 3NF).
+3. Computer Networks: TCP 3-way handshake, HTTP vs HTTP/2 vs HTTP/3, DNS Resolution flow.`,
       fileUrl: '',
       locked: true,
       order: 4,
     },
     {
-      title: 'Growth Sahayta Client Onboarding & Ad Audit Form',
-      description: 'The exact 15-point diagnostic sheet we use before taking over any ad account.',
-      categoryId: createdCategories['agency-work'].id,
-      videoId: createdVideos[3].id,
-      promptText: `Audit Framework:
-1. Pixel & CAPI Event Match Quality score (must exceed 8.0/10).
-2. Creative fatigue rate: % of spend concentrated in top 2 ads.
-3. Cost per Outbound Click vs Cost per Unique Add to Cart ratio.
-4. Landing page speed and mobile checkout drop-off rate.`,
+      title: 'Git & GitHub Pro Workflow Cheat Sheet',
+      description: 'Clean commit conventions, interactive rebasing, branch management, and open-source contribution checklist.',
+      categoryId: createdCategories['web-development'].id,
+      videoId: createdVideos[1].id,
+      promptText: `Git Workflow Guidelines:
+- Conventional Commits: feat:, fix:, chore:, docs:, refactor:
+- Branching: main, dev, feature/<name>
+- Rebasing cleanly without merge conflict clutter: git rebase -i HEAD~3
+- Squashing commits before PR merge`,
       fileUrl: '',
       locked: true,
       order: 5,
-    },
-    {
-      title: '3-Second Short-Form Hook Formulas',
-      description: '10 viral short-form script templates tested across Reels and Shorts with high watch-time retention.',
-      categoryId: createdCategories['meta-ads'].id,
-      videoId: createdVideos[5].id,
-      promptText: `Hook 1: "If you're still doing [Common Practice] in 2026, please stop."
-Hook 2: "This 2-minute setting changed our cost per lead from ₹450 to ₹120."
-Hook 3: "Here is what no marketing agency will tell you about broad targeting."`,
-      fileUrl: '',
-      locked: true,
-      order: 6,
     },
   ];
 
@@ -417,20 +498,20 @@ Hook 3: "Here is what no marketing agency will tell you about broad targeting."`
     await prisma.resourceItem.create({ data: r });
   }
 
-  // 9. Reels
+  // 10. Reels / Shorts
   const reelsData = [
     {
-      title: 'Why 90% of Meta Ad Budgets Are Wasted in 2026',
-      description: 'The #1 mistake media buyers make with audience overlap and high CPMs.',
-      url: 'https://www.instagram.com/growth_sahayta',
-      cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80',
+      title: '3 Golden Rules for Mastering DSA in 2026',
+      description: 'Focus on problem-solving patterns instead of memorizing hundreds of questions.',
+      url: 'https://youtube.com',
+      cover: 'https://images.unsplash.com/photo-1516116211227-bbc141e97d4d?w=600&auto=format&fit=crop&q=80',
       order: 1,
     },
     {
-      title: 'The Andromeda Bidding Trick You Need To Know',
-      description: 'How to structure Dynamic Creative sets so Meta auto-allocates spend to winners.',
-      url: 'https://www.instagram.com/growth_sahayta',
-      cover: 'https://images.unsplash.com/photo-1618172193763-c511deb635ca?w=600&auto=format&fit=crop&q=80',
+      title: 'How Systems Handle 1 Million Requests Per Second',
+      description: 'Behind the scenes: CDN edge caching, connection pooling, and read replicas.',
+      url: 'https://youtube.com',
+      cover: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&auto=format&fit=crop&q=80',
       order: 2,
     },
   ];
@@ -440,7 +521,7 @@ Hook 3: "Here is what no marketing agency will tell you about broad targeting."`
     await prisma.reel.create({ data: rel });
   }
 
-  // 10. Home Sections
+  // 11. Home Page Sections
   const homeSections = [
     {
       page: 'home',
@@ -448,13 +529,13 @@ Hook 3: "Here is what no marketing agency will tell you about broad targeting."`
       order: 1,
       visible: true,
       data: JSON.stringify({
-        h1: 'Scale your business with Meta Ads, the simple way.',
-        subtext: 'Beginner-friendly tutorials on Facebook and Instagram ads, marketing strategy and AI. Start with an idea and grow it into real results.',
-        primaryBtn: 'Watch Tutorials',
-        primaryUrl: '/watch-tutorials',
-        secondaryBtn: 'Instagram',
-        secondaryUrl: 'https://www.instagram.com/growth_sahayta',
-        badgeText: 'New 2026 Frameworks Released',
+        h1: 'Learn Tech the simplest way possible',
+        subtext: 'Curated roadmaps, step-by-step lectures, and practical project resources for students and self-taught developers. Stop getting lost in tutorial hell.',
+        primaryBtn: 'Explore Domains',
+        primaryUrl: '/#domains',
+        secondaryBtn: 'Student Resources',
+        secondaryUrl: '/resources',
+        badgeText: 'Curated Tech Learning Platform for Students',
       }),
     },
     {
@@ -463,8 +544,8 @@ Hook 3: "Here is what no marketing agency will tell you about broad targeting."`
       order: 2,
       visible: true,
       data: JSON.stringify({
-        heading: 'Explore Topics',
-        subheading: 'Master the high-leverage skills driving modern paid media performance.',
+        heading: 'Explore Learning Domains',
+        subheading: 'Structured paths designed to take you from foundational concepts to job-ready engineering.',
       }),
     },
     {
@@ -473,11 +554,11 @@ Hook 3: "Here is what no marketing agency will tell you about broad targeting."`
       order: 3,
       visible: true,
       data: JSON.stringify({
-        heading: 'Latest Tutorials',
-        linkText: 'See all tutorials',
+        heading: 'Curated Lectures & Courses',
+        linkText: 'Browse all courses',
         linkUrl: '/watch-tutorials',
-        count: 3,
-        source: 'featured', // 'latest', 'featured'
+        count: 5,
+        source: 'featured',
       }),
     },
     {
@@ -486,8 +567,8 @@ Hook 3: "Here is what no marketing agency will tell you about broad targeting."`
       order: 4,
       visible: true,
       data: JSON.stringify({
-        heading: 'Recommended Tools',
-        subheading: 'The tools I use and share in my videos.',
+        heading: 'Recommended Developer Tools',
+        subheading: 'Essential software, platforms, and developer utilities battle-tested by modern engineers.',
         bottomLinkText: 'See all recommended tools',
         bottomLinkUrl: '/recommended-tools',
       }),
@@ -498,8 +579,8 @@ Hook 3: "Here is what no marketing agency will tell you about broad targeting."`
       order: 5,
       visible: true,
       data: JSON.stringify({
-        heading: 'Free prompts for every tutorial.',
-        subtext: 'Get instant access to copy-paste AI ad prompts, campaign checklists, and creative testing frameworks.',
+        heading: 'Free student resources for every track.',
+        subtext: 'Get instant access to curated DSA cheat sheets, system design templates, and open-source project guides.',
         buttonText: 'Visit Resources',
         buttonUrl: '/resources',
       }),
@@ -510,10 +591,10 @@ Hook 3: "Here is what no marketing agency will tell you about broad targeting."`
       order: 6,
       visible: true,
       data: JSON.stringify({
-        heading: 'Instagram',
-        blurb: 'Quick ad breakdowns, Andromeda bidding insights, and behind-the-scenes tests at Growth Sahayta.',
-        buttonText: 'Follow on Instagram',
-        buttonUrl: 'https://www.instagram.com/growth_sahayta',
+        heading: 'Shorts & Insights',
+        blurb: 'Bite-sized engineering tips, algorithmic breakdowns, and tech career advice.',
+        buttonText: 'Watch on YouTube',
+        buttonUrl: 'https://youtube.com',
       }),
     },
     {
@@ -524,14 +605,14 @@ Hook 3: "Here is what no marketing agency will tell you about broad targeting."`
       data: JSON.stringify({
         heading: 'About',
         title: 'Zenvora',
-        paragraph1: "Zenvora is built to simplify the tech learning journey for students, career switchers, and developers worldwide.",
-        paragraph2: "We cut through tutorial hell with structured domain roadmaps, hands-on masterclasses, and curated developer resources.",
+        paragraph1: 'Zenvora is built to simplify the tech learning journey for students, career switchers, and developers worldwide.',
+        paragraph2: 'We cut through tutorial hell with structured domain roadmaps, hands-on masterclasses, and curated developer resources.',
         primaryBtn: 'Explore Domains',
         primaryUrl: '/#domains',
         secondaryBtn: 'Student Resources',
         secondaryUrl: '/resources',
         collabHeading: 'Collaborations & Opportunities',
-        collabSubtext: 'Interested in partnering with Zenvora or listing learning resources?',
+        collabSubtext: 'Interested in partnering with Zenvora or listing student opportunities?',
         email: 'hello@zenvora.com',
       }),
     },
@@ -541,11 +622,11 @@ Hook 3: "Here is what no marketing agency will tell you about broad targeting."`
       order: 8,
       visible: true,
       data: JSON.stringify({
-        heading: 'Learn Tech the Simplest Way Possible',
+        heading: 'Start Learning Tech the Simplest Way',
         subtext: 'Join students and developers mastering Web Dev, Backend, AI/ML, System Design, and DSA with curated roadmaps.',
         buttonText: 'Explore Tracks',
         buttonUrl: '/#domains',
-        telegramText: 'Explore our student developer resources →',
+        telegramText: 'Explore student developer resources →',
         telegramUrl: '/resources',
       }),
     },
@@ -566,77 +647,56 @@ Hook 3: "Here is what no marketing agency will tell you about broad targeting."`
     await prisma.section.create({ data: s });
   }
 
-  // 11. Legal Pages
+  // 12. Legal Pages
   const legalPages = [
     {
       slug: 'privacy-policy',
       title: 'Privacy Policy',
-      metaDescription: 'Privacy policy for Zenvora. Explains data collection for free resources and communications.',
+      metaDescription: 'Privacy policy for Zenvora. Explains data collection for free educational resources.',
       content: `## Privacy Policy
 
-**Last updated:** October 25, 2026
+**Last updated:** October 26, 2026
 
-Zenvora ("we", "our", or "us") respects your privacy. This Privacy Policy explains how personal data is collected, used, and disclosed when you visit **zenvora.com** and interact with our resources, tutorials, and forms.
+Zenvora ("we", "our", or "us") respects your privacy. This Privacy Policy explains how personal data is collected and protected when you visit **zenvora.com** and interact with our resources, tracks, and student forms.
 
 ### 1. Information We Collect
 We collect personal information that you voluntarily provide to us when you:
-- Fill out the **Unlock Free Resources** form (including your full name, email address, WhatsApp/phone number, and learning interests).
-- Fill out the **Collaborations & Sponsorships** enquiry form (including your name, email address, phone number, company name, project budget, and message).
+- Fill out the **Unlock Free Resources** form (your name, email address, WhatsApp/phone number, and learning track interests).
+- Fill out the **Collaborations** enquiry form (your name, email address, organization/club, and message).
 - Contact us via email or direct messaging.
 
 ### 2. How We Use Your Information
-We use your information strictly for legitimate business purposes:
-- To immediately grant access to free prompts, checklists, and templates on our Resources page.
-- To send periodic educational newsletters, Meta Ads case studies, and tutorial announcements via email or WhatsApp (with clear opt-out options).
-- To respond to sponsorship, agency consultation, and client work enquiries.
-- To monitor and maintain the security and integrity of our website.
+We use your information strictly for educational and legitimate platform purposes:
+- To immediately grant access to free DSA sheets, system design templates, and roadmap resources.
+- To notify you about new curated video lectures, student hackathons, and engineering guides.
+- We never sell or share your personal data with third-party advertisers.
 
-### 3. Cookies and Local Storage
-We use lightweight, secure browser cookies:
-- \`resources_unlocked=1\`: A secure cookie set for 12 months after you complete the unlock form, ensuring you never have to re-enter your information on returning visits.
+### 3. Cookies
+We use minimal, secure browser cookies:
+- \`resources_unlocked=1\`: A secure cookie set for 12 months after completing the unlock form, so you never have to re-enter your information.
 - Essential session cookies for authenticated admin access.
-We do not sell, rent, or trade your personal data to third parties.
 
-### 4. Data Protection & Your Rights
-You have the right to request access to the personal data we hold about you, request corrections, or request complete removal of your records from our database. To request removal, simply reach out to **hello@zenvora.com**.
-
-### 5. Third-Party Links
-Our site features links to external websites, including YouTube, GitHub, Discord, and recommended partner tools. We are not responsible for the privacy practices of external platforms.`,
+### 4. Contact
+For questions regarding your data or to request data removal, contact **hello@zenvora.com**.`,
     },
     {
       slug: 'terms-and-conditions',
       title: 'Terms and Conditions',
-      metaDescription: 'Terms and Conditions governing the use of Zenvora learning tracks and website.',
+      metaDescription: 'Terms and conditions governing the use of Zenvora learning tracks and educational resources.',
       content: `## Terms and Conditions
 
-**Last updated:** October 25, 2026
+**Last updated:** October 26, 2026
 
 Welcome to Zenvora. By accessing or using this website, you agree to be bound by these Terms and Conditions.
 
-### 1. Intellectual Property
-All original educational roadmaps, curated resources, custom code snippets, and site layout designs on this website are the intellectual property of Zenvora, unless otherwise noted. You may freely use our templates and code for your personal or educational development, but you may not republish our database as a competing commercial product.
+### 1. Intellectual Property & Fair Use
+All original learning roadmaps, curated guides, custom code snippets, and platform layouts on this website are the property of Zenvora, unless otherwise attributed. You are welcome to use our resources and templates for your personal, academic, or professional learning.
 
-### 2. Educational Disclaimer
-All tutorials, roadmaps, and recommendations provided on this website are for educational purposes.
+### 2. Educational Purpose
+All tutorials, roadmaps, and content on Zenvora are provided strictly for educational purposes to help students and developers master technology skills.
 
-### 3. User Conduct
-When submitting forms on this website, you agree to provide authentic and accurate contact information. Any automated scraping, spam submissions, or malicious access attempts are strictly prohibited.`,
-    },
-    {
-      slug: 'disclaimer',
-      title: 'Disclaimer & Affiliate Disclosure',
-      metaDescription: 'Earnings disclaimer and affiliate disclosure for Zenvora.',
-      content: `## Disclaimer & Affiliate Disclosure
-
-**Last updated:** October 25, 2026
-
-### 1. Affiliate Disclosure
-Some of the links on this website (particularly within the **Recommended Tools** and **My Gear** sections) may be affiliate links. If you click on an affiliate link and complete a purchase or sign up for a subscription, Zenvora may receive a referral commission at no additional cost to you. 
-
-We only recommend tools, software platforms, and resources that we believe provide genuine value to students and developers.
-
-### 2. Educational & Platform Disclaimer
-Technology stacks and cloud services continuously evolve. Always test code and deploy responsibly in your environments.`,
+### 3. Contact
+If you have any questions about these Terms, reach out to us at **hello@zenvora.com**.`,
     },
   ];
 
@@ -645,12 +705,12 @@ Technology stacks and cloud services continuously evolve. Always test code and d
     await prisma.page.create({ data: p });
   }
 
-  console.log('Seeding completed successfully!');
+  console.log('✅ Zenvora database seeded successfully with tech learning tracks, domains, and lectures!');
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error('Error seeding database:', e);
     process.exit(1);
   })
   .finally(async () => {

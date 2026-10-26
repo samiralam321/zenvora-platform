@@ -18,7 +18,7 @@ export default function UnlockModal({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [interest, setInterest] = useState("Meta Ads Strategy");
+  const [interest, setInterest] = useState("Data Structures & Algorithms (DSA)");
   const [consent, setConsent] = useState(true);
   const [honeypot, setHoneypot] = useState("");
 
@@ -117,10 +117,10 @@ export default function UnlockModal({
             </div>
 
             <h3 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">
-              Unlock All Prompts & Blueprints
+              Unlock All Prompts & Roadmaps
             </h3>
             <p className="text-slate-500 text-xs sm:text-sm mb-6 leading-relaxed">
-              Enter your details below to instantly unlock our full library of Meta Ads prompts and campaign checklists. No passwords, no login walls.
+              Enter your details below to instantly unlock our full library of developer roadmaps, DSA cheat sheets, and project resources. No passwords, no login walls.
             </p>
 
             {error && (
@@ -192,10 +192,12 @@ export default function UnlockModal({
                   onChange={(e) => setInterest(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-[#1D64EC]"
                 >
-                  <option value="Meta Ads Strategy">Meta Ads Scaling & ROAS</option>
-                  <option value="Andromeda 2026 Strategy">Andromeda 2026 Algorithmic Bidding</option>
-                  <option value="AI Agents & Automation">AI Marketing Agents & Automations</option>
-                  <option value="Agency Client Work">Agency Client Acquisition & Delivery</option>
+                  <option value="Data Structures & Algorithms (DSA)">Data Structures & Algorithms (DSA)</option>
+                  <option value="Full Stack & Web Development">Full Stack & Web Development</option>
+                  <option value="Backend Engineering & APIs">Backend Engineering & APIs</option>
+                  <option value="System Design & Architecture">System Design & Architecture</option>
+                  <option value="AI & Machine Learning">AI & Machine Learning / GenAI</option>
+                  <option value="Competitive Programming">Competitive Programming</option>
                 </select>
               </div>
 
