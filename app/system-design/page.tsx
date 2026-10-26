@@ -90,6 +90,10 @@ export default async function SystemDesignPage() {
     (r) => r.id === "sd-book-pdf"
   )!;
 
+  const alexXuRes = SYSTEM_DESIGN_RESOURCES.find(
+    (r) => r.id === "sd-book-alex-xu"
+  )!;
+
   return (
     <div className="flex flex-col min-h-screen bg-white text-slate-900 font-sans">
       <Header
@@ -361,6 +365,7 @@ export default async function SystemDesignPage() {
               trade-off cheat sheets, and interview solutions:
             </p>
 
+            <div className="space-y-6">
             {/* Luxury Feature Card */}
             <div className="rounded-2xl border-2 border-blue-100 bg-gradient-to-br from-[#F8FAFC] via-white to-[#EEF4FF]/50 p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -424,6 +429,62 @@ export default async function SystemDesignPage() {
                 </div>
               </div>
             </div>
+
+            {/* Alex Xu Book Card */}
+            <div className="rounded-2xl border-2 border-rose-100 bg-gradient-to-br from-[#FFF8F8] via-white to-[#FFF0F0]/50 p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-4 max-w-3xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-500/20 shrink-0">
+                      <BookOpen className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60 mb-1">
+                        Free Download &bull; Industry-Standard Interview Book
+                      </div>
+                      <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                        {alexXuRes.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    {alexXuRes.description}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+                    {[
+                      "Design URL Shortener, Twitter & YouTube from scratch",
+                      "Step-by-step interview framework & estimation techniques",
+                      "Rate limiter, notification system & chat system design",
+                      "Used by engineers at Google, Meta, Amazon & Microsoft",
+                    ].map((point) => (
+                      <div key={point} className="flex items-center gap-2 text-xs text-slate-700">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <span>{point}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center">
+                  <a
+                    href={alexXuRes.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-center rounded-xl shadow-md hover:shadow-lg transition-all bg-rose-600 hover:bg-rose-700 text-white"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>{alexXuRes.buttonText}</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                  <span className="text-[11px] text-center text-slate-400">
+                    Alex Xu &bull; Free PDF download
+                  </span>
+                </div>
+              </div>
+            </div>
+            </div>{/* end space-y-6 wrapper */}
           </section>
         </div>
       </main>

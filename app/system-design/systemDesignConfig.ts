@@ -97,4 +97,16 @@ export const SYSTEM_DESIGN_RESOURCES: SystemDesignResource[] = [
     description:
       "The definitive open-source guide and PDF handbook for mastering system design interviews. Contains comprehensive architectural blueprints, trade-off comparisons, real-world case studies, and interview cheat sheets.",
   },
+  {
+    id: "sd-book-alex-xu",
+    stepNumber: 7,
+    stepCategory: "pdf",
+    title: "System Design Interview – Alex Xu (PDF)",
+    level: "Free Resource",
+    buttonText: "Download PDF FREE",
+    url: "https://github.com/aasthas2022/SDE-Interview-and-Prep-Roadmap/blob/main/System%20Design/Resources/System%20Design%20Interview%20by%20Alex%20Xu.pdf",
+    badgeText: "Free Download • Industry-Standard Interview Book",
+    description:
+      "Alex Xu's renowned System Design Interview book — the go-to reference for FAANG and top-tier engineering interviews. Covers real-world case studies like designing URL shorteners, Twitter, YouTube, and more with clear step-by-step frameworks.",
+  },
 ];
