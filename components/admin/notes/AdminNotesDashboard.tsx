@@ -1,0 +1,1249 @@
+"use client";
+
+import React, { useState, useCallback, useRef } from "react";
+import {
+  BookOpen,
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  EyeOff,
+  Upload,
+  FileText,
+  Globe,
+  X,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Download,
+  ChevronDown,
+  Search,
+  LayoutGrid,
+  List,
+} from "lucide-react";
+
+// ── Types ──────────────────────────────────────────────────────────────────
+interface DbDomain {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  iconName: string | null;
+  accentColor: string | null;
+  pastelBg: string | null;
+  isPublished: boolean;
+  displayOrder: number;
+  _count: { notes: number };
+}
+
+interface DbNote {
+  id: string;
+  domainId: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  storagePath: string | null;
+  originalFilename: string | null;
+  fileSize: number | null;
+  pageCount: number | null;
+  displayOrder: number;
+  status: string;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  domain: { name: string; slug: string };
+}
+
+interface Stats {
+  totalDomains: number;
+  totalNotes: number;
+  publishedNotes: number;
+  draftNotes: number;
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function fmtBytes(b: number | null) {
+  if (!b) return "—";
+  if (b < 1024) return `${b} B`;
+  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+  return `${(b / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function fmtDate(s: string) {
+  return new Date(s).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function Toast({
+  msg,
+  type,
+  onClose,
+}: {
+  msg: string;
+  type: "success" | "error";
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className={`fixed bottom-6 right-6 z-[999] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-sm font-semibold transition-all ${
+        type === "success"
+          ? "bg-emerald-600 text-white"
+          : "bg-rose-600 text-white"
+      }`}
+    >
+      {type === "success" ? (
+        <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+      ) : (
+        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+      )}
+      <span>{msg}</span>
+      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100">
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+// ── Drag-Drop PDF Upload ───────────────────────────────────────────────────
+function PdfUploadArea({
+  value,
+  onChange,
+}: {
+  value: { url: string; name: string; size: number } | null;
+  onChange: (v: { url: string; name: string; size: number } | null) => void;
+}) {
+  const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const [progress, setProgress] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const doUpload = async (file: File) => {
+    setError("");
+    if (file.type !== "application/pdf") {
+      setError("Only PDF files are accepted.");
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      setError("File must be under 50 MB.");
+      return;
+    }
+    setUploading(true);
+    setProgress(20);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      setProgress(50);
+      const res = await fetch("/api/admin/notes/upload", { method: "POST", body: fd });
+      setProgress(90);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      onChange({ url: data.url, name: data.filename, size: data.size });
+      setProgress(100);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) doUpload(file);
+  };
+
+  return (
+    <div>
+      {value ? (
+        <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+          <FileText className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-emerald-800 truncate">{value.name}</p>
+            <p className="text-xs text-emerald-600">{fmtBytes(value.size)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="text-emerald-500 hover:text-rose-500 transition"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      ) : (
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+          onClick={() => inputRef.current?.click()}
+          className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+            dragging
+              ? "border-[#1D64EC] bg-[#EEF4FF]"
+              : "border-slate-300 hover:border-[#1D64EC] hover:bg-slate-50"
+          }`}
+        >
+          {uploading ? (
+            <div className="space-y-2">
+              <Loader2 className="w-8 h-8 text-[#1D64EC] animate-spin mx-auto" />
+              <p className="text-sm text-slate-600 font-medium">Uploading... {progress}%</p>
+              <div className="w-full bg-slate-200 rounded-full h-1.5">
+                <div
+                  className="bg-[#1D64EC] h-1.5 rounded-full transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          ) : (
+            <>
+              <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-slate-700">
+                Drag and drop your PDF here
+              </p>
+              <p className="text-xs text-slate-500 mt-1">or browse files from your computer</p>
+              <p className="text-xs text-slate-400 mt-2">PDF only · Max 50 MB</p>
+            </>
+          )}
+          <input
+            ref={inputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) doUpload(f);
+              e.target.value = "";
+            }}
+          />
+        </div>
+      )}
+      {error && <p className="text-xs text-rose-600 mt-1.5">{error}</p>}
+    </div>
+  );
+}
+
+// ── Domain Modal ───────────────────────────────────────────────────────────
+const ACCENT_PRESETS = [
+  { label: "Blue", accentColor: "#1D64EC", pastelBg: "#EEF4FF", pastelBorder: "#BFDBFE", badgeBg: "#DBEAFE", badgeText: "#1E40AF" },
+  { label: "Orange", accentColor: "#EA580C", pastelBg: "#FFF4EC", pastelBorder: "#FDE5D4", badgeBg: "#FFEDD5", badgeText: "#9A3412" },
+  { label: "Green", accentColor: "#059669", pastelBg: "#ECFDF5", pastelBorder: "#A7F3D0", badgeBg: "#D1FAE5", badgeText: "#065F46" },
+  { label: "Purple", accentColor: "#7C3AED", pastelBg: "#F5F3FF", pastelBorder: "#DDD6FE", badgeBg: "#EDE9FE", badgeText: "#5B21B6" },
+  { label: "Amber", accentColor: "#D97706", pastelBg: "#FFFBEB", pastalBorder: "#FDE68A", badgeBg: "#FEF3C7", badgeText: "#92400E" },
+  { label: "Pink", accentColor: "#E11D48", pastelBg: "#FFF1F2", pastelBorder: "#FECDD3", badgeBg: "#FFE4E6", badgeText: "#9F1239" },
+  { label: "Cyan", accentColor: "#0891B2", pastelBg: "#ECFEFF", pastelBorder: "#A5F3FC", badgeBg: "#CFFAFE", badgeText: "#155E75" },
+  { label: "Indigo", accentColor: "#4F46E5", pastelBg: "#EEF2FF", pastelBorder: "#C7D2FE", badgeBg: "#E0E7FF", badgeText: "#3730A3" },
+] as any[];
+
+function DomainModal({
+  domain,
+  onClose,
+  onSaved,
+}: {
+  domain: DbDomain | null;
+  onClose: () => void;
+  onSaved: (d: DbDomain) => void;
+}) {
+  const isEdit = !!domain;
+  const [name, setName] = useState(domain?.name || "");
+  const [slug, setSlug] = useState(domain?.slug || "");
+  const [desc, setDesc] = useState(domain?.description || "");
+  const [accent, setAccent] = useState(
+    ACCENT_PRESETS.find((p) => p.accentColor === domain?.accentColor) ||
+      ACCENT_PRESETS[0]
+  );
+  const [order, setOrder] = useState(domain?.displayOrder ?? 0);
+  const [published, setPublished] = useState(domain?.isPublished ?? false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const autoSlug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSaving(true);
+    try {
+      const payload = {
+        ...(isEdit ? { id: domain!.id } : {}),
+        name,
+        slug: slug || autoSlug,
+        description: desc,
+        accentColor: accent.accentColor,
+        pastelBg: accent.pastelBg,
+        pastelBorder: accent.pastelBorder || accent.pastalBorder,
+        badgeBg: accent.badgeBg,
+        badgeText: accent.badgeText,
+        displayOrder: order,
+        isPublished: published,
+      };
+      const res = await fetch("/api/admin/notes/domains", {
+        method: isEdit ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save domain");
+      onSaved(data.domain);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-900">
+            {isEdit ? "Edit Domain" : "Create Domain"}
+          </h2>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition">
+            <X className="w-4 h-4 text-slate-500" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Name */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Domain Name *
+            </label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="e.g. DSA Notes"
+              className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+            />
+          </div>
+
+          {/* Slug */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              URL Slug
+            </label>
+            <input
+              value={slug || autoSlug}
+              onChange={(e) => setSlug(e.target.value)}
+              placeholder={autoSlug || "auto-generated"}
+              className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-mono focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10 text-slate-500"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              Will appear as /notes/<strong>{slug || autoSlug || "..."}</strong>
+            </p>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Description *
+            </label>
+            <textarea
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              required
+              rows={3}
+              placeholder="Brief description of this domain..."
+              className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10 resize-none"
+            />
+          </div>
+
+          {/* Color preset */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-2">
+              Card Color
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {ACCENT_PRESETS.map((p) => (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => setAccent(p)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition ${
+                    accent.label === p.label
+                      ? "border-[#1D64EC] bg-[#EEF4FF] text-[#1D64EC]"
+                      : "border-slate-200 text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  <span
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: p.accentColor }}
+                  />
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Order + Published */}
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Display Order
+              </label>
+              <input
+                type="number"
+                value={order}
+                onChange={(e) => setOrder(Number(e.target.value))}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+              />
+            </div>
+            <div className="flex items-end pb-0.5">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <div
+                  onClick={() => setPublished(!published)}
+                  className={`relative w-10 h-5 rounded-full transition-colors ${
+                    published ? "bg-[#1D64EC]" : "bg-slate-300"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                      published ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </div>
+                <span className="text-xs font-semibold text-slate-700">
+                  {published ? "Published" : "Hidden"}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {error && (
+            <p className="text-sm text-rose-600 bg-rose-50 rounded-xl px-3 py-2">
+              {error}
+            </p>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 border border-slate-200 text-slate-700 rounded-xl py-2.5 text-sm font-semibold hover:bg-slate-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 bg-[#1D64EC] text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-[#1a56d4] transition disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isEdit ? "Save Changes" : "Create Domain"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Note Modal ─────────────────────────────────────────────────────────────
+function NoteModal({
+  note,
+  domains,
+  defaultDomainId,
+  onClose,
+  onSaved,
+}: {
+  note: DbNote | null;
+  domains: DbDomain[];
+  defaultDomainId?: string;
+  onClose: () => void;
+  onSaved: (n: DbNote) => void;
+}) {
+  const isEdit = !!note;
+  const [domainId, setDomainId] = useState(
+    note?.domainId || defaultDomainId || domains[0]?.id || ""
+  );
+  const [title, setTitle] = useState(note?.title || "");
+  const [desc, setDesc] = useState(note?.description || "");
+  const [pdf, setPdf] = useState<{ url: string; name: string; size: number } | null>(
+    note?.storagePath
+      ? { url: note.storagePath, name: note.originalFilename || "file.pdf", size: note.fileSize || 0 }
+      : null
+  );
+  const [pageCount, setPageCount] = useState(note?.pageCount?.toString() || "");
+  const [order, setOrder] = useState(note?.displayOrder ?? 0);
+  const [status, setStatus] = useState<"draft" | "published">(
+    (note?.status as "draft" | "published") || "draft"
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (publishNow?: boolean) => {
+    setError("");
+    if (!title.trim()) { setError("Title is required"); return; }
+    if (!domainId) { setError("Please select a domain"); return; }
+    setSaving(true);
+    try {
+      const finalStatus = publishNow ? "published" : status;
+      const payload = {
+        ...(isEdit ? { id: note!.id } : {}),
+        domainId,
+        title: title.trim(),
+        description: desc,
+        storagePath: pdf?.url || null,
+        originalFilename: pdf?.name || null,
+        fileSize: pdf?.size || null,
+        pageCount: pageCount ? parseInt(pageCount) : null,
+        displayOrder: order,
+        status: finalStatus,
+      };
+      const res = await fetch("/api/admin/notes/notes", {
+        method: isEdit ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save note");
+      onSaved(data.note);
+    } catch (err: any) {
+      setError(err.message);
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-900">
+            {isEdit ? "Edit Note" : "Add Note"}
+          </h2>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition">
+            <X className="w-4 h-4 text-slate-500" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {/* Domain */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Domain *
+            </label>
+            <select
+              value={domainId}
+              onChange={(e) => setDomainId(e.target.value)}
+              className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+            >
+              <option value="">— Select Domain —</option>
+              {domains.map((d) => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Title */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Note Title *
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Arrays and Strings Complete Notes"
+              className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Short Description
+            </label>
+            <textarea
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              rows={2}
+              placeholder="What does this note cover?"
+              className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10 resize-none"
+            />
+          </div>
+
+          {/* PDF Upload */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              PDF File
+            </label>
+            <PdfUploadArea value={pdf} onChange={setPdf} />
+          </div>
+
+          {/* Page count + order */}
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Page Count
+              </label>
+              <input
+                type="number"
+                value={pageCount}
+                onChange={(e) => setPageCount(e.target.value)}
+                placeholder="e.g. 42"
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Display Order
+              </label>
+              <input
+                type="number"
+                value={order}
+                onChange={(e) => setOrder(Number(e.target.value))}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <p className="text-sm text-rose-600 bg-rose-50 rounded-xl px-3 py-2">{error}</p>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 border border-slate-200 text-slate-700 rounded-xl py-2.5 text-sm font-semibold hover:bg-slate-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => { setStatus("draft"); handleSubmit(false); }}
+              className="flex-1 border border-slate-300 text-slate-700 rounded-xl py-2.5 text-sm font-semibold hover:bg-slate-50 transition disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {saving && status === "draft" && <Loader2 className="w-4 h-4 animate-spin" />}
+              Save as Draft
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => handleSubmit(true)}
+              className="flex-1 bg-[#1D64EC] text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-[#1a56d4] transition disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {saving && status === "published" && <Loader2 className="w-4 h-4 animate-spin" />}
+              <Globe className="w-3.5 h-3.5" />
+              Publish Note
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Stat Card ──────────────────────────────────────────────────────────────
+function StatCard({
+  label,
+  value,
+  color = "blue",
+}: {
+  label: string;
+  value: number;
+  color?: "blue" | "green" | "amber" | "slate";
+}) {
+  const cls = {
+    blue: "bg-[#EEF4FF] text-[#1D64EC] border-blue-200",
+    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    slate: "bg-slate-50 text-slate-600 border-slate-200",
+  }[color];
+  return (
+    <div className={`rounded-2xl border p-4 ${cls}`}>
+      <div className="text-2xl font-extrabold">{value}</div>
+      <div className="text-xs font-semibold mt-0.5 opacity-80">{label}</div>
+    </div>
+  );
+}
+
+// ── Main Dashboard ─────────────────────────────────────────────────────────
+export default function AdminNotesDashboard({
+  initialDomains,
+  stats: initialStats,
+}: {
+  initialDomains: DbDomain[];
+  stats: Stats;
+}) {
+  const [tab, setTab] = useState<"domains" | "notes">("domains");
+  const [domains, setDomains] = useState<DbDomain[]>(initialDomains);
+  const [notes, setNotes] = useState<DbNote[]>([]);
+  const [notesLoaded, setNotesLoaded] = useState(false);
+  const [stats, setStats] = useState<Stats>(initialStats);
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+
+  // Modals
+  const [domainModal, setDomainModal] = useState<DbDomain | null | false>(false);
+  const [noteModal, setNoteModal] = useState<DbNote | null | false>(false);
+  const [defaultDomainForNote, setDefaultDomainForNote] = useState<string | undefined>();
+
+  // Filters
+  const [noteSearch, setNoteSearch] = useState("");
+  const [noteDomainFilter, setNoteDomainFilter] = useState("all");
+  const [noteStatusFilter, setNoteStatusFilter] = useState("all");
+
+  // Delete confirm
+  const [deleteTarget, setDeleteTarget] = useState<
+    { type: "domain"; item: DbDomain } | { type: "note"; item: DbNote } | null
+  >(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  // Load notes when tab switches to notes
+  const loadNotes = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/notes/notes");
+      const data = await res.json();
+      if (data.notes) {
+        setNotes(data.notes);
+        setNotesLoaded(true);
+      }
+    } catch {
+      showToast("Failed to load notes", "error");
+    }
+  }, []);
+
+  const handleTabChange = (t: "domains" | "notes") => {
+    setTab(t);
+    if (t === "notes" && !notesLoaded) loadNotes();
+  };
+
+  // Refresh stats
+  const refreshStats = useCallback(async () => {
+    try {
+      const [dRes, nRes] = await Promise.all([
+        fetch("/api/admin/notes/domains"),
+        fetch("/api/admin/notes/notes"),
+      ]);
+      const dData = await dRes.json();
+      const nData = await nRes.json();
+      if (dData.domains) setDomains(dData.domains);
+      if (nData.notes) {
+        setNotes(nData.notes);
+        setNotesLoaded(true);
+        const allNotes: DbNote[] = nData.notes;
+        setStats({
+          totalDomains: dData.domains?.length ?? stats.totalDomains,
+          totalNotes: allNotes.length,
+          publishedNotes: allNotes.filter((n) => n.status === "published").length,
+          draftNotes: allNotes.filter((n) => n.status === "draft").length,
+        });
+      }
+    } catch {}
+  }, [stats.totalDomains]);
+
+  // Toggle domain publish
+  const toggleDomainPublish = async (d: DbDomain) => {
+    try {
+      const res = await fetch("/api/admin/notes/domains", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: d.id, isPublished: !d.isPublished }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setDomains((prev) =>
+        prev.map((x) => (x.id === d.id ? { ...x, isPublished: !d.isPublished } : x))
+      );
+      showToast(d.isPublished ? "Domain hidden from public" : "Domain published ✓");
+    } catch {
+      showToast("Failed to update domain", "error");
+    }
+  };
+
+  // Toggle note status
+  const toggleNoteStatus = async (n: DbNote) => {
+    const newStatus = n.status === "published" ? "draft" : "published";
+    try {
+      const res = await fetch("/api/admin/notes/notes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: n.id, status: newStatus }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setNotes((prev) =>
+        prev.map((x) => (x.id === n.id ? { ...x, status: newStatus } : x))
+      );
+      showToast(newStatus === "published" ? "Note published ✓" : "Note set to draft");
+      refreshStats();
+    } catch {
+      showToast("Failed to update note", "error");
+    }
+  };
+
+  // Delete
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const isD = deleteTarget.type === "domain";
+      const res = await fetch(
+        isD ? "/api/admin/notes/domains" : "/api/admin/notes/notes",
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: deleteTarget.item.id }),
+        }
+      );
+      if (!res.ok) throw new Error("Failed to delete");
+      if (isD) {
+        setDomains((prev) => prev.filter((d) => d.id !== deleteTarget.item.id));
+      } else {
+        setNotes((prev) => prev.filter((n) => n.id !== deleteTarget.item.id));
+      }
+      showToast(`${isD ? "Domain" : "Note"} deleted`);
+      refreshStats();
+      setDeleteTarget(null);
+    } catch (e: any) {
+      showToast(e.message, "error");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Filtered notes
+  const filteredNotes = notes.filter((n) => {
+    const q = noteSearch.toLowerCase();
+    const matchSearch =
+      !q || n.title.toLowerCase().includes(q) || n.domain.name.toLowerCase().includes(q);
+    const matchDomain = noteDomainFilter === "all" || n.domainId === noteDomainFilter;
+    const matchStatus = noteStatusFilter === "all" || n.status === noteStatusFilter;
+    return matchSearch && matchDomain && matchStatus;
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+            Notes Management
+          </h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Manage your learning resources, organize domains, and publish notes to Zenvora.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <a
+            href="/notes"
+            target="_blank"
+            className="flex items-center gap-2 text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-xl hover:bg-slate-50 transition"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            View Public Notes
+          </a>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatCard label="Total Domains" value={stats.totalDomains} color="blue" />
+        <StatCard label="Total Notes" value={stats.totalNotes} color="slate" />
+        <StatCard label="Published" value={stats.publishedNotes} color="green" />
+        <StatCard label="Drafts" value={stats.draftNotes} color="amber" />
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
+        {(["domains", "notes"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => handleTabChange(t)}
+            className={`px-5 py-2 rounded-lg text-xs font-bold capitalize transition ${
+              tab === t
+                ? "bg-white text-[#1D64EC] shadow-sm"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            {t === "domains" ? "Domains" : "All Notes"}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Domains Tab ── */}
+      {tab === "domains" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-700">
+              {domains.length} domain{domains.length !== 1 ? "s" : ""} total
+            </p>
+            <button
+              onClick={() => setDomainModal(null)}
+              className="flex items-center gap-2 bg-[#1D64EC] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#1a56d4] transition"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Create Domain
+            </button>
+          </div>
+
+          {domains.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+              <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <h3 className="text-base font-bold text-slate-800 mb-1">No domains yet</h3>
+              <p className="text-xs text-slate-500 mb-4">
+                Create your first domain to start building your Notes library.
+              </p>
+              <button
+                onClick={() => setDomainModal(null)}
+                className="bg-[#1D64EC] text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#1a56d4] transition"
+              >
+                + Create Domain
+              </button>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {domains.map((d) => (
+                <div
+                  key={d.id}
+                  className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 hover:shadow-md transition"
+                  style={{ borderLeft: `4px solid ${d.accentColor || "#1D64EC"}` }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-slate-900 text-sm truncate">{d.name}</h3>
+                      <p className="text-[11px] text-slate-500 font-mono">/notes/{d.slug}</p>
+                    </div>
+                    <span
+                      className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        d.isPublished
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {d.isPublished ? "Published" : "Hidden"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{d.description}</p>
+                  <div className="text-[11px] text-slate-500 font-semibold">
+                    {d._count.notes} note{d._count.notes !== 1 ? "s" : ""}
+                  </div>
+                  <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                    <button
+                      onClick={() => setDomainModal(d)}
+                      className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 hover:text-[#1D64EC] transition px-2 py-1 rounded-lg hover:bg-slate-50"
+                    >
+                      <Pencil className="w-3 h-3" /> Edit
+                    </button>
+                    <button
+                      onClick={() => toggleDomainPublish(d)}
+                      className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 hover:text-[#1D64EC] transition px-2 py-1 rounded-lg hover:bg-slate-50"
+                    >
+                      {d.isPublished ? (
+                        <><EyeOff className="w-3 h-3" /> Hide</>
+                      ) : (
+                        <><Eye className="w-3 h-3" /> Publish</>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDefaultDomainForNote(d.id);
+                        setNoteModal(null);
+                      }}
+                      className="flex items-center gap-1.5 text-[11px] font-semibold text-[#1D64EC] hover:text-[#1a56d4] transition px-2 py-1 rounded-lg hover:bg-[#EEF4FF]"
+                    >
+                      <Plus className="w-3 h-3" /> Add Note
+                    </button>
+                    <button
+                      onClick={() => setDeleteTarget({ type: "domain", item: d })}
+                      className="flex items-center gap-1.5 text-[11px] font-semibold text-rose-500 hover:text-rose-700 transition ml-auto px-2 py-1 rounded-lg hover:bg-rose-50"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Notes Tab ── */}
+      {tab === "notes" && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                value={noteSearch}
+                onChange={(e) => setNoteSearch(e.target.value)}
+                placeholder="Search notes..."
+                className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+              />
+            </div>
+            {/* Domain filter */}
+            <select
+              value={noteDomainFilter}
+              onChange={(e) => setNoteDomainFilter(e.target.value)}
+              className="border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+            >
+              <option value="all">All Domains</option>
+              {domains.map((d) => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
+            {/* Status filter */}
+            <select
+              value={noteStatusFilter}
+              onChange={(e) => setNoteStatusFilter(e.target.value)}
+              className="border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+            >
+              <option value="all">All Status</option>
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+            </select>
+            <div className="ml-auto">
+              <button
+                onClick={() => { setDefaultDomainForNote(undefined); setNoteModal(null); }}
+                className="flex items-center gap-2 bg-[#1D64EC] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#1a56d4] transition"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Note
+              </button>
+            </div>
+          </div>
+
+          {!notesLoaded ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-6 h-6 animate-spin text-[#1D64EC]" />
+            </div>
+          ) : filteredNotes.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+              <FileText className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <h3 className="text-base font-bold text-slate-800 mb-1">
+                {notes.length === 0 ? "No notes yet" : "No notes match your filters"}
+              </h3>
+              <p className="text-xs text-slate-500 mb-4">
+                {notes.length === 0
+                  ? "Create your first note to start building your learning library."
+                  : "Try adjusting your search or filters."}
+              </p>
+              {notes.length === 0 && (
+                <button
+                  onClick={() => { setDefaultDomainForNote(undefined); setNoteModal(null); }}
+                  className="bg-[#1D64EC] text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#1a56d4] transition"
+                >
+                  + Add Note
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="text-left font-semibold text-slate-600 px-4 py-3">Title</th>
+                    <th className="text-left font-semibold text-slate-600 px-4 py-3 hidden sm:table-cell">Domain</th>
+                    <th className="text-left font-semibold text-slate-600 px-4 py-3 hidden md:table-cell">File</th>
+                    <th className="text-left font-semibold text-slate-600 px-4 py-3">Status</th>
+                    <th className="text-left font-semibold text-slate-600 px-4 py-3 hidden lg:table-cell">Updated</th>
+                    <th className="text-right font-semibold text-slate-600 px-4 py-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredNotes.map((n, i) => (
+                    <tr
+                      key={n.id}
+                      className={`border-b border-slate-50 hover:bg-slate-50/50 transition ${
+                        i === filteredNotes.length - 1 ? "border-b-0" : ""
+                      }`}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="font-semibold text-slate-800 line-clamp-1">{n.title}</div>
+                        {n.pageCount && (
+                          <div className="text-slate-400 text-[10px]">{n.pageCount} pages</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 hidden sm:table-cell">
+                        <span className="text-slate-600">{n.domain.name}</span>
+                      </td>
+                      <td className="px-4 py-3 hidden md:table-cell">
+                        {n.storagePath ? (
+                          <a
+                            href={n.storagePath}
+                            target="_blank"
+                            className="flex items-center gap-1 text-[#1D64EC] hover:underline"
+                          >
+                            <FileText className="w-3 h-3" />
+                            <span className="truncate max-w-[120px]">{n.originalFilename || "PDF"}</span>
+                          </a>
+                        ) : (
+                          <span className="text-slate-400">No file</span>
+                        )}
+                        {n.fileSize && (
+                          <div className="text-slate-400 text-[10px]">{fmtBytes(n.fileSize)}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            n.status === "published"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {n.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 hidden lg:table-cell text-slate-400">
+                        {fmtDate(n.updatedAt)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => setNoteModal(n)}
+                            className="p-1.5 text-slate-500 hover:text-[#1D64EC] hover:bg-slate-100 rounded-lg transition"
+                            title="Edit"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => toggleNoteStatus(n)}
+                            className="p-1.5 text-slate-500 hover:text-[#1D64EC] hover:bg-slate-100 rounded-lg transition"
+                            title={n.status === "published" ? "Unpublish" : "Publish"}
+                          >
+                            {n.status === "published" ? (
+                              <EyeOff className="w-3.5 h-3.5" />
+                            ) : (
+                              <Globe className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                          {n.storagePath && (
+                            <a
+                              href={n.storagePath}
+                              target="_blank"
+                              className="p-1.5 text-slate-500 hover:text-[#1D64EC] hover:bg-slate-100 rounded-lg transition"
+                              title="Download PDF"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                            </a>
+                          )}
+                          <button
+                            onClick={() => setDeleteTarget({ type: "note", item: n })}
+                            className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Domain Modal ── */}
+      {domainModal !== false && (
+        <DomainModal
+          domain={domainModal}
+          onClose={() => setDomainModal(false)}
+          onSaved={(d) => {
+            const existing = domains.find((x) => x.id === d.id);
+            if (existing) {
+              setDomains((prev) => prev.map((x) => (x.id === d.id ? { ...x, ...d } : x)));
+              showToast("Domain updated ✓");
+            } else {
+              setDomains((prev) => [...prev, { ...d, _count: { notes: 0 } }]);
+              setStats((s) => ({ ...s, totalDomains: s.totalDomains + 1 }));
+              showToast("Domain created ✓");
+            }
+            setDomainModal(false);
+          }}
+        />
+      )}
+
+      {/* ── Note Modal ── */}
+      {noteModal !== false && (
+        <NoteModal
+          note={noteModal}
+          domains={domains}
+          defaultDomainId={defaultDomainForNote}
+          onClose={() => { setNoteModal(false); setDefaultDomainForNote(undefined); }}
+          onSaved={(n) => {
+            const existing = notes.find((x) => x.id === n.id);
+            if (existing) {
+              setNotes((prev) => prev.map((x) => (x.id === n.id ? { ...x, ...n } : x)));
+              showToast("Note updated ✓");
+            } else {
+              // Attach domain info
+              const dom = domains.find((d) => d.id === n.domainId);
+              const noteWithDomain = { ...n, domain: { name: dom?.name || "", slug: dom?.slug || "" } };
+              setNotes((prev) => [noteWithDomain, ...prev]);
+              setNotesLoaded(true);
+              setStats((s) => ({
+                ...s,
+                totalNotes: s.totalNotes + 1,
+                ...(n.status === "published"
+                  ? { publishedNotes: s.publishedNotes + 1 }
+                  : { draftNotes: s.draftNotes + 1 }),
+              }));
+              showToast(n.status === "published" ? "Note published ✓" : "Saved as draft ✓");
+            }
+            setNoteModal(false);
+            setDefaultDomainForNote(undefined);
+          }}
+        />
+      )}
+
+      {/* ── Delete Confirm Modal ── */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">
+                  Delete {deleteTarget.type === "domain" ? "Domain" : "Note"}?
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {deleteTarget.type === "domain"
+                    ? `"${deleteTarget.item.name}" and all its notes will be permanently deleted.`
+                    : `"${deleteTarget.item.title}" will be permanently deleted.`}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 border border-slate-200 text-slate-700 rounded-xl py-2.5 text-sm font-semibold hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex-1 bg-rose-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-rose-700 transition disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />
+      )}
+    </div>
+  );
+}

@@ -206,6 +206,46 @@ model Media {
   createdAt DateTime @default(now())
 }
 
+// ── Notes feature ──────────────────────────────────────────────────────────
+
+model NotesDomain {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  description  String
+  iconName     String?  @default("FileText")
+  accentColor  String?  @default("#1D64EC")
+  pastelBg     String?  @default("#EEF4FF")
+  pastelBorder String?  @default("#BFDBFE")
+  badgeBg      String?  @default("#DBEAFE")
+  badgeText    String?  @default("#1E40AF")
+  displayOrder Int      @default(0)
+  isPublished  Boolean  @default(false)
+  notes        Note[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Note {
+  id               String      @id @default(cuid())
+  domainId         String
+  domain           NotesDomain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  title            String
+  slug             String
+  description      String?
+  storagePath      String?     // path/url to the PDF
+  originalFilename String?
+  fileSize         Int?        // bytes
+  pageCount        Int?
+  displayOrder     Int         @default(0)
+  status           String      @default("draft") // "draft" | "published"
+  publishedAt      DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@unique([domainId, slug])
+}
+
 model SyncLog {
   id           String   @id @default(cuid())
   startedAt    DateTime @default(now())

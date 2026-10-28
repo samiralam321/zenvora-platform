@@ -23,6 +23,7 @@ import {
   X,
   Code2,
   Trophy,
+  NotebookPen,
 } from "lucide-react";
 
 const navLinks = [
@@ -31,6 +32,7 @@ const navLinks = [
   { label: "Lectures & Videos", href: "/admin/tutorials", icon: Youtube },
   { label: "Opportunities", href: "/admin/opportunities", icon: Trophy },
   { label: "Developer Tools", href: "/admin/tools", icon: Wrench },
+  { label: "Notes Management", href: "/admin/notes", icon: NotebookPen },
   { label: "Home Page Builder", href: "/admin/sections", icon: Layers },
   { label: "Site Settings", href: "/admin/settings", icon: Settings },
   { label: "Learner Signups", href: "/admin/leads", icon: Users },
