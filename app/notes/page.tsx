@@ -43,14 +43,14 @@ export default async function NotesPage() {
       include: { _count: { select: { notes: { where: { status: "published" } } } } },
     });
 
-    if (dbDomains.length === 0) {
-      // Seed initial 9 domains so database is instantly ready
+    if (dbDomains.length < 10) {
+      // Seed initial 10 domains so database is instantly ready
       const { NOTES_DOMAINS } = await import("@/lib/notesData");
       for (let i = 0; i < NOTES_DOMAINS.length; i++) {
         const d = NOTES_DOMAINS[i];
         await prisma.notesDomain.upsert({
           where: { slug: d.slug },
-          update: {},
+          update: { displayOrder: i },
           create: {
             name: d.name,
             slug: d.slug,

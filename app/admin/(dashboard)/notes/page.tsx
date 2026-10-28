@@ -23,14 +23,14 @@ export default async function AdminNotesPage() {
     include: { _count: { select: { notes: true } } },
   });
 
-  // If database has 0 domains yet, automatically seed the 9 core domains
-  if (domains.length === 0) {
+  // If database has fewer than 10 domains, automatically seed
+  if (domains.length < 10) {
     try {
       for (let i = 0; i < NOTES_DOMAINS.length; i++) {
         const d = NOTES_DOMAINS[i];
         await prisma.notesDomain.upsert({
           where: { slug: d.slug },
-          update: {},
+          update: { displayOrder: i },
           create: {
             name: d.name,
             slug: d.slug,

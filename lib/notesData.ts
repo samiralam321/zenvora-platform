@@ -1108,4 +1108,72 @@ function maxSubarraySum(arr: number[], k: number): number {
       },
     ],
   },
+  // ── 10: DevOps & Cloud ──────────────────────────────────────────────────
+  {
+    id: "devops-cloud",
+    slug: "devops-cloud",
+    number: "10",
+    name: "DevOps & Cloud Engineering",
+    shortName: "DevOps & Cloud",
+    description: "Docker containerization, Kubernetes orchestration, CI/CD automated deployment, and AWS cloud architecture.",
+    iconName: "Server",
+    pastelBg: "#F0FDF4",
+    pastelBorder: "#DCFCE7",
+    accentColor: "#15803D",
+    badgeBg: "#DCFCE7",
+    badgeText: "#166534",
+    pinColor: "emerald",
+    rotationDeg: 2.1,
+    topics: [
+      "All Notes",
+      "Docker Containers",
+      "Kubernetes & Pods",
+      "CI/CD Pipelines",
+      "Cloud Infrastructure (AWS/GCP)",
+      "Monitoring & Observability",
+    ],
+    resources: [
+      {
+        id: "docker-kubernetes-handbook",
+        title: "Docker & Kubernetes: Production Container Architecture",
+        description: "Master multi-stage Docker builds, Kubernetes Pod scheduling, Services, Ingress controllers, and GitOps pipelines.",
+        topic: "Docker Containers",
+        difficulty: "Intermediate",
+        pages: 64,
+        lastUpdated: "Nov 2024",
+        downloadFileName: "Zenvora-DevOps-Cloud-Handbook.pdf",
+        outline: [
+          { id: "docker-arch", title: "1. Containerization vs Virtualization", pageNumber: 1 },
+          { id: "k8s-arch", title: "2. Kubernetes Control Plane Architecture", pageNumber: 2 },
+        ],
+        chapters: [
+          {
+            id: "docker-arch",
+            pageNumber: 1,
+            title: "1. Containerization vs Virtualization",
+            subtitle: "Namespaces, cgroups, and layered UnionFS storage",
+            content: [
+              {
+                type: "paragraph",
+                text: "Unlike traditional virtual machines that bundle a guest operating system on top of a hypervisor, Docker containers share the host Linux kernel while isolating processes through namespaces (PID, NET, MNT, IPC, UTS) and enforcing resource constraints via cgroups (CPU, memory, I/O limits).",
+              },
+            ],
+          },
+          {
+            id: "k8s-arch",
+            pageNumber: 2,
+            title: "2. Kubernetes Control Plane Architecture",
+            subtitle: "kube-apiserver, etcd, scheduler, and controller-manager",
+            content: [
+              {
+                type: "paragraph",
+                text: "The Kubernetes control plane manages the desired state of a cluster. The API server serves as the front door, backed by the distributed consensus key-value store etcd. The scheduler assigns pods to optimal worker nodes based on resource requests and affinity rules.",
+              },
+            ],
+          },
+        ],
+        relatedNotes: [],
+      },
+    ],
+  },
 ];

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { Search, BookOpen, ArrowRight, Folder } from "lucide-react";
+import { Search, BookOpen, ArrowRight } from "lucide-react";
 import { DomainNotes, NOTES_DOMAINS } from "@/lib/notesData";
 
 // ── 3D Pushpin Component ───────────────────────────────────────────────────
@@ -121,17 +121,18 @@ const ICON_CHARS: Record<string, string> = {
   Network: "⬡",
 };
 
-// ── Per-card Stagger & Rotation Config ─────────────────────────────────────
+// ── Stagger & Subtle Rotation Config for 10 cards ──────────────────────────
 const CARD_CONFIG = [
-  { rotate: -2.0, dy: 0 },    // 0 DSA
-  { rotate: 1.8, dy: -10 },   // 1 Web Dev
-  { rotate: -1.4, dy: 6 },    // 2 Backend
-  { rotate: 2.0, dy: -8 },    // 3 Full Stack
-  { rotate: -1.8, dy: 4 },    // 4 CS Fundamentals
-  { rotate: 1.6, dy: 6 },     // 5 GenAI
-  { rotate: -2.2, dy: -6 },   // 6 ML
-  { rotate: 1.8, dy: 4 },     // 7 Competitive Programming
-  { rotate: -1.2, dy: -8 },   // 8 System Design
+  { rotate: -1.6, dy: 0 },    // 0 DSA (01)
+  { rotate: 1.5, dy: -5 },    // 1 Web Dev (02)
+  { rotate: -1.2, dy: 3 },    // 2 Backend (03)
+  { rotate: 1.6, dy: -5 },    // 3 Full Stack (04)
+  { rotate: -1.4, dy: 2 },    // 4 CS Fundamentals (05)
+  { rotate: 1.5, dy: 0 },     // 5 GenAI (06)
+  { rotate: -1.4, dy: -4 },   // 6 ML (07)
+  { rotate: 1.3, dy: 3 },     // 7 Competitive Programming (08)
+  { rotate: -1.5, dy: -4 },   // 8 System Design (09)
+  { rotate: 1.4, dy: 3 },     // 9 DevOps & Cloud (10)
 ];
 
 // ── Single Sticky Note Card ───────────────────────────────────────────────
@@ -156,18 +157,18 @@ function StickyCard({ domain, index, visible, onCardRef }: StickyCardProps) {
     <Link
       ref={onCardRef}
       href={`/notes/${domain.slug}`}
-      className="group block relative focus:outline-none focus-visible:ring-4 focus-visible:ring-[#1D64EC]/30 rounded-2xl transition-all duration-300"
+      className="group block relative focus:outline-none focus-visible:ring-4 focus-visible:ring-[#1D64EC]/30 rounded-2xl transition-all duration-300 w-full"
       aria-label={`Explore ${domain.name}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0px)" : "translateY(20px)",
-        transition: `opacity 0.45s ease ${index * 45}ms, transform 0.45s ease ${index * 45}ms`,
+        transition: `opacity 0.45s ease ${index * 40}ms, transform 0.45s ease ${index * 40}ms`,
         willChange: "transform, opacity",
       }}
     >
-      {/* 3D Pushpin on upper center edge */}
+      {/* 3D Pushpin on top center edge */}
       <div
         className="absolute -top-3.5 left-1/2 z-30 transition-transform duration-300 group-hover:scale-110"
         style={{ transform: "translateX(-50%)" }}
@@ -177,26 +178,26 @@ function StickyCard({ domain, index, visible, onCardRef }: StickyCardProps) {
 
       {/* Outer White Paper Note */}
       <div
-        className="relative bg-white rounded-2xl p-3 border border-slate-200/90 transition-all duration-300"
+        className="relative bg-white rounded-2xl p-3 border border-slate-200/90 transition-all duration-300 h-full flex flex-col justify-between"
         style={{
           transform: `rotate(${rot}deg) translateY(${ty}px)`,
           boxShadow: hovered
-            ? "0 20px 35px -10px rgba(15, 23, 42, 0.15), 0 8px 16px -4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(29, 100, 236, 0.1)"
-            : "0 8px 24px -6px rgba(15, 23, 42, 0.09), 0 3px 8px -2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(226, 232, 240, 0.7)",
+            ? "0 20px 35px -10px rgba(15, 23, 42, 0.15), 0 8px 16px -4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(29, 100, 236, 0.12)"
+            : "0 8px 24px -6px rgba(15, 23, 42, 0.09), 0 3px 8px -2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(226, 232, 240, 0.75)",
           transition: "transform 260ms cubic-bezier(0.34, 1.45, 0.64, 1), box-shadow 260ms ease",
         }}
       >
         {/* Inner Pastel Surface */}
         <div
-          className="rounded-xl p-4 flex flex-col justify-between"
+          className="rounded-xl p-3.5 sm:p-4 flex flex-col justify-between h-full"
           style={{
             backgroundColor: domain.pastelBg || "#EEF4FF",
             border: `1px solid ${domain.pastelBorder || "#BFDBFE"}`,
-            minHeight: 205,
+            minHeight: 215,
           }}
         >
           {/* Top row: Number + Domain Icon */}
-          <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center justify-between mb-2">
             <span
               className="text-xl sm:text-2xl font-black tracking-tight"
               style={{ color: domain.accentColor }}
@@ -204,7 +205,7 @@ function StickyCard({ domain, index, visible, onCardRef }: StickyCardProps) {
               {domain.number}
             </span>
             <div
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold shadow-2xs transition-transform duration-300 group-hover:scale-110"
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold shadow-2xs transition-transform duration-300 group-hover:scale-110"
               style={{
                 backgroundColor: domain.badgeBg || "#DBEAFE",
                 color: domain.badgeText || "#1E40AF",
@@ -215,17 +216,17 @@ function StickyCard({ domain, index, visible, onCardRef }: StickyCardProps) {
           </div>
 
           {/* Title & Description */}
-          <div className="flex-1 mb-3">
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-snug mb-1 group-hover:text-[#1D64EC] transition-colors line-clamp-1">
+          <div className="flex-1 mb-2.5">
+            <h3 className="text-sm sm:text-[15px] font-bold text-slate-900 leading-snug mb-1 group-hover:text-[#1D64EC] transition-colors line-clamp-1">
               {domain.shortName}
             </h3>
-            <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed line-clamp-2">
+            <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-2">
               {domain.description}
             </p>
           </div>
 
           {/* Card Footer */}
-          <div className="pt-2.5 border-t border-black/[0.06] flex items-center justify-between mt-auto">
+          <div className="pt-2 border-t border-black/[0.06] flex items-center justify-between mt-auto">
             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
               {noteCount > 0 ? `${noteCount} notes` : "coming soon"}
             </span>
@@ -243,56 +244,97 @@ function StickyCard({ domain, index, visible, onCardRef }: StickyCardProps) {
   );
 }
 
-// ── Dynamic Measured Roadmap Connectors ────────────────────────────────────
-interface PathData {
-  id: string;
-  d: string;
+// ── Animated Continuous Snake-Style SVG Connector ──────────────────────────
+interface ArrowMarker {
+  x: number;
+  y: number;
+  dir: "right" | "down" | "left";
 }
 
-function RoadmapConnectors({
-  paths,
+function SnakeRoadmapConnector({
+  pathD,
   svgSize,
+  arrowMarkers,
 }: {
-  paths: PathData[];
+  pathD: string;
   svgSize: { width: number; height: number };
+  arrowMarkers: ArrowMarker[];
 }) {
-  if (paths.length === 0 || svgSize.width === 0) return null;
+  if (!pathD || svgSize.width === 0) return null;
 
   return (
-    <svg
-      width={svgSize.width}
-      height={svgSize.height}
-      className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 hidden md:block"
-      style={{ overflow: "visible" }}
-      aria-hidden="true"
-    >
-      <defs>
-        <marker
-          id="roadmap-arrow"
-          viewBox="0 0 10 10"
-          refX="5"
-          refY="5"
-          markerWidth="5"
-          markerHeight="5"
-          orient="auto-start-reverse"
-        >
-          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#93C5FD" opacity="0.8" />
-        </marker>
-      </defs>
+    <>
+      <style jsx>{`
+        @keyframes flowingSnake {
+          from {
+            stroke-dashoffset: 28;
+          }
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+        .snake-animated-path {
+          stroke-dasharray: 8 6;
+          animation: flowingSnake 1.8s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .snake-animated-path {
+            animation: none;
+          }
+        }
+      `}</style>
 
-      {paths.map((p) => (
+      <svg
+        width={svgSize.width}
+        height={svgSize.height}
+        className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 hidden lg:block"
+        style={{ overflow: "visible" }}
+        aria-hidden="true"
+      >
+        {/* Soft background glow line for depth */}
         <path
-          key={p.id}
-          d={p.d}
-          stroke="#93C5FD"
-          strokeWidth="1.8"
-          strokeDasharray="6 5"
+          d={pathD}
+          stroke="rgba(29, 100, 236, 0.12)"
+          strokeWidth="6"
           strokeLinecap="round"
+          strokeLinejoin="round"
           fill="none"
-          opacity="0.65"
         />
-      ))}
-    </svg>
+
+        {/* Primary animated dashed line */}
+        <path
+          d={pathD}
+          className="snake-animated-path"
+          stroke="#2563EB"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+          opacity="0.85"
+        />
+
+        {/* Flow direction indicators in gaps */}
+        {arrowMarkers.map((m, idx) => {
+          let transform = `translate(${m.x}, ${m.y})`;
+          if (m.dir === "down") transform += " rotate(90)";
+          if (m.dir === "left") transform += " rotate(180)";
+
+          return (
+            <g key={idx} transform={transform}>
+              <circle r="7" fill="white" stroke="#BFDBFE" strokeWidth="1.2" />
+              <path
+                d="M -2.5 -2.5 L 2 0 L -2.5 2.5"
+                fill="none"
+                stroke="#1D64EC"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
+          );
+        })}
+      </svg>
+    </>
   );
 }
 
@@ -319,9 +361,10 @@ export default function NotesLandingClient({
   const [visible, setVisible] = useState(false);
 
   const boardRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const cardRefs = useRef<{ [key: number]: HTMLAnchorElement | null }>({});
 
-  const [connectorPaths, setConnectorPaths] = useState<PathData[]>([]);
+  const [snakePathD, setSnakePathD] = useState("");
+  const [arrowMarkers, setArrowMarkers] = useState<ArrowMarker[]>([]);
   const [boardSize, setBoardSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -380,138 +423,166 @@ export default function NotesLandingClient({
     );
   }, [searchQuery, baseDomains]);
 
-  // Two thematic rows:
-  // Row 1: Core foundations (first 5 cards)
-  // Row 2: Advanced tracks (remaining cards)
   const isSearchActive = !!searchQuery.trim();
-  const row1 = useMemo(() => {
+
+  // ── Row 1: Cards 01 → 02 → 03 → 04 → 05 (indices 0..4) ───────────────────
+  const row1Domains = useMemo(() => {
     if (isSearchActive) return filteredDomains;
     return filteredDomains.slice(0, 5);
   }, [filteredDomains, isSearchActive]);
 
-  const row2 = useMemo(() => {
+  // ── Row 2: Cards 10 ← 09 ← 08 ← 07 ← 06 (visually left to right, reverse order) ──
+  // Column 1: Card 10 (index 9)
+  // Column 2: Card 09 (index 8)
+  // Column 3: Card 08 (index 7)
+  // Column 4: Card 07 (index 6)
+  // Column 5: Card 06 (index 5)
+  const row2VisualDomains = useMemo(() => {
     if (isSearchActive) return [];
-    return filteredDomains.slice(5);
+    const remaining = filteredDomains.slice(5, 10);
+    // Reverse so that index 9 (Card 10) is on the left, and index 5 (Card 06) is on the right
+    return [...remaining].reverse();
   }, [filteredDomains, isSearchActive]);
 
-  // ── Measure card positions and compute connector lines ───────────────────
-  const updateConnectorLines = useCallback(() => {
+  // ── Calculate Continuous Snake Path ──────────────────────────────────────
+  const updateSnakePath = useCallback(() => {
     const board = boardRef.current;
     if (!board) return;
 
     const bRect = board.getBoundingClientRect();
     setBoardSize({ width: bRect.width, height: bRect.height });
 
-    // Only compute connectors if not searching and desktop/tablet
-    if (isSearchActive || window.innerWidth < 768) {
-      setConnectorPaths([]);
+    // Only compute snake connector when not searching and on desktop (>= 1024px)
+    if (isSearchActive || window.innerWidth < 1024 || filteredDomains.length < 6) {
+      setSnakePathD("");
+      setArrowMarkers([]);
       return;
     }
 
     const anchors: {
-      x: number;
-      y: number;
-      top: number;
-      bottom: number;
-      left: number;
-      right: number;
-      width: number;
-      height: number;
-    }[] = [];
+      [key: number]: {
+        left: number;
+        right: number;
+        top: number;
+        bottom: number;
+        centerY: number;
+        centerX: number;
+      };
+    } = {};
 
-    cardRefs.current.forEach((el) => {
-      if (!el) {
-        anchors.push(null as any);
-        return;
-      }
+    for (let i = 0; i < 10; i++) {
+      const el = cardRefs.current[i];
+      if (!el) return; // cards still mounting
       const eRect = el.getBoundingClientRect();
-      anchors.push({
-        x: eRect.left - bRect.left + eRect.width / 2,
-        y: eRect.top - bRect.top + 20, // near pushpin
-        top: eRect.top - bRect.top,
-        bottom: eRect.top - bRect.top + eRect.height,
+      anchors[i] = {
         left: eRect.left - bRect.left,
-        right: eRect.left - bRect.left + eRect.width,
-        width: eRect.width,
-        height: eRect.height,
-      });
-    });
+        right: eRect.right - bRect.left,
+        top: eRect.top - bRect.top,
+        bottom: eRect.bottom - bRect.top,
+        centerX: eRect.left - bRect.left + eRect.width / 2,
+        centerY: eRect.top - bRect.top + eRect.height * 0.48,
+      };
+    }
 
-    const newPaths: PathData[] = [];
+    // Build the single continuous snake path:
+    // 01 -> 02 -> 03 -> 04 -> 05 -> (smooth U-turn down) -> 06 -> 07 -> 08 -> 09 -> 10
+    const newMarkers: ArrowMarker[] = [];
 
-    // Helper: Connect two horizontally adjacent cards
-    const connectHorizontal = (fromIdx: number, toIdx: number, curveDir: "up" | "down" = "up") => {
+    // Helper: Horizontal gap curve left-to-right
+    const makeHGapRight = (fromIdx: number, toIdx: number) => {
       const a = anchors[fromIdx];
       const b = anchors[toIdx];
-      if (!a || !b) return;
-
-      // Ensure 'a' is to the left of 'b'
-      if (a.left >= b.left) return;
-
-      const startX = a.right - 4;
-      const startY = a.top + a.height * 0.38;
-      const endX = b.left + 4;
-      const endY = b.top + b.height * 0.38;
+      const startX = a.right - 2;
+      const startY = a.centerY;
+      const endX = b.left + 2;
+      const endY = b.centerY;
       const dx = endX - startX;
-      const sag = curveDir === "up" ? -14 : 14;
+      const midX = startX + dx * 0.5;
 
-      const d = `M ${startX} ${startY} C ${startX + dx * 0.4} ${startY + sag}, ${endX - dx * 0.4} ${endY + sag}, ${endX} ${endY}`;
-      newPaths.push({ id: `h-${fromIdx}-${toIdx}`, d });
+      newMarkers.push({ x: midX, y: (startY + endY) / 2, dir: "right" });
+      return `C ${startX + dx * 0.45} ${startY}, ${endX - dx * 0.45} ${endY}, ${endX} ${endY}`;
     };
 
-    // Helper: Connect two vertically related cards (e.g. Row 1 to Row 2)
-    const connectVertical = (fromIdx: number, toIdx: number) => {
+    // Helper: Horizontal gap curve right-to-left
+    const makeHGapLeft = (fromIdx: number, toIdx: number) => {
       const a = anchors[fromIdx];
       const b = anchors[toIdx];
-      if (!a || !b) return;
+      const startX = a.left + 2;
+      const startY = a.centerY;
+      const endX = b.right - 2;
+      const endY = b.centerY;
+      const dx = startX - endX;
+      const midX = startX - dx * 0.5;
 
-      const startX = a.x;
-      const startY = a.bottom - 4;
-      const endX = b.x;
-      const endY = b.top + 16;
-      const dy = endY - startY;
-
-      if (dy <= 0) return; // not stacked vertically
-
-      const d = `M ${startX} ${startY} C ${startX} ${startY + dy * 0.5}, ${endX} ${endY - dy * 0.5}, ${endX} ${endY}`;
-      newPaths.push({ id: `v-${fromIdx}-${toIdx}`, d });
+      newMarkers.push({ x: midX, y: (startY + endY) / 2, dir: "left" });
+      return `C ${startX - dx * 0.45} ${startY}, ${endX + dx * 0.45} ${endY}, ${endX} ${endY}`;
     };
 
-    // 1. Row 1 Horizontal Chain: 0 -> 1 -> 2 -> 3 -> 4
-    connectHorizontal(0, 1, "down");
-    connectHorizontal(1, 2, "up");
-    connectHorizontal(2, 3, "down");
-    connectHorizontal(3, 4, "up");
+    // Start at right edge of Card 01 (index 0)
+    let d = `M ${anchors[0].right - 2} ${anchors[0].centerY} `;
 
-    // 2. Inter-Row Bridges (Roadmap transitions):
-    // CS Fundamentals (4) -> GenAI (5)
-    connectVertical(4, 5);
-    // DSA (0) -> Competitive Programming (7)
-    connectVertical(0, 7);
-    // Backend (2) / Full Stack (3) -> System Design (8)
-    connectVertical(2, 8);
+    // 01 -> 02
+    d += makeHGapRight(0, 1) + " ";
+    d += `L ${anchors[1].right - 2} ${anchors[1].centerY} `;
 
-    // 3. Row 2 Horizontal Chain: 5 -> 6 -> 7 -> 8
-    connectHorizontal(5, 6, "up");
-    connectHorizontal(6, 7, "down");
-    connectHorizontal(7, 8, "up");
+    // 02 -> 03
+    d += makeHGapRight(1, 2) + " ";
+    d += `L ${anchors[2].right - 2} ${anchors[2].centerY} `;
 
-    setConnectorPaths(newPaths);
-  }, [isSearchActive]);
+    // 03 -> 04
+    d += makeHGapRight(2, 3) + " ";
+    d += `L ${anchors[3].right - 2} ${anchors[3].centerY} `;
 
-  // Recalculate connector lines after layout render and on resize
+    // 04 -> 05
+    d += makeHGapRight(3, 4) + " ";
+    d += `L ${anchors[4].right - 2} ${anchors[4].centerY} `;
+
+    // ── Row Transition: 05 (Row 1 Col 5) to 06 (Row 2 Col 5) ──
+    // Smooth rounded U-turn curve around the right side
+    const c4 = anchors[4];
+    const c5 = anchors[5];
+    const loopOffset = 42;
+    const loopX = Math.max(c4.right, c5.right) + loopOffset;
+    const midY = (c4.centerY + c5.centerY) / 2;
+
+    d += `C ${loopX} ${c4.centerY}, ${loopX} ${c5.centerY}, ${c5.right - 2} ${c5.centerY} `;
+    newMarkers.push({ x: loopX, y: midY, dir: "down" });
+
+    // Travel across Card 06 to its left edge
+    d += `L ${anchors[5].left + 2} ${anchors[5].centerY} `;
+
+    // 06 -> 07 (moving right-to-left)
+    d += makeHGapLeft(5, 6) + " ";
+    d += `L ${anchors[6].left + 2} ${anchors[6].centerY} `;
+
+    // 07 -> 08
+    d += makeHGapLeft(6, 7) + " ";
+    d += `L ${anchors[7].left + 2} ${anchors[7].centerY} `;
+
+    // 08 -> 09
+    d += makeHGapLeft(7, 8) + " ";
+    d += `L ${anchors[8].left + 2} ${anchors[8].centerY} `;
+
+    // 09 -> 10
+    d += makeHGapLeft(8, 9);
+
+    setSnakePathD(d);
+    setArrowMarkers(newMarkers);
+  }, [isSearchActive, filteredDomains.length]);
+
+  // Recalculate connector path on render and window resize
   useEffect(() => {
     const handleResize = () => {
-      updateConnectorLines();
+      updateSnakePath();
     };
 
-    const timer = setTimeout(updateConnectorLines, 200);
+    const timer = setTimeout(updateSnakePath, 180);
     window.addEventListener("resize", handleResize);
 
     let ro: ResizeObserver | null = null;
     if (boardRef.current && typeof ResizeObserver !== "undefined") {
       ro = new ResizeObserver(() => {
-        updateConnectorLines();
+        updateSnakePath();
       });
       ro.observe(boardRef.current);
     }
@@ -521,13 +592,13 @@ export default function NotesLandingClient({
       window.removeEventListener("resize", handleResize);
       if (ro) ro.disconnect();
     };
-  }, [updateConnectorLines, filteredDomains]);
+  }, [updateSnakePath, filteredDomains]);
 
   return (
     <div className="relative min-h-screen bg-[#FDFCFB] overflow-x-hidden">
       {/* Subtle notebook ruled background texture */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.25]"
+        className="absolute inset-0 pointer-events-none opacity-[0.22]"
         style={{
           backgroundImage:
             "radial-gradient(circle, #CBD5E1 1px, transparent 1px)",
@@ -613,7 +684,7 @@ export default function NotesLandingClient({
           </div>
         </div>
 
-        {/* ── STICKY-NOTE BOARD ── */}
+        {/* ── ANIMATED SNAKE-STYLE ROADMAP BOARD ── */}
         {filteredDomains.length === 0 ? (
           <div className="text-center py-20 bg-slate-50/70 rounded-2xl border border-slate-200/80 p-8 max-w-md mx-auto">
             <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-3" />
@@ -632,12 +703,16 @@ export default function NotesLandingClient({
           </div>
         ) : (
           <div ref={boardRef} className="relative w-full">
-            {/* Dynamic SVG Roadmap Connectors (Zero floating or disconnected lines) */}
-            <RoadmapConnectors paths={connectorPaths} svgSize={boardSize} />
+            {/* Single Continuous Animated Snake Connector */}
+            <SnakeRoadmapConnector
+              pathD={snakePathD}
+              svgSize={boardSize}
+              arrowMarkers={arrowMarkers}
+            />
 
-            {/* If user is actively searching, render a clean responsive grid */}
+            {/* If user is actively searching, render a responsive grid */}
             {isSearchActive ? (
-              <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-4">
+              <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5 pt-4">
                 {filteredDomains.map((domain, i) => (
                   <StickyCard
                     key={domain.id}
@@ -651,41 +726,65 @@ export default function NotesLandingClient({
                 ))}
               </div>
             ) : (
-              /* Two-Row Staggered Roadmap Composition */
+              /* Two-Row Snake Roadmap Layout */
               <div className="relative z-10 space-y-12 sm:space-y-16 pt-4">
-                {/* ── ROW 1: Core Foundations (5 cards on xl, wrap gracefully on smaller) ── */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-5 sm:gap-6">
-                  {row1.map((domain, i) => (
-                    <StickyCard
-                      key={domain.id}
-                      domain={domain}
-                      index={i}
-                      visible={visible}
-                      onCardRef={(el) => {
-                        cardRefs.current[i] = el;
-                      }}
-                    />
-                  ))}
+                {/* ── ROW 1: Cards 01 → 02 → 03 → 04 → 05 (Left to Right) ── */}
+                <div>
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <span className="text-[11px] font-bold text-[#1D64EC] uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#1D64EC] animate-pulse" />
+                      Phase 1: Foundations &amp; Core Stacks (01 → 05)
+                    </span>
+                    <span className="text-xs font-semibold text-slate-400 hidden sm:inline">
+                      Step-by-step roadmap →
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+                    {row1Domains.map((domain, i) => (
+                      <StickyCard
+                        key={domain.id}
+                        domain={domain}
+                        index={i}
+                        visible={visible}
+                        onCardRef={(el) => {
+                          cardRefs.current[i] = el;
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
 
-                {/* ── ROW 2: Advanced Tracks (4 cards centered on xl under Row 1) ── */}
-                {row2.length > 0 && (
-                  <div className="flex flex-wrap justify-center gap-5 sm:gap-6 xl:gap-8">
-                    {row2.map((domain, i) => (
-                      <div
-                        key={domain.id}
-                        className="w-full sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] xl:w-[calc(22%-12px)] xl:min-w-[230px]"
-                      >
-                        <StickyCard
-                          domain={domain}
-                          index={5 + i}
-                          visible={visible}
-                          onCardRef={(el) => {
-                            cardRefs.current[5 + i] = el;
-                          }}
-                        />
-                      </div>
-                    ))}
+                {/* ── ROW 2: Cards 10 ← 09 ← 08 ← 07 ← 06 (Visually Left to Right, Reverse Order) ── */}
+                {row2VisualDomains.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-3 px-1">
+                      <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                        Phase 2: Advanced Engineering &amp; Deployment (06 → 10)
+                      </span>
+                      <span className="text-xs font-semibold text-slate-400 hidden sm:inline">
+                        ← Continuing the journey to Mastery
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+                      {row2VisualDomains.map((domain) => {
+                        // Locate the domain's chronological index (5..9)
+                        const originalIdx = filteredDomains.findIndex((d) => d.id === domain.id);
+                        return (
+                          <StickyCard
+                            key={domain.id}
+                            domain={domain}
+                            index={originalIdx >= 0 ? originalIdx : 5}
+                            visible={visible}
+                            onCardRef={(el) => {
+                              if (originalIdx >= 0) cardRefs.current[originalIdx] = el;
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
