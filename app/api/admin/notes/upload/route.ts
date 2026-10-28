@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import prisma from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -16,29 +15,40 @@ export async function POST(req: NextRequest) {
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
-    if (file.type !== "application/pdf") {
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
       return NextResponse.json({ error: "Only PDF files are accepted" }, { status: 400 });
     }
-    // 50 MB limit
-    if (file.size > 50 * 1024 * 1024) {
-      return NextResponse.json({ error: "File exceeds 50 MB limit" }, { status: 400 });
+
+    // Limit to 4.5 MB for Vercel Serverless payload limits
+    if (file.size > 15 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "Direct upload is limited to 15 MB. For larger PDFs, please paste an external link." },
+        { status: 400 }
+      );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const filename = `${Date.now()}_${safeName}`;
-    const uploadDir = path.join(process.cwd(), "public", "notes-pdfs");
-    await mkdir(uploadDir, { recursive: true });
-    const filePath = path.join(uploadDir, filename);
-    await writeFile(filePath, buffer);
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    const publicUrl = `/notes-pdfs/${filename}`;
+    // Save directly into Neon PostgreSQL database — 100% serverless compatible, zero ENOENT errors!
+    const noteFile = await prisma.noteFile.create({
+      data: {
+        filename: file.name,
+        mimeType: file.type || "application/pdf",
+        size: file.size,
+        data: buffer,
+      },
+    });
+
+    const publicUrl = `/api/notes/pdf/${noteFile.id}`;
+
     return NextResponse.json({
       url: publicUrl,
       filename: file.name,
       size: file.size,
     });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    console.error("PDF upload error:", e);
+    return NextResponse.json({ error: e.message || "Failed to upload PDF" }, { status: 500 });
   }
 }

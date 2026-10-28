@@ -246,6 +246,15 @@ model Note {
   @@unique([domainId, slug])
 }
 
+model NoteFile {
+  id        String   @id @default(cuid())
+  filename  String
+  mimeType  String   @default("application/pdf")
+  size      Int
+  data      Bytes    // raw binary PDF data stored in PostgreSQL
+  createdAt DateTime @default(now())
+}
+
 model SyncLog {
   id           String   @id @default(cuid())
   startedAt    DateTime @default(now())

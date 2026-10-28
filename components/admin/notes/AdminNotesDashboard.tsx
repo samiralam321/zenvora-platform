@@ -108,7 +108,7 @@ function Toast({
   );
 }
 
-// ── Drag-Drop PDF Upload ───────────────────────────────────────────────────
+// ── Drag-Drop & External Link PDF Upload ────────────────────────────────────
 function PdfUploadArea({
   value,
   onChange,
@@ -116,6 +116,12 @@ function PdfUploadArea({
   value: { url: string; name: string; size: number } | null;
   onChange: (v: { url: string; name: string; size: number } | null) => void;
 }) {
+  const [mode, setMode] = useState<"upload" | "link">("upload");
+  const [directUrl, setDirectUrl] = useState(
+    value?.url && !value.url.startsWith("/api/") ? value.url : ""
+  );
+  const [directName, setDirectName] = useState(value?.name || "");
+
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -124,12 +130,12 @@ function PdfUploadArea({
 
   const doUpload = async (file: File) => {
     setError("");
-    if (file.type !== "application/pdf") {
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
       setError("Only PDF files are accepted.");
       return;
     }
-    if (file.size > 50 * 1024 * 1024) {
-      setError("File must be under 50 MB.");
+    if (file.size > 15 * 1024 * 1024) {
+      setError("File exceeds 15 MB direct upload limit. Use the 'Paste Link' tab for larger files.");
       return;
     }
     setUploading(true);
@@ -137,18 +143,28 @@ function PdfUploadArea({
     const fd = new FormData();
     fd.append("file", file);
     try {
-      setProgress(50);
+      setProgress(40);
       const res = await fetch("/api/admin/notes/upload", { method: "POST", body: fd });
-      setProgress(90);
+      setProgress(85);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed");
       onChange({ url: data.url, name: data.filename, size: data.size });
       setProgress(100);
     } catch (e: any) {
-      setError(e.message);
+      setError(e.message || "Upload failed");
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleApplyUrl = () => {
+    setError("");
+    if (!directUrl.trim()) {
+      setError("Please enter a valid URL");
+      return;
+    }
+    const name = directName.trim() || directUrl.split("/").pop()?.split("?")[0] || "document.pdf";
+    onChange({ url: directUrl.trim(), name, size: 0 });
   };
 
   const onDrop = (e: React.DragEvent) => {
@@ -159,25 +175,63 @@ function PdfUploadArea({
   };
 
   return (
-    <div>
+    <div className="space-y-2">
+      {/* Tab toggle between Direct Upload and External Link */}
+      {!value && (
+        <div className="flex gap-2 mb-2">
+          <button
+            type="button"
+            onClick={() => setMode("upload")}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
+              mode === "upload"
+                ? "bg-[#EEF4FF] text-[#1D64EC] border-blue-200"
+                : "text-slate-600 border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            Upload File
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("link")}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
+              mode === "link"
+                ? "bg-[#EEF4FF] text-[#1D64EC] border-blue-200"
+                : "text-slate-600 border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            Paste PDF Link
+          </button>
+        </div>
+      )}
+
       {value ? (
-        <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+        <div className="flex items-center gap-3 p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl">
           <FileText className="w-5 h-5 text-emerald-600 flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-emerald-800 truncate">{value.name}</p>
-            <p className="text-xs text-emerald-600">{fmtBytes(value.size)}</p>
+            <p className="text-sm font-semibold text-emerald-900 truncate">{value.name}</p>
+            <p className="text-xs text-emerald-600 font-mono truncate">
+              {value.size > 0 ? fmtBytes(value.size) : value.url}
+            </p>
           </div>
           <button
             type="button"
-            onClick={() => onChange(null)}
-            className="text-emerald-500 hover:text-rose-500 transition"
+            onClick={() => {
+              onChange(null);
+              setDirectUrl("");
+              setDirectName("");
+            }}
+            className="text-emerald-600 hover:text-rose-600 p-1 rounded-lg transition"
+            title="Remove file"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
-      ) : (
+      ) : mode === "upload" ? (
         <div
-          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
           onClick={() => inputRef.current?.click()}
@@ -190,10 +244,10 @@ function PdfUploadArea({
           {uploading ? (
             <div className="space-y-2">
               <Loader2 className="w-8 h-8 text-[#1D64EC] animate-spin mx-auto" />
-              <p className="text-sm text-slate-600 font-medium">Uploading... {progress}%</p>
-              <div className="w-full bg-slate-200 rounded-full h-1.5">
+              <p className="text-sm text-slate-700 font-medium">Uploading to database... {progress}%</p>
+              <div className="w-full bg-slate-200 rounded-full h-1.5 max-w-xs mx-auto">
                 <div
-                  className="bg-[#1D64EC] h-1.5 rounded-full transition-all"
+                  className="bg-[#1D64EC] h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -205,7 +259,7 @@ function PdfUploadArea({
                 Drag and drop your PDF here
               </p>
               <p className="text-xs text-slate-500 mt-1">or browse files from your computer</p>
-              <p className="text-xs text-slate-400 mt-2">PDF only · Max 50 MB</p>
+              <p className="text-xs text-slate-400 mt-2">Saved directly into database · PDF only</p>
             </>
           )}
           <input
@@ -220,7 +274,43 @@ function PdfUploadArea({
             }}
           />
         </div>
+      ) : (
+        /* Direct link input */
+        <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+              Direct PDF URL *
+            </label>
+            <input
+              type="url"
+              value={directUrl}
+              onChange={(e) => setDirectUrl(e.target.value)}
+              placeholder="https://example.com/notes.pdf or Google Drive / GitHub link"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs bg-white focus:outline-none focus:border-[#1D64EC]"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+              Display Filename (optional)
+            </label>
+            <input
+              type="text"
+              value={directName}
+              onChange={(e) => setDirectName(e.target.value)}
+              placeholder="e.g. System Design Alex Xu.pdf"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs bg-white focus:outline-none focus:border-[#1D64EC]"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleApplyUrl}
+            className="text-xs font-semibold px-4 py-2 bg-[#1D64EC] text-white rounded-lg hover:bg-[#1a56d4] transition"
+          >
+            Attach Link
+          </button>
+        </div>
       )}
+
       {error && <p className="text-xs text-rose-600 mt-1.5">{error}</p>}
     </div>
   );

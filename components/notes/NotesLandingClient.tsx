@@ -557,10 +557,10 @@ export default function NotesLandingClient({
       {/* ── STANDARD CENTERED CONTAINER (Matches Lectures, Tools, & Header EXACTLY) ── */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-24">
 
-        {/* ── Page Header (Identical left alignment and styling as other pages) ── */}
-        <div className="mb-10 text-left">
+        {/* ── Hero Section (Matches Reference Image 1) ── */}
+        <div className="text-center max-w-3xl mx-auto mb-14">
           {/* Breadcrumb */}
-          <nav className="text-xs text-slate-400 mb-2 font-medium flex items-center gap-1.5">
+          <nav className="text-xs text-slate-400 mb-4 font-medium flex items-center justify-center gap-1.5">
             <Link href="/" className="hover:text-slate-600 transition">
               Home
             </Link>
@@ -569,46 +569,48 @@ export default function NotesLandingClient({
           </nav>
 
           {/* Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EEF4FF] text-[#1D64EC] text-xs font-bold mb-2.5 uppercase tracking-wider">
-            <Folder className="w-3.5 h-3.5" />
-            <span>STUDENT RESOURCE LIBRARY</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EEF4FF] border border-blue-200/80 text-[#1D64EC] text-xs font-bold mb-4 shadow-2xs">
+            <span className="text-[#1D64EC]">✨</span>
+            <span className="uppercase tracking-wider">YOUR LEARNING LIBRARY</span>
           </div>
 
-          {/* Heading */}
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 mt-0.5 mb-2">
-            Student <span className="text-[#1D64EC]">Notes</span>
+          {/* Main Heading */}
+          <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black text-slate-900 tracking-tight leading-[1.15] mb-4">
+            Your Notes. Your{" "}
+            <span className="text-[#1D64EC]">Learning Journey.</span>
           </h1>
 
-          {/* Description */}
-          <p className="text-slate-500 text-sm sm:text-base max-w-2xl leading-relaxed mb-6">
-            Access high-quality notes, handwritten PDFs, cheat sheets, and study material across all domains. Read online or download anytime.
+          {/* Subtitle */}
+          <p className="text-slate-600 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl mx-auto mb-8 font-normal">
+            Explore carefully organized notes, handwritten PDFs, cheat sheets, and study resources across your favorite tech domains. Read online or download anytime.
           </p>
 
-          {/* Search Bar */}
-          <div className="relative max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search notes, subjects, or topics..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10 transition-colors bg-white shadow-2xs"
-            />
+          {/* Centered Search Bar */}
+          <div className="relative max-w-xl mx-auto">
+            <div className="relative flex items-center">
+              <Search className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search notes, subjects, or topics (e.g. Arrays, React, System Design)..."
+                className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white border border-slate-200 text-slate-900 text-sm shadow-2xs focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10 transition-all placeholder:text-slate-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3.5 text-xs font-semibold text-slate-400 hover:text-slate-700 p-1"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
             {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
-              >
-                ✕
-              </button>
+              <p className="text-xs text-slate-500 mt-2 text-left px-1">
+                Found {filteredDomains.length} domain(s) matching &ldquo;{searchQuery}&rdquo;
+              </p>
             )}
           </div>
-
-          {searchQuery && (
-            <p className="text-xs text-slate-500 mt-2">
-              Found {filteredDomains.length} domain(s) matching &ldquo;{searchQuery}&rdquo;
-            </p>
-          )}
         </div>
 
         {/* ── STICKY-NOTE BOARD ── */}
