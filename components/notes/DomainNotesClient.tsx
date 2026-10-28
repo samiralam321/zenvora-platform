@@ -4,14 +4,10 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   ChevronRight,
-  Search,
   FileText,
   Eye,
   Download,
   BookOpen,
-  Filter,
-  CheckCircle2,
-  Calendar,
   Layers,
   Sparkles,
   Binary,
@@ -78,11 +74,23 @@ export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
     });
   }, [domain.resources, selectedTopic, selectedDifficulty, searchQuery]);
 
-  // Download handler that triggers browser download of the note document
+  // Download handler — uses real storagePath (DB PDF) when available
   const handleDownload = (res: NoteResource, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // Create a rich educational text / printable summary blob
+    // If a real PDF is stored in DB, open it directly for download
+    if ((res as any).storagePath) {
+      const a = document.createElement("a");
+      a.href = (res as any).storagePath;
+      a.download = (res as any).downloadFileName || `${res.title}.pdf`;
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
+
+    // Fallback: generate a text summary for static seed notes
     const contentLines: string[] = [
       `=============================================================`,
       `ZENVORA LEARNING PLATFORM - CURATED STUDENT NOTES`,
@@ -91,30 +99,8 @@ export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
       `Topic: ${res.topic} | Level: ${res.difficulty} | Pages: ${res.pages}`,
       `Last Updated: ${res.lastUpdated}`,
       `=============================================================\n`,
-      `TABLE OF CONTENTS / CHAPTER OUTLINE:`,
-      ...res.outline.map((item) => `[Page ${item.pageNumber}] ${item.title}`),
-      `\n-------------------------------------------------------------\n`,
-      `CHAPTER SUMMARIES & KEY TAKEAWAYS:\n`,
     ];
-
-    res.chapters.forEach((ch) => {
-      contentLines.push(`[PAGE ${ch.pageNumber}] ${ch.title}`);
-      if (ch.subtitle) contentLines.push(`Subtitle: ${ch.subtitle}`);
-      ch.content.forEach((c) => {
-        if (c.heading) contentLines.push(`\n### ${c.heading}`);
-        if (c.text) contentLines.push(c.text);
-        if (c.points) {
-          c.points.forEach((p) => contentLines.push(`  * ${p}`));
-        }
-        if (c.code) {
-          contentLines.push(`\n\`\`\`${c.code.language}\n${c.code.snippet}\n\`\`\``);
-        }
-      });
-      contentLines.push(`\n-------------------------------------------------------------\n`);
-    });
-
     contentLines.push(`Downloaded from Zenvora (https://zenvora-platform.vercel.app/notes/${domain.slug})`);
-
     const blob = new Blob([contentLines.join("\n")], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -230,56 +216,17 @@ export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
           </aside>
 
           {/* ── RIGHT COLUMN: Main Notes List ── */}
-          <main className="lg:col-span-9 space-y-6">
-            {/* Search & Difficulty Filter Bar */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs space-y-4">
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={`Search ${domain.shortName} (e.g. Arrays, Recursion, Formulas)...`}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 text-xs sm:text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-2 focus:ring-[#1D64EC]/10"
-                />
-              </div>
-
-              {/* Difficulty Filter Pills */}
-              <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <span className="text-xs font-semibold text-slate-400 mr-2 flex items-center gap-1">
-                  <Filter className="w-3.5 h-3.5" />
-                  Filter:
+          <main className="lg:col-span-9 space-y-4">
+            {/* Count indicator */}
+            <div className="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
+              <span>
+                Showing {filteredResources.length} of {domain.resources.length} notes
+              </span>
+              {selectedTopic !== "All Notes" && (
+                <span className="text-[#1D64EC]">
+                  Topic: <strong>{selectedTopic}</strong>
                 </span>
-                {DIFFICULTY_PILLS.map((pill) => {
-                  const isActive = selectedDifficulty === pill;
-                  return (
-                    <button
-                      key={pill}
-                      onClick={() => setSelectedDifficulty(pill)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                        isActive
-                          ? "bg-[#1D64EC] text-white shadow-xs"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200/80"
-                      }`}
-                    >
-                      {pill}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Status Row */}
-              <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100 font-medium">
-                <span>
-                  Showing {filteredResources.length} of {domain.resources.length} notes
-                </span>
-                {selectedTopic !== "All Notes" && (
-                  <span className="text-[#1D64EC]">
-                    Topic: <strong>{selectedTopic}</strong>
-                  </span>
-                )}
-              </div>
+              )}
             </div>
 
             {/* ── Notes Resources List ── */}
@@ -336,13 +283,25 @@ export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
 
                   {/* Right: Action Buttons */}
                   <div className="flex items-center gap-2.5 sm:self-center shrink-0">
-                    <Link
-                      href={`/notes/${domain.slug}/${res.id}`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#EEF4FF] text-[#1D64EC] border border-blue-200/80 hover:bg-[#1D64EC] hover:text-white transition-all shadow-2xs group/btn"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Read Online</span>
-                    </Link>
+                    {(res as any).storagePath ? (
+                      <a
+                        href={(res as any).storagePath}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#EEF4FF] text-[#1D64EC] border border-blue-200/80 hover:bg-[#1D64EC] hover:text-white transition-all shadow-2xs"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Read Online</span>
+                      </a>
+                    ) : (
+                      <Link
+                        href={`/notes/${domain.slug}/${res.id}`}
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#EEF4FF] text-[#1D64EC] border border-blue-200/80 hover:bg-[#1D64EC] hover:text-white transition-all shadow-2xs group/btn"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Read Online</span>
+                      </Link>
+                    )}
 
                     <button
                       onClick={(e) => handleDownload(res, e)}

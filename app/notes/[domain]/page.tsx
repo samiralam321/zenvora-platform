@@ -44,12 +44,15 @@ export default async function DomainNotesPage({ params }: DomainPageProps) {
     });
   } catch {}
 
-  // Try to load from DB first
+  // Load domain from DB — use findFirst so we can filter by both slug AND isPublished
   let dbDomain: any = null;
   let dbNotes: any[] = [];
   try {
-    dbDomain = await prisma.notesDomain.findUnique({
-      where: { slug, isPublished: true },
+    dbDomain = await prisma.notesDomain.findFirst({
+      where: {
+        slug,
+        isPublished: true,
+      },
     });
     if (dbDomain) {
       dbNotes = await prisma.note.findMany({
@@ -63,26 +66,29 @@ export default async function DomainNotesPage({ params }: DomainPageProps) {
   const staticDomain = NOTES_DOMAINS.find((d) => d.slug === slug);
   if (!dbDomain && !staticDomain) notFound();
 
-  const domain = staticDomain || {
-    id: dbDomain.id,
-    slug: dbDomain.slug,
-    number: "01",
-    name: dbDomain.name,
-    shortName: dbDomain.name,
-    description: dbDomain.description,
-    iconName: dbDomain.iconName || "FileText",
-    pastelBg: dbDomain.pastelBg || "#EEF4FF",
-    pastelBorder: dbDomain.pastelBorder || "#BFDBFE",
-    accentColor: dbDomain.accentColor || "#1D64EC",
-    badgeBg: dbDomain.badgeBg || "#DBEAFE",
-    badgeText: dbDomain.badgeText || "#1E40AF",
-    pinColor: "blue" as const,
-    rotationDeg: -2,
-    topics: [],
-    resources: [],
-  };
+  // Build the domain object — prefer DB metadata, fall back to static
+  const domain: any = staticDomain
+    ? { ...staticDomain }
+    : {
+        id: dbDomain.id,
+        slug: dbDomain.slug,
+        number: "01",
+        name: dbDomain.name,
+        shortName: dbDomain.name,
+        description: dbDomain.description,
+        iconName: dbDomain.iconName || "FileText",
+        pastelBg: dbDomain.pastelBg || "#EEF4FF",
+        pastelBorder: dbDomain.pastelBorder || "#BFDBFE",
+        accentColor: dbDomain.accentColor || "#1D64EC",
+        badgeBg: dbDomain.badgeBg || "#DBEAFE",
+        badgeText: dbDomain.badgeText || "#1E40AF",
+        pinColor: "blue" as const,
+        rotationDeg: -2,
+        topics: ["All Notes"],
+        resources: [],
+      };
 
-  // Merge DB notes into domain resources format for DomainNotesClient
+  // ALWAYS merge DB notes when they exist — this overwrites any static mock resources
   if (dbNotes.length > 0) {
     domain.resources = dbNotes.map((n: any) => ({
       id: n.id,
@@ -91,7 +97,10 @@ export default async function DomainNotesPage({ params }: DomainPageProps) {
       topic: "General",
       difficulty: "Beginner" as const,
       pages: n.pageCount || 0,
-      lastUpdated: new Date(n.updatedAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+      lastUpdated: new Date(n.updatedAt).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      }),
       downloadFileName: n.originalFilename || `${n.slug}.pdf`,
       storagePath: n.storagePath || null,
       outline: [],
@@ -108,7 +117,7 @@ export default async function DomainNotesPage({ params }: DomainPageProps) {
         navItems={navItems.length > 0 ? navItems : undefined}
       />
       <main className="flex-1">
-        <DomainNotesClient domain={domain as any} />
+        <DomainNotesClient domain={domain} />
       </main>
       <Footer settings={settings} />
       <ScrollToTop />
