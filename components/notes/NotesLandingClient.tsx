@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { Search, BookOpen, ArrowRight } from "lucide-react";
 import { DomainNotes, NOTES_DOMAINS } from "@/lib/notesData";
+import { getCategoryIcon } from "@/lib/notesIcons";
 
 // â”€â”€ 3D Pushpin Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function CSSPushPin({ color = "#EA580C" }: { color: string }) {
@@ -108,20 +109,7 @@ function darken(hex: string, t: number) {
   return `rgb(${Math.round(r * (1 - t))},${Math.round(g * (1 - t))},${Math.round(b * (1 - t))})`;
 }
 
-// â”€â”€ Card Icon Map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const ICON_CHARS: Record<string, string> = {
-  Binary: "âŒ¥",
-  Code2: "</>",
-  Server: "âŠŸ",
-  Layers: "â‰¡",
-  Cpu: "â–¡",
-  Sparkles: "âœ¦",
-  Brain: "â—Ž",
-  Trophy: "â¬¡",
-  Network: "â¬¡",
-};
-
-// â”€â”€ Stagger & Subtle Rotation Config for 10 cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Stagger & Subtle Rotation Config for 10 cards ─────────────────────────
 const CARD_CONFIG = [
   { rotate: -1.6, dy: 0 },    // 0 DSA (01)
   { rotate: 1.5, dy: -5 },    // 1 Web Dev (02)
@@ -135,7 +123,7 @@ const CARD_CONFIG = [
   { rotate: 1.4, dy: 3 },     // 9 DevOps & Cloud (10)
 ];
 
-// â”€â”€ Single Sticky Note Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Single Sticky Note Card ───────────────────────────────────────────────
 interface StickyCardProps {
   domain: DomainNotes;
   index: number;
@@ -146,7 +134,7 @@ interface StickyCardProps {
 function StickyCard({ domain, index, visible, onCardRef }: StickyCardProps) {
   const [hovered, setHovered] = useState(false);
   const cfg = CARD_CONFIG[index % CARD_CONFIG.length];
-  const iconChar = ICON_CHARS[domain.iconName] || "â—†";
+  const Icon = getCategoryIcon(domain);
 
   const rot = hovered ? 0 : cfg.rotate;
   const ty = hovered ? cfg.dy - 8 : cfg.dy;
@@ -205,13 +193,13 @@ function StickyCard({ domain, index, visible, onCardRef }: StickyCardProps) {
               {domain.number}
             </span>
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold shadow-2xs transition-transform duration-300 group-hover:scale-110"
+              className="w-8 h-8 rounded-xl flex items-center justify-center shadow-2xs transition-transform duration-300 group-hover:scale-110 shrink-0"
               style={{
                 backgroundColor: domain.badgeBg || "#DBEAFE",
-                color: domain.badgeText || "#1E40AF",
+                color: domain.badgeText || domain.accentColor || "#1E40AF",
               }}
             >
-              {iconChar}
+              <Icon className="w-4 h-4" strokeWidth={2.2} />
             </div>
           </div>
 

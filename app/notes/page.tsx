@@ -50,7 +50,7 @@ export default async function NotesPage() {
         const d = NOTES_DOMAINS[i];
         await prisma.notesDomain.upsert({
           where: { slug: d.slug },
-          update: { displayOrder: i },
+          update: { displayOrder: i, iconName: d.iconName },
           create: {
             name: d.name,
             slug: d.slug,

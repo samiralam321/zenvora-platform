@@ -70,7 +70,7 @@ export const NOTES_DOMAINS: DomainNotes[] = [
     name: "Data Structures & Algorithms (DSA)",
     shortName: "DSA Notes",
     description: "Master arrays, linked lists, trees, graphs, dynamic programming, and interview patterns.",
-    iconName: "Binary",
+    iconName: "GitBranch",
     pastelBg: "#FFF4EC", // pale peach
     pastelBorder: "#FDE5D4",
     accentColor: "#EA580C",
@@ -792,7 +792,7 @@ function maxSubarraySum(arr: number[], k: number): number {
     name: "CS Fundamentals",
     shortName: "CS Fundamentals",
     description: "Operating Systems, Computer Networks, DBMS, and System Design core academic principles.",
-    iconName: "Cpu",
+    iconName: "BookOpen",
     pastelBg: "#FAF5FF", // light purple
     pastelBorder: "#F3E8FF",
     accentColor: "#9333EA",
@@ -866,7 +866,7 @@ function maxSubarraySum(arr: number[], k: number): number {
     name: "Generative AI",
     shortName: "GenAI Notes",
     description: "LLMs, Prompt Engineering, LangChain, RAG architectures, and autonomous AI agent workflows.",
-    iconName: "Sparkles",
+    iconName: "BrainCircuit",
     pastelBg: "#F0F9FF", // pale sky blue
     pastelBorder: "#E0F2FE",
     accentColor: "#0284C7",
@@ -1034,7 +1034,7 @@ function maxSubarraySum(arr: number[], k: number): number {
     name: "System Design",
     shortName: "System Design Notes",
     description: "Scalable distributed architectures, high-availability design, caching, databases, and microservices.",
-    iconName: "Network",
+    iconName: "Workflow",
     pastelBg: "#EEF2FF", // muted periwinkle
     pastelBorder: "#E0E7FF",
     accentColor: "#4F46E5",
@@ -1116,7 +1116,7 @@ function maxSubarraySum(arr: number[], k: number): number {
     name: "DevOps & Cloud Engineering",
     shortName: "DevOps & Cloud",
     description: "Docker containerization, Kubernetes orchestration, CI/CD automated deployment, and AWS cloud architecture.",
-    iconName: "Server",
+    iconName: "Cloud",
     pastelBg: "#F0FDF4",
     pastelBorder: "#DCFCE7",
     accentColor: "#15803D",

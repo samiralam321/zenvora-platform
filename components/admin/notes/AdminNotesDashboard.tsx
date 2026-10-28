@@ -21,6 +21,7 @@ import {
   LayoutGrid,
   List,
 } from "lucide-react";
+import { getCategoryIcon } from "@/lib/notesIcons";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface DbDomain {
@@ -31,6 +32,9 @@ interface DbDomain {
   iconName: string | null;
   accentColor: string | null;
   pastelBg: string | null;
+  pastelBorder?: string | null;
+  badgeBg?: string | null;
+  badgeText?: string | null;
   isPublished: boolean;
   displayOrder: number;
   _count: { notes: number };
@@ -345,6 +349,7 @@ function DomainModal({
     ACCENT_PRESETS.find((p) => p.accentColor === domain?.accentColor) ||
       ACCENT_PRESETS[0]
   );
+  const [iconName, setIconName] = useState(domain?.iconName || "BookOpen");
   const [order, setOrder] = useState(domain?.displayOrder ?? 0);
   const [published, setPublished] = useState(domain?.isPublished ?? false);
   const [saving, setSaving] = useState(false);
@@ -365,6 +370,7 @@ function DomainModal({
         name,
         slug: slug || autoSlug,
         description: desc,
+        iconName,
         accentColor: accent.accentColor,
         pastelBg: accent.pastelBg,
         pastelBorder: accent.pastelBorder || accent.pastalBorder,
@@ -444,6 +450,29 @@ function DomainModal({
               placeholder="Brief description of this domain..."
               className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10 resize-none"
             />
+          </div>
+
+          {/* Icon Choice */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Category Icon
+            </label>
+            <select
+              value={iconName}
+              onChange={(e) => setIconName(e.target.value)}
+              className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+            >
+              <option value="GitBranch">GitBranch (DSA / Algorithms)</option>
+              <option value="Code2">Code2 (Web Development)</option>
+              <option value="Server">Server (Backend Development)</option>
+              <option value="Layers">Layers (Full Stack Development)</option>
+              <option value="BookOpen">BookOpen (CS Fundamentals)</option>
+              <option value="BrainCircuit">BrainCircuit (Generative AI)</option>
+              <option value="Brain">Brain (Machine Learning)</option>
+              <option value="Trophy">Trophy (Competitive Programming)</option>
+              <option value="Workflow">Workflow (System Design)</option>
+              <option value="Cloud">Cloud (DevOps & Cloud)</option>
+            </select>
           </div>
 
           {/* Color preset */}
@@ -1001,9 +1030,20 @@ export default function AdminNotesDashboard({
                   style={{ borderLeft: `4px solid ${d.accentColor || "#1D64EC"}` }}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-slate-900 text-sm truncate">{d.name}</h3>
-                      <p className="text-[11px] text-slate-500 font-mono">/notes/{d.slug}</p>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-2xs"
+                        style={{
+                          backgroundColor: d.badgeBg || "#DBEAFE",
+                          color: d.badgeText || d.accentColor || "#1E40AF",
+                        }}
+                      >
+                        {React.createElement(getCategoryIcon(d), { className: "w-4 h-4" })}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-slate-900 text-sm truncate">{d.name}</h3>
+                        <p className="text-[11px] text-slate-500 font-mono">/notes/{d.slug}</p>
+                      </div>
                     </div>
                     <span
                       className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${

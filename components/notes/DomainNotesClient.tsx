@@ -8,45 +8,16 @@ import {
   Eye,
   Download,
   BookOpen,
-  Layers,
-  Sparkles,
-  Binary,
-  Code2,
-  Server,
-  Cpu,
-  Brain,
-  Trophy,
-  Network,
 } from "lucide-react";
 import { DomainNotes, NoteResource } from "@/lib/notesData";
-
-const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  Binary,
-  Code2,
-  Server,
-  Layers,
-  Cpu,
-  Sparkles,
-  Brain,
-  Trophy,
-  Network,
-};
-
-const DIFFICULTY_PILLS = [
-  "All",
-  "Beginner",
-  "Intermediate",
-  "Advanced",
-  "Cheat Sheets",
-  "Formulas",
-];
+import { getCategoryIcon } from "@/lib/notesIcons";
 
 export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
   const [selectedTopic, setSelectedTopic] = useState("All Notes");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
 
-  const IconComponent = ICONS[domain.iconName] || BookOpen;
+  const IconComponent = getCategoryIcon(domain);
 
   // Filter notes based on topic, search query, and difficulty
   const filteredResources = useMemo(() => {
