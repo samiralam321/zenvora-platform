@@ -118,9 +118,7 @@ export default function Footer({ settings = {} }: FooterProps) {
                 </Link>
               </li>
               <li>
-                <Link href="/admin/login" className="hover:text-slate-900 transition-colors">
-                  Admin Portal
-                </Link>
+               
               </li>
             </ul>
           </div>

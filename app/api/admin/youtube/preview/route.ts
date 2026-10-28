@@ -46,10 +46,11 @@ export async function POST(req: NextRequest) {
     // Check if it's a playlist URL
     const listId = extractPlaylistId(trimmed);
     if (listId && trimmed.includes("list=")) {
+      let playlistErr = "";
       try {
         const playlistResult = await fetchPlaylistVideos(trimmed);
         if (playlistResult.videos.length > 0) {
-          const detectedChannel = (playlistResult as any).channelName || playlistResult.videos[0]?.authorName || "";
+          const detectedChannel = playlistResult.channelName || playlistResult.videos[0]?.authorName || "";
           return NextResponse.json({
             success: true,
             isPlaylist: true,
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
           });
         }
       } catch (err: any) {
+        playlistErr = err.message || "";
         console.warn("Playlist extraction failed, checking for video parameter:", err);
       }
 
@@ -68,6 +70,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             error:
+              playlistErr ||
               "Could not load playlist automatically. You can paste video links directly into this box (one per line) to batch import.",
           },
           { status: 400 }
