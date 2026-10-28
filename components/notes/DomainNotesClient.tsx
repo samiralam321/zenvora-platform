@@ -11,11 +11,23 @@ import {
 } from "lucide-react";
 import { DomainNotes, NoteResource } from "@/lib/notesData";
 import { getCategoryIcon } from "@/lib/notesIcons";
+import PdfViewer from "./PdfViewer";
 
 export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
   const [selectedTopic, setSelectedTopic] = useState("All Notes");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
+  const [activeReadingNote, setActiveReadingNote] = useState<NoteResource | null>(null);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && activeReadingNote) {
+        setActiveReadingNote(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeReadingNote]);
 
   const IconComponent = getCategoryIcon(domain);
 
@@ -254,25 +266,13 @@ export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
 
                   {/* Right: Action Buttons */}
                   <div className="flex items-center gap-2.5 sm:self-center shrink-0">
-                    {(res as any).storagePath ? (
-                      <a
-                        href={(res as any).storagePath}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#EEF4FF] text-[#1D64EC] border border-blue-200/80 hover:bg-[#1D64EC] hover:text-white transition-all shadow-2xs"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Read Online</span>
-                      </a>
-                    ) : (
-                      <Link
-                        href={`/notes/${domain.slug}/${res.id}`}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#EEF4FF] text-[#1D64EC] border border-blue-200/80 hover:bg-[#1D64EC] hover:text-white transition-all shadow-2xs group/btn"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Read Online</span>
-                      </Link>
-                    )}
+                    <button
+                      onClick={() => setActiveReadingNote(res)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#EEF4FF] text-[#1D64EC] border border-blue-200/80 hover:bg-[#1D64EC] hover:text-white transition-all shadow-2xs group/btn cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Read Online</span>
+                    </button>
 
                     <button
                       onClick={(e) => handleDownload(res, e)}
@@ -312,6 +312,23 @@ export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
           </main>
         </div>
       </div>
+
+      {/* ── In-Platform Dedicated PDF Reader Modal ── */}
+      {activeReadingNote && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-6xl h-[94vh] flex flex-col rounded-3xl overflow-hidden shadow-2xl">
+            <PdfViewer
+              url={(activeReadingNote as any).storagePath || null}
+              title={activeReadingNote.title}
+              domainName={domain.name}
+              domainSlug={domain.slug}
+              totalPages={activeReadingNote.pages || 1}
+              downloadFileName={activeReadingNote.downloadFileName || `${activeReadingNote.title}.pdf`}
+              onBack={() => setActiveReadingNote(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

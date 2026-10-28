@@ -138,23 +138,66 @@ function PdfUploadArea({
       setError("Only PDF files are accepted.");
       return;
     }
-    if (file.size > 15 * 1024 * 1024) {
-      setError("File exceeds 15 MB direct upload limit. Use the 'Paste Link' tab for larger files.");
+    if (file.size > 50 * 1024 * 1024) {
+      setError("File exceeds 50 MB limit. Please select a smaller PDF or use 'Paste PDF Link'.");
       return;
     }
     setUploading(true);
-    setProgress(20);
-    const fd = new FormData();
-    fd.append("file", file);
+    setProgress(5);
+
     try {
-      setProgress(40);
-      const res = await fetch("/api/admin/notes/upload", { method: "POST", body: fd });
-      setProgress(85);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
-      onChange({ url: data.url, name: data.filename, size: data.size });
-      setProgress(100);
+      const CHUNK_SIZE = 2 * 1024 * 1024; // 2 MB slices - safely under Vercel's 4.5 MB serverless limit
+      const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
+      const uploadId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `up_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+      let resultData: any = null;
+
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        const chunkBlob = file.slice(start, end);
+
+        const fd = new FormData();
+        fd.append("file", chunkBlob, file.name);
+        fd.append("uploadId", uploadId);
+        fd.append("chunkIndex", i.toString());
+        fd.append("totalChunks", totalChunks.toString());
+        fd.append("filename", file.name);
+        fd.append("mimeType", file.type || "application/pdf");
+
+        const res = await fetch("/api/admin/notes/upload", {
+          method: "POST",
+          body: fd,
+        });
+
+        // Safe response parsing: handle non-JSON or HTML error responses cleanly
+        const text = await res.text();
+        let json: any = {};
+        try {
+          json = JSON.parse(text);
+        } catch {
+          throw new Error(text.length < 150 ? text : `Upload failed with HTTP ${res.status}`);
+        }
+
+        if (!res.ok) {
+          throw new Error(json.error || `Upload error on part ${i + 1}/${totalChunks}`);
+        }
+
+        const pct = Math.round(((i + 1) / totalChunks) * 100);
+        setProgress(pct);
+
+        if (json.complete) {
+          resultData = json;
+        }
+      }
+
+      if (resultData) {
+        onChange({ url: resultData.url, name: resultData.filename, size: resultData.size });
+      } else {
+        throw new Error("Upload completed without receiving file URL");
+      }
     } catch (e: any) {
+      console.error("Upload error:", e);
       setError(e.message || "Upload failed");
     } finally {
       setUploading(false);

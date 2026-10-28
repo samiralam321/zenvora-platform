@@ -255,6 +255,17 @@ model NoteFile {
   createdAt DateTime @default(now())
 }
 
+model NoteUploadChunk {
+  id          String   @id @default(cuid())
+  uploadId    String
+  chunkIndex  Int
+  totalChunks Int
+  data        Bytes
+  createdAt   DateTime @default(now())
+
+  @@index([uploadId])
+}
+
 model SyncLog {
   id           String   @id @default(cuid())
   startedAt    DateTime @default(now())
