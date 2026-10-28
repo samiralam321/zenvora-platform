@@ -84,7 +84,7 @@ export default async function NotesPage() {
         navItems={navItems.length > 0 ? navItems : undefined}
       />
 
-      <main className="flex-1 pt-16">
+      <main className="flex-1">
         <NotesLandingClient dbDomains={dbDomains.length > 0 ? dbDomains : undefined} />
       </main>
 
