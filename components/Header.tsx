@@ -21,6 +21,7 @@ export default function Header({
     { label: "Lectures", url: "/watch-tutorials", isButton: false },
     { label: "Developer Tools", url: "/recommended-tools", isButton: false },
     { label: "Opportunities", url: "/opportunities", isButton: false },
+    { label: "Notes", url: "/notes", isButton: false },
     { label: "Start Learning", url: "/opportunities", isButton: true },
   ],
 }: HeaderProps) {
@@ -112,7 +113,11 @@ export default function Header({
             <nav className="hidden md:flex items-center gap-6 lg:gap-8">
               {regularLinks.map((item) => {
                 const isExternal = item.url.startsWith("http");
-                const isActive = pathname === item.url;
+                const isActive =
+                  pathname === item.url ||
+                  (!item.url.startsWith("/#") &&
+                    item.url !== "/" &&
+                    pathname.startsWith(item.url + "/"));
                 return (
                   <Link
                     key={item.label}
@@ -175,7 +180,11 @@ export default function Header({
             <nav className="flex flex-col space-y-4">
               {regularLinks.map((item) => {
                 const isExternal = item.url.startsWith("http");
-                const isActive = pathname === item.url;
+                const isActive =
+                  pathname === item.url ||
+                  (!item.url.startsWith("/#") &&
+                    item.url !== "/" &&
+                    pathname.startsWith(item.url + "/"));
                 return (
                   <Link
                     key={item.label}
