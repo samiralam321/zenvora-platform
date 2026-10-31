@@ -10,6 +10,14 @@ export interface Track {
 export const STUDY_TRACKS: Track[] = [
   // ── Ambient & Nature ──
   {
+    id: "healing-sufi-rumi",
+    title: "Come Closer to the Divine",
+    artist: "Roni Healing Music (Sufi · Rumi)",
+    category: "Ambient & Nature",
+    youtubeId: "fv0rXRM3LGA",
+    icon: "🕌",
+  },
+  {
     id: "relaxing-rain-sound",
     title: "Relaxing Rain Sound",
     artist: "Ambient Nature Sounds",
