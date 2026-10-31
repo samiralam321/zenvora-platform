@@ -84,13 +84,14 @@ export default function PdfViewer({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pdfDocRef = useRef<any>(null);
   const renderTaskRef = useRef<any>(null);
+  const pageAnnotationsRef = useRef<any[]>([]);
 
   // Sync input box with active page
   useEffect(() => {
     setInputPage(currentPage.toString());
   }, [currentPage]);
 
-  // 1. Load PDF.js library & companion annotation stylesheet from Mozilla CDN once
+  // 1. Load PDF.js library, companion viewer helper & annotation stylesheet from Mozilla CDN once
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -102,7 +103,18 @@ export default function PdfViewer({
       document.head.appendChild(link);
     }
 
+    const loadViewerHelperScript = () => {
+      if (!document.getElementById("pdfjs-viewer-js")) {
+        const vScript = document.createElement("script");
+        vScript.id = "pdfjs-viewer-js";
+        vScript.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.js";
+        vScript.async = true;
+        document.head.appendChild(vScript);
+      }
+    };
+
     if ((window as any).pdfjsLib) {
+      loadViewerHelperScript();
       setPdfLibReady(true);
       return;
     }
@@ -115,6 +127,7 @@ export default function PdfViewer({
       if (pdfjsLib) {
         pdfjsLib.GlobalWorkerOptions.workerSrc =
           "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        loadViewerHelperScript();
         setPdfLibReady(true);
       }
     };
@@ -170,6 +183,78 @@ export default function PdfViewer({
     loadDocument();
   }, [loadDocument]);
 
+  // Robust destination navigation resolver (handles strings, refs, arrays, direct page numbers)
+  const navigateToDestination = useCallback(
+    async (dest: any) => {
+      try {
+        const pdf = pdfDocRef.current;
+        if (!pdf || !dest) return;
+
+        let explicitDest = dest;
+        // 1. Resolve if dest is a thenable/promise
+        if (explicitDest && typeof explicitDest.then === "function") {
+          explicitDest = await explicitDest;
+        }
+
+        // 2. Resolve named destination string (e.g., "page.4" or "section-2")
+        if (typeof explicitDest === "string") {
+          explicitDest = await pdf.getDestination(explicitDest);
+        }
+        if (explicitDest && typeof explicitDest.then === "function") {
+          explicitDest = await explicitDest;
+        }
+        if (typeof explicitDest === "string") {
+          explicitDest = await pdf.getDestination(explicitDest);
+        }
+
+        // 3. Resolve explicit destination array [ pageRefOrNum, { name: "XYZ" }, ... ]
+        if (Array.isArray(explicitDest) && explicitDest.length > 0) {
+          const destRef = explicitDest[0];
+          // PDF object ref e.g. { num: 15, gen: 0 }
+          if (destRef && typeof destRef === "object") {
+            const pageIndex = await pdf.getPageIndex(destRef);
+            if (typeof pageIndex === "number" && !isNaN(pageIndex) && pageIndex >= 0) {
+              const targetPage = pageIndex + 1;
+              if (targetPage >= 1 && targetPage <= numPages) {
+                setCurrentPage(targetPage);
+                scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                return;
+              }
+            }
+          } else if (Number.isInteger(destRef)) {
+            // In PDF explicit dest arrays, an integer pageRef is 0-based page index
+            const targetPage = destRef + 1;
+            if (targetPage >= 1 && targetPage <= numPages) {
+              setCurrentPage(targetPage);
+              scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+              return;
+            }
+          }
+        }
+
+        // 4. Resolve direct number
+        if (typeof dest === "number" && dest >= 1 && dest <= numPages) {
+          setCurrentPage(dest);
+          scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+
+        // 5. Resolve object with pageNumber property
+        if (dest && typeof dest === "object" && typeof dest.pageNumber === "number") {
+          const p = dest.pageNumber;
+          if (p >= 1 && p <= numPages) {
+            setCurrentPage(p);
+            scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("PDF link navigation failed:", err);
+      }
+    },
+    [numPages]
+  );
+
   // 3. Render active page to Canvas with HiDPI and AnnotationLayer
   const renderPage = useCallback(
     async (pageNum: number) => {
@@ -215,45 +300,69 @@ export default function PdfViewer({
           annotDiv.innerHTML = "";
           annotDiv.style.width = `${Math.floor(viewport.width)}px`;
           annotDiv.style.height = `${Math.floor(viewport.height)}px`;
+          annotDiv.style.setProperty("--scale-factor", viewport.scale.toString());
+          annotDiv.style.setProperty("--scale-round-x", "1px");
+          annotDiv.style.setProperty("--scale-round-y", "1px");
+
+          const wrapper = annotDiv.parentElement;
+          if (wrapper) {
+            wrapper.style.width = `${Math.floor(viewport.width)}px`;
+            wrapper.style.height = `${Math.floor(viewport.height)}px`;
+            wrapper.style.setProperty("--scale-factor", viewport.scale.toString());
+          }
 
           try {
             const annotations = await page.getAnnotations({ intent: "display" });
+            pageAnnotationsRef.current = annotations || [];
             const pdfjs = (window as any).pdfjsLib;
 
             if (annotations && annotations.length > 0 && pdfjs?.AnnotationLayer) {
-              const linkService = {
+              // Full-featured custom PDF link service
+              const linkService: any = {
+                get pagesCount() {
+                  return numPages;
+                },
+                get page() {
+                  return currentPage;
+                },
+                set page(val: number) {
+                  if (typeof val === "number" && val >= 1 && val <= numPages) {
+                    setCurrentPage(val);
+                    scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                },
+                get rotation() {
+                  return rotation;
+                },
                 getDestinationHash: (dest: any) => "#",
                 getAnchorUrl: (hash: string) => hash || "#",
                 setHash: (hash: string) => {},
                 executeNamedAction: (action: string) => {
-                  if (action === "NextPage") setCurrentPage((p) => Math.min(p + 1, numPages));
-                  else if (action === "PrevPage") setCurrentPage((p) => Math.max(p - 1, 1));
-                  else if (action === "FirstPage") setCurrentPage(1);
-                  else if (action === "LastPage") setCurrentPage(numPages);
-                },
-                navigateTo: async (dest: any) => {
-                  try {
-                    let destArray = dest;
-                    if (typeof dest === "string") {
-                      destArray = await pdfDocRef.current?.getDestination(dest);
-                    }
-                    if (Array.isArray(destArray) && destArray[0]) {
-                      const pageIndex = await pdfDocRef.current?.getPageIndex(destArray[0]);
-                      if (typeof pageIndex === "number" && !isNaN(pageIndex)) {
-                        setCurrentPage(pageIndex + 1);
-                        return;
-                      }
-                    }
-                    if (typeof dest === "number" && dest >= 1 && dest <= numPages) {
-                      setCurrentPage(dest);
-                    }
-                  } catch (e) {
-                    console.warn("PDF link navigation failed:", e);
+                  if (action === "NextPage") {
+                    setCurrentPage((p) => Math.min(p + 1, numPages));
+                    scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                  } else if (action === "PrevPage") {
+                    setCurrentPage((p) => Math.max(p - 1, 1));
+                    scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                  } else if (action === "FirstPage") {
+                    setCurrentPage(1);
+                    scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                  } else if (action === "LastPage") {
+                    setCurrentPage(numPages);
+                    scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
                   }
                 },
+                goToDestination: async (dest: any) => {
+                  await navigateToDestination(dest);
+                },
+                navigateTo: async (dest: any) => {
+                  await navigateToDestination(dest);
+                },
                 goToPage: (val: any) => {
-                  if (typeof val === "number" && val >= 1 && val <= numPages) {
-                    setCurrentPage(val);
+                  const p = parseInt(val);
+                  if (!isNaN(p) && p >= 1 && p <= numPages) {
+                    setCurrentPage(p);
+                    scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
                   }
                 },
                 addLinkAttributes: (
@@ -269,6 +378,40 @@ export default function PdfViewer({
                 },
               };
 
+              // If official PDFLinkService from pdf_viewer is ready, enhance it
+              const pdfjsViewer = (window as any).pdfjsViewer;
+              let effectiveLinkService: any = linkService;
+              if (pdfjsViewer && typeof pdfjsViewer.PDFLinkService === "function") {
+                try {
+                  const official = new pdfjsViewer.PDFLinkService();
+                  official.setDocument(pdfDocRef.current);
+                  official.setViewer({
+                    currentPageNumber: currentPage,
+                    pagesRotation: rotation,
+                    scrollPageIntoView: (params: any) => {
+                      if (params && typeof params.pageNumber === "number") {
+                        setCurrentPage(params.pageNumber);
+                        scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                      }
+                    },
+                    nextPage: () => {
+                      setCurrentPage((p) => Math.min(p + 1, numPages));
+                      scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                    },
+                    previousPage: () => {
+                      setCurrentPage((p) => Math.max(p - 1, 1));
+                      scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                    },
+                  });
+                  official.goToDestination = async (dest: any) => {
+                    await navigateToDestination(dest);
+                  };
+                  effectiveLinkService = official;
+                } catch (e) {
+                  // Fall back cleanly to linkService
+                }
+              }
+
               const annotLayer = new pdfjs.AnnotationLayer({
                 div: annotDiv,
                 page: page,
@@ -277,10 +420,14 @@ export default function PdfViewer({
 
               await annotLayer.render({
                 annotations,
-                linkService,
+                linkService: effectiveLinkService,
                 renderForms: true,
                 imageResourcesPath: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/images/",
               });
+
+              // Guarantee dimensions and position post-render
+              annotDiv.style.width = `${Math.floor(viewport.width)}px`;
+              annotDiv.style.height = `${Math.floor(viewport.height)}px`;
             }
           } catch (annotErr) {
             console.warn("Annotation layer render warning:", annotErr);
@@ -294,7 +441,7 @@ export default function PdfViewer({
         setPageRendering(false);
       }
     },
-    [scale, rotation, numPages]
+    [scale, rotation, numPages, currentPage, navigateToDestination]
   );
 
   useEffect(() => {
@@ -481,27 +628,84 @@ export default function PdfViewer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isFullscreen, sidebarMode, currentPage, numPages]);
 
-  // Bookmark / TOC jump handler
-  const handleJumpToDest = async (dest: any) => {
-    if (!dest) return;
-    try {
-      let destArray = dest;
-      if (typeof dest === "string") {
-        destArray = await pdfDocRef.current?.getDestination(dest);
-      }
-      if (Array.isArray(destArray) && destArray[0]) {
-        const pageIndex = await pdfDocRef.current?.getPageIndex(destArray[0]);
-        if (typeof pageIndex === "number" && !isNaN(pageIndex)) {
-          setCurrentPage(pageIndex + 1);
+  // Delegated click handler on the annotation layer container to capture internal link clicks
+  const handleAnnotationLayerClick = async (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (!target) return;
+
+    // Check if target is an anchor or inside an anchor
+    const anchor = target.closest("a");
+    const section = target.closest("section");
+
+    // If external link with http(s), allow normal browser navigation
+    if (
+      anchor &&
+      anchor.href &&
+      !anchor.href.endsWith("#") &&
+      !anchor.href.startsWith("javascript:") &&
+      (anchor.href.startsWith("http://") ||
+        anchor.href.startsWith("https://") ||
+        anchor.href.startsWith("mailto:"))
+    ) {
+      return;
+    }
+
+    // Prevent default '#' page jumping
+    e.preventDefault();
+
+    const annotId =
+      target.getAttribute("data-element-id") ||
+      anchor?.getAttribute("data-element-id") ||
+      section?.getAttribute("data-annotation-id");
+
+    if (annotId && pageAnnotationsRef.current && pageAnnotationsRef.current.length > 0) {
+      const annot = pageAnnotationsRef.current.find((a: any) => a.id === annotId);
+      if (annot) {
+        if (annot.dest) {
+          await navigateToDestination(annot.dest);
+          return;
+        }
+        if (annot.action) {
+          if (annot.action === "NextPage") {
+            setCurrentPage((p) => Math.min(p + 1, numPages));
+            scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+          } else if (annot.action === "PrevPage") {
+            setCurrentPage((p) => Math.max(p - 1, 1));
+            scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+          } else if (annot.action === "FirstPage") {
+            setCurrentPage(1);
+            scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+          } else if (annot.action === "LastPage") {
+            setCurrentPage(numPages);
+            scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+          }
           return;
         }
       }
-      if (typeof dest === "number" && dest >= 1 && dest <= numPages) {
-        setCurrentPage(dest);
-      }
-    } catch (e) {
-      console.warn("Destination jump failed:", e);
     }
+
+    // Check anchor href hash
+    const href = anchor?.getAttribute("href");
+    if (href && href !== "#") {
+      const hash = href.replace(/^#/, "");
+      if (hash.startsWith("page=")) {
+        const p = parseInt(hash.replace("page=", ""));
+        if (!isNaN(p) && p >= 1 && p <= numPages) {
+          setCurrentPage(p);
+          scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+      } else {
+        await navigateToDestination(hash);
+        return;
+      }
+    }
+  };
+
+  // Bookmark / TOC jump handler
+  const handleJumpToDest = async (dest: any) => {
+    if (!dest) return;
+    await navigateToDestination(dest);
   };
 
   return (
@@ -887,7 +1091,7 @@ export default function PdfViewer({
         {/* ── Scrollable Document Container (ONLY this scrolls!) ── */}
         <div
           ref={scrollContainerRef}
-          className={`flex-1 w-full h-full overflow-y-auto overflow-x-auto overscroll-contain flex items-start justify-center p-3 sm:p-6 transition-all ${
+          className={`flex-1 w-full h-full overflow-y-auto overflow-x-auto overscroll-contain flex items-start justify-center p-3 sm:p-6 pb-28 sm:pb-32 transition-all ${
             isFullscreen ? "bg-slate-950" : "bg-transparent"
           }`}
         >
@@ -953,6 +1157,7 @@ export default function PdfViewer({
                 <canvas ref={canvasRef} className="block select-none" />
                 <div
                   ref={annotationLayerRef}
+                  onClick={handleAnnotationLayerClick}
                   className="annotationLayer absolute inset-0 pointer-events-auto"
                 />
               </div>
@@ -1130,18 +1335,30 @@ export default function PdfViewer({
           bottom: 0;
           pointer-events: none;
           transform-origin: 0 0;
+          z-index: 10;
         }
-        .annotationLayer section {
+        .annotationLayer section,
+        .annotationLayer [data-internal-link],
+        .annotationLayer .linkAnnotation,
+        .annotationLayer .buttonWidgetAnnotation {
           position: absolute;
           text-align: initial;
-          pointer-events: auto;
+          pointer-events: auto !important;
           box-sizing: border-box;
           transform-origin: 0 0;
+          cursor: pointer !important;
+        }
+        .annotationLayer a,
+        .annotationLayer button,
+        .annotationLayer input {
+          pointer-events: auto !important;
+          cursor: pointer !important;
         }
         .annotationLayer .linkAnnotation > a,
         .annotationLayer .buttonWidgetAnnotation > a,
         .annotationLayer .buttonWidgetAnnotation > button,
-        .annotationLayer .buttonWidgetAnnotation > input {
+        .annotationLayer .buttonWidgetAnnotation > input,
+        .annotationLayer [data-internal-link] > a {
           position: absolute;
           top: 0;
           left: 0;
@@ -1151,13 +1368,15 @@ export default function PdfViewer({
           pointer-events: auto !important;
           background-color: transparent;
           border-radius: 4px;
+          display: block !important;
           transition: background-color 0.15s ease, outline 0.15s ease;
         }
         .annotationLayer .linkAnnotation > a:hover,
         .annotationLayer .buttonWidgetAnnotation > a:hover,
-        .annotationLayer .buttonWidgetAnnotation > button:hover {
+        .annotationLayer .buttonWidgetAnnotation > button:hover,
+        .annotationLayer [data-internal-link] > a:hover {
           background-color: rgba(29, 100, 236, 0.18) !important;
-          outline: 1.5px solid rgba(29, 100, 236, 0.5) !important;
+          outline: 2px solid rgba(29, 100, 236, 0.6) !important;
         }
         .custom-scroll::-webkit-scrollbar {
           width: 5px;
