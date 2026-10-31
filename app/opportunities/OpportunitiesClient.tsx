@@ -171,6 +171,13 @@ export default function OpportunitiesClient({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const restoredRef = useRef(false);
 
+  // Refs for the separate-pill animation — pill is a standalone element, text never moves
+  const oppTabContainerRef = useRef<HTMLDivElement>(null);
+  const oppBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [oppPillStyle, setOppPillStyle] = useState<{
+    left: number; width: number; top: number; height: number;
+  } | null>(null);
+
   // Restore persisted state + scroll position on mount (client-only, after hydration)
   // Only restore scroll when navigating back from a detail page — not on fresh navbar clicks.
   useLayoutEffect(() => {
@@ -250,6 +257,18 @@ export default function OpportunitiesClient({
     return () => window.removeEventListener("scroll", onScroll);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory, searchQuery, academicYearFilter, genderFilter, participationFilter, difficultyFilter, availabilityFilter, showHistorical, filtersOpen]);
+
+  // ── Pill measurement — measure the active tab button to position the sliding pill ──
+  useEffect(() => {
+    const el = oppBtnRefs.current.get(activeCategory);
+    if (!el) return;
+    setOppPillStyle({
+      left: el.offsetLeft,
+      width: el.offsetWidth,
+      top: el.offsetTop,
+      height: el.offsetHeight,
+    });
+  }, [activeCategory]);
 
   // ── Derived Stats ─────────────────────────────────────────────────────────
   const stats = useMemo(() => {
@@ -407,15 +426,34 @@ export default function OpportunitiesClient({
       {/* ── Category Tabs ───────────────────────────────────────────────────── */}
       <section className="bg-white border-b border-slate-100 sticky top-[68px] z-20 shadow-2xs">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-1 overflow-x-auto py-3 scrollbar-hide">
+          <div
+            ref={oppTabContainerRef}
+            className="relative flex items-center gap-1 overflow-x-auto py-3 scrollbar-hide"
+          >
+            {/* Standalone sliding pill — only this element moves; icons and text never transform */}
+            {oppPillStyle && (
+              <motion.div
+                className="absolute bg-[#1D64EC] rounded-xl shadow-sm pointer-events-none"
+                initial={false}
+                animate={{
+                  left: oppPillStyle.left,
+                  top: oppPillStyle.top,
+                  width: oppPillStyle.width,
+                  height: oppPillStyle.height,
+                }}
+                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                style={{ zIndex: 0 }}
+              />
+            )}
+
             {CATEGORIES.map(({ key, label, icon: Icon }) => {
-              // Ambassador tab links to its dedicated page — no pill needed
+              // Ambassador tab links to its dedicated page — not part of the pill system
               if (key === "Campus Ambassador Programs") {
                 return (
                   <Link
                     key={key}
                     href="/opportunities/campus-ambassador-programs"
-                    className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors text-slate-600 hover:text-violet-700"
+                    className="relative z-10 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap text-slate-600 hover:text-violet-700"
                   >
                     <Icon className="w-4 h-4" />
                     {label}
@@ -426,18 +464,15 @@ export default function OpportunitiesClient({
               return (
                 <button
                   key={key}
+                  ref={(el) => {
+                    if (el) oppBtnRefs.current.set(key, el);
+                    else oppBtnRefs.current.delete(key);
+                  }}
                   onClick={() => setActiveCategory(key)}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors z-10 ${
+                  className={`relative z-10 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap ${
                     isActive ? "text-white" : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
-                  {isActive && (
-                    <motion.span
-                      layoutId="opp-active-pill"
-                      className="absolute inset-0 bg-[#1D64EC] rounded-xl shadow-sm z-[-1]"
-                      transition={{ type: "spring", stiffness: 400, damping: 38 }}
-                    />
-                  )}
                   <Icon className="w-4 h-4" />
                   {label}
                 </button>

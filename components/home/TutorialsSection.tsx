@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Youtube, Plus, Folder, Tv, ArrowRight, Play, Film, ExternalLink } from "lucide-react";
@@ -57,6 +57,14 @@ export default function TutorialsSection({
 
   const [activeDomain, setActiveDomain] = useState<string>("all");
 
+  // Refs for the separate-pill animation (pill is a standalone element, text never moves)
+  const tabContainerRef = useRef<HTMLDivElement>(null);
+  const allBtnRef = useRef<HTMLButtonElement>(null);
+  const domBtnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [pillStyle, setPillStyle] = useState<{
+    left: number; width: number; top: number; height: number;
+  } | null>(null);
+
   // Determine available domains
   const availableDomains = useMemo(() => {
     if (categories.length > 0) return categories;
@@ -82,6 +90,24 @@ export default function TutorialsSection({
   }, [videos, activeDomain]);
 
   const totalItemCount = videos.length;
+
+  // Measure active button to position the sliding pill independently of text
+  useEffect(() => {
+    let el: HTMLButtonElement | null = null;
+    if (activeDomain === "all") {
+      el = allBtnRef.current;
+    } else {
+      const idx = availableDomains.findIndex((d) => d.slug === activeDomain);
+      el = idx >= 0 ? (domBtnRefs.current[idx] ?? null) : null;
+    }
+    if (!el) return;
+    setPillStyle({
+      left: el.offsetLeft,
+      width: el.offsetWidth,
+      top: el.offsetTop,
+      height: el.offsetHeight,
+    });
+  }, [activeDomain, availableDomains]);
 
   return (
     <section id="lectures" className="py-16 sm:py-20 bg-white">
@@ -113,46 +139,49 @@ export default function TutorialsSection({
 
         {/* Domain Filter Tabs — Animated Sliding Pill */}
         {availableDomains.length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-4 mb-10 scrollbar-hide border-b border-slate-100">
-            {/* All Domains pill */}
+          <div
+            ref={tabContainerRef}
+            className="relative flex items-center gap-1.5 overflow-x-auto pb-4 mb-10 scrollbar-hide border-b border-slate-100"
+          >
+            {/* Standalone pill — ONLY this element moves; text buttons are never transformed */}
+            {pillStyle && (
+              <motion.div
+                className="absolute bg-[#1D64EC] rounded-xl shadow-xs pointer-events-none"
+                initial={false}
+                animate={{
+                  left: pillStyle.left,
+                  top: pillStyle.top,
+                  width: pillStyle.width,
+                  height: pillStyle.height,
+                }}
+                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                style={{ zIndex: 0 }}
+              />
+            )}
+
+            {/* All Domains button — completely stationary, z-index above pill */}
             <button
+              ref={allBtnRef}
               onClick={() => setActiveDomain("all")}
-              className={`relative shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-colors z-10 ${
-                activeDomain === "all"
-                  ? "text-white"
-                  : "text-slate-700 hover:text-slate-900"
+              className={`relative z-10 shrink-0 px-4 py-2 rounded-xl text-xs font-bold ${
+                activeDomain === "all" ? "text-white" : "text-slate-700 hover:text-slate-900"
               }`}
             >
-              {activeDomain === "all" && (
-                <motion.span
-                  layoutId="active-pill"
-                  className="absolute inset-0 bg-[#1D64EC] rounded-xl shadow-xs z-[-1]"
-                  transition={{ type: "spring", stiffness: 400, damping: 38 }}
-                />
-              )}
               All Domains ({totalItemCount})
             </button>
 
-            {availableDomains.map((dom) => {
+            {availableDomains.map((dom, idx) => {
               const domVideoCount = videos.filter((v) => v.category?.slug === dom.slug).length;
               const isActive = activeDomain === dom.slug;
               return (
                 <button
                   key={dom.slug}
+                  ref={(el) => { domBtnRefs.current[idx] = el; }}
                   onClick={() => setActiveDomain(dom.slug)}
-                  className={`relative shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-colors z-10 ${
-                    isActive
-                      ? "text-white"
-                      : "text-slate-700 hover:text-slate-900"
+                  className={`relative z-10 shrink-0 px-4 py-2 rounded-xl text-xs font-bold ${
+                    isActive ? "text-white" : "text-slate-700 hover:text-slate-900"
                   }`}
                 >
-                  {isActive && (
-                    <motion.span
-                      layoutId="active-pill"
-                      className="absolute inset-0 bg-[#1D64EC] rounded-xl shadow-xs z-[-1]"
-                      transition={{ type: "spring", stiffness: 400, damping: 38 }}
-                    />
-                  )}
                   {dom.name} ({domVideoCount})
                 </button>
               );
