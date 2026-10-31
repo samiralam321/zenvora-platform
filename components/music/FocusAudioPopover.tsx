@@ -49,7 +49,11 @@ export default function FocusAudioPopover({
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      className={`w-[310px] sm:w-[340px] bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 shadow-2xl shadow-black/60 rounded-2xl p-4 text-slate-100 flex flex-col gap-3.5 animate-in fade-in zoom-in-95 duration-200 select-none ${className}`}
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      data-lenis-prevent="true"
+      data-lenis-prevent-touch="true"
+      className={`w-[310px] sm:w-[340px] bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 shadow-2xl shadow-black/60 rounded-2xl p-4 text-slate-100 flex flex-col gap-3.5 animate-in fade-in zoom-in-95 duration-200 ${className}`}
     >
       {/* ── Top Header ── */}
       <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
@@ -83,7 +87,15 @@ export default function FocusAudioPopover({
       </div>
 
       {/* ── Mood Filter Chips ── */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scroll text-[11px] font-semibold">
+      <div
+        data-lenis-prevent="true"
+        data-lenis-prevent-touch="true"
+        style={{
+          WebkitOverflowScrolling: "touch",
+          touchAction: "pan-x",
+        }}
+        className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scroll text-[11px] font-semibold overscroll-contain"
+      >
         {MUSIC_CATEGORIES.map((cat) => {
           const isActive = activeCategory === cat;
           let label: string = cat;
@@ -221,20 +233,32 @@ export default function FocusAudioPopover({
         </button>
 
         {showTracklist && (
-          <div className="mt-1.5 max-h-48 overflow-y-auto space-y-1 custom-scroll pr-1">
+          <div
+            data-lenis-prevent="true"
+            data-lenis-prevent-touch="true"
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            className="mt-1.5 max-h-56 overflow-y-auto space-y-1 custom-scroll pr-1 overscroll-contain"
+            style={{
+              WebkitOverflowScrolling: "touch",
+              touchAction: "pan-y",
+              overscrollBehavior: "contain",
+            }}
+          >
             {filteredTracks.map((t) => {
               const isSelected = t.id === currentTrack.id;
               return (
                 <button
                   key={t.id}
                   onClick={() => playTrackById(t.id)}
-                  className={`w-full flex items-center justify-between text-left p-2 rounded-lg text-xs transition ${
+                  style={{ touchAction: "pan-y" }}
+                  className={`w-full flex items-center justify-between text-left p-2 rounded-lg text-xs transition active:scale-[0.99] select-none ${
                     isSelected
                       ? "bg-blue-950/80 text-white font-bold border border-blue-700/50"
                       : "text-slate-300 hover:bg-slate-800/60"
                   }`}
                 >
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 pointer-events-none">
                     <span className="text-sm shrink-0">{t.icon}</span>
                     <div className="min-w-0">
                       <p className="truncate text-[11px]">{t.title}</p>
@@ -242,7 +266,7 @@ export default function FocusAudioPopover({
                     </div>
                   </div>
                   {isSelected && (
-                    <span className="text-[10px] text-blue-400 font-mono flex items-center gap-0.5 shrink-0">
+                    <span className="text-[10px] text-blue-400 font-mono flex items-center gap-0.5 shrink-0 pointer-events-none">
                       <Check className="w-3 h-3 text-[#1D64EC]" />
                     </span>
                   )}

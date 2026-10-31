@@ -1389,7 +1389,13 @@ export default function PdfViewer({
 
       {/* ── Focus Audio Popover (Positioned neatly above floating bottom toolbar) ── */}
       {isMusicPopoverOpen && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
+        <div
+          data-lenis-prevent="true"
+          data-lenis-prevent-touch="true"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+          className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 max-h-[80vh] flex flex-col"
+        >
           <FocusAudioPopover onClose={() => setMusicPopoverOpen(false)} />
         </div>
       )}
