@@ -15,6 +15,7 @@ import {
   Loader2,
   Globe,
   Heart,
+  Landmark,
   User,
   Users,
   ShieldCheck,
@@ -25,6 +26,8 @@ import {
   AlertCircle,
   Clock,
   IndianRupee,
+  RefreshCw,
+  Check,
 } from "lucide-react";
 
 interface Scholarship {
@@ -67,7 +70,10 @@ interface Scholarship {
   applicationUrl: string | null;
   notificationUrl: string | null;
   lastVerified: string | null;
+  verificationStatus?: string | null;
+  verificationNotes?: string | null;
 
+  isNational?: boolean;
   isVerified: boolean;
   isFeatured: boolean;
   isPublished: boolean;
@@ -81,6 +87,11 @@ export default function AdminScholarshipsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterGender, setFilterGender] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+
+  // Link verification state
+  const [verifyingAll, setVerifyingAll] = useState(false);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [verificationBanner, setVerificationBanner] = useState<string | null>(null);
 
   // Modal State
   const [modalOpen, setModalOpen] = useState(false);
@@ -99,6 +110,7 @@ export default function AdminScholarshipsPage() {
     organization: "",
     organizationType: "Indian Private Company",
     country: "India",
+    isNational: true,
     logoUrl: "",
     description: "",
 
@@ -127,6 +139,8 @@ export default function AdminScholarshipsPage() {
     officialUrl: "",
     applicationUrl: "",
     notificationUrl: "",
+    verificationStatus: "verified",
+    verificationNotes: "",
 
     isVerified: true,
     isFeatured: false,
@@ -153,6 +167,49 @@ export default function AdminScholarshipsPage() {
     fetchScholarships();
   }, []);
 
+  const handleVerifyAllLinks = async () => {
+    try {
+      setVerifyingAll(true);
+      setVerificationBanner(null);
+      const res = await fetch("/api/admin/scholarships/verify-links", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setVerificationBanner(
+          `Link Verification Complete: Checked ${data.totalChecked} scholarships (${data.verifiedCount} active, ${data.brokenCount} broken).`
+        );
+        fetchScholarships();
+      } else {
+        setVerificationBanner(`Verification failed: ${data.error || "Unknown error"}`);
+      }
+    } catch (e: any) {
+      setVerificationBanner(`Verification failed: ${e.message}`);
+    } finally {
+      setVerifyingAll(false);
+    }
+  };
+
+  const handleVerifySingleLink = async (id: string) => {
+    try {
+      setVerifyingId(id);
+      const res = await fetch("/api/admin/scholarships/verify-links", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        fetchScholarships();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setVerifyingId(null);
+    }
+  };
+
   const openCreateModal = () => {
     setEditingId(null);
     setFormData({
@@ -161,6 +218,7 @@ export default function AdminScholarshipsPage() {
       organization: "",
       organizationType: "Indian Private Company",
       country: "India",
+      isNational: true,
       logoUrl: "",
       description: "",
 
@@ -189,6 +247,8 @@ export default function AdminScholarshipsPage() {
       officialUrl: "",
       applicationUrl: "",
       notificationUrl: "",
+      verificationStatus: "verified",
+      verificationNotes: "",
 
       isVerified: true,
       isFeatured: false,
@@ -222,6 +282,7 @@ export default function AdminScholarshipsPage() {
       organization: s.organization,
       organizationType: s.organizationType || "Indian Private Company",
       country: s.country || "India",
+      isNational: s.isNational !== undefined ? s.isNational : true,
       logoUrl: s.logoUrl || "",
       description: s.description,
 
@@ -250,6 +311,8 @@ export default function AdminScholarshipsPage() {
       officialUrl: s.officialUrl || "",
       applicationUrl: s.applicationUrl || "",
       notificationUrl: s.notificationUrl || "",
+      verificationStatus: s.verificationStatus || "verified",
+      verificationNotes: s.verificationNotes || "",
 
       isVerified: s.isVerified,
       isFeatured: s.isFeatured,
@@ -295,6 +358,7 @@ export default function AdminScholarshipsPage() {
         organization: formData.organization.trim(),
         organizationType: formData.organizationType,
         country: formData.country,
+        isNational: formData.isNational,
         logoUrl: formData.logoUrl.trim() || null,
         description: formData.description.trim(),
 
@@ -323,6 +387,8 @@ export default function AdminScholarshipsPage() {
         officialUrl: formData.officialUrl.trim() || null,
         applicationUrl: formData.applicationUrl.trim() || null,
         notificationUrl: formData.notificationUrl.trim() || null,
+        verificationStatus: formData.verificationStatus,
+        verificationNotes: formData.verificationNotes.trim() || null,
 
         isVerified: formData.isVerified,
         isFeatured: formData.isFeatured,
@@ -412,38 +478,72 @@ export default function AdminScholarshipsPage() {
           </p>
         </div>
 
-        <button
-          onClick={openCreateModal}
-          className="inline-flex items-center gap-2 bg-[#1D64EC] hover:bg-[#1a56d4] text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl transition shadow-xs"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Scholarship</span>
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={handleVerifyAllLinks}
+            disabled={verifyingAll}
+            className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl transition shadow-2xs disabled:opacity-60"
+            title="Perform live HTTP checks on all scholarship links to detect 404s and broken URLs"
+          >
+            <RefreshCw className={`w-4 h-4 text-[#1D64EC] ${verifyingAll ? "animate-spin" : ""}`} />
+            <span>{verifyingAll ? "Checking Links..." : "Verify All Links"}</span>
+          </button>
+
+          <button
+            onClick={openCreateModal}
+            className="inline-flex items-center gap-2 bg-[#1D64EC] hover:bg-[#1a56d4] text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl transition shadow-xs"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Scholarship</span>
+          </button>
+        </div>
       </div>
 
+      {/* ── Link Verification Banner ── */}
+      {verificationBanner && (
+        <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 text-xs font-semibold flex items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#1D64EC] shrink-0" />
+            <span>{verificationBanner}</span>
+          </div>
+          <button
+            onClick={() => setVerificationBanner(null)}
+            className="text-blue-500 hover:text-blue-700 p-1"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* ── Stats Row ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
         <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
           <div className="text-2xl font-black text-slate-900">{scholarships.length}</div>
           <div className="text-xs font-semibold text-slate-500 mt-0.5">Total Scholarships</div>
         </div>
         <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
-          <div className="text-2xl font-black text-emerald-600">
-            {scholarships.filter((s) => s.isPublished).length}
-          </div>
-          <div className="text-xs font-semibold text-slate-500 mt-0.5">Published Live</div>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
           <div className="text-2xl font-black text-blue-600">
-            {scholarships.filter((s) => s.isVerified).length}
+            {scholarships.filter((s) => s.isNational).length}
           </div>
-          <div className="text-xs font-semibold text-slate-500 mt-0.5">Verified Badges</div>
+          <div className="text-xs font-semibold text-slate-500 mt-0.5">National Schemes</div>
         </div>
         <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
-          <div className="text-2xl font-black text-amber-600">
-            {scholarships.filter((s) => s.applicationStatus === "open").length}
+          <div className="text-2xl font-black text-purple-600">
+            {scholarships.filter((s) => !s.isNational).length}
           </div>
-          <div className="text-xs font-semibold text-slate-500 mt-0.5">Applications Open</div>
+          <div className="text-xs font-semibold text-slate-500 mt-0.5">International</div>
+        </div>
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
+          <div className="text-2xl font-black text-emerald-600">
+            {scholarships.filter((s) => s.verificationStatus === "verified").length}
+          </div>
+          <div className="text-xs font-semibold text-slate-500 mt-0.5">Verified Links</div>
+        </div>
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
+          <div className="text-2xl font-black text-rose-600">
+            {scholarships.filter((s) => s.verificationStatus === "broken").length}
+          </div>
+          <div className="text-xs font-semibold text-slate-500 mt-0.5">Broken Links</div>
         </div>
       </div>
 
@@ -468,8 +568,6 @@ export default function AdminScholarshipsPage() {
           >
             <option value="all">All Genders</option>
             <option value="girls">Girls Only</option>
-            <option value="boys">Boys Only</option>
-            <option value="all">Open to All</option>
           </select>
 
           <select
@@ -505,9 +603,10 @@ export default function AdminScholarshipsPage() {
               <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="py-3 px-4">Scholarship & Organization</th>
-                  <th className="py-3 px-4">Gender</th>
+                  <th className="py-3 px-4">Scope & Gender</th>
                   <th className="py-3 px-4">Amount</th>
                   <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Link Health</th>
                   <th className="py-3 px-4 text-center">Verified</th>
                   <th className="py-3 px-4 text-center">Featured</th>
                   <th className="py-3 px-4 text-center">Live</th>
@@ -527,22 +626,31 @@ export default function AdminScholarshipsPage() {
                     </td>
 
                     <td className="py-3.5 px-4 whitespace-nowrap">
-                      {s.genderEligibility === "girls" ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200">
-                          <Heart className="w-3 h-3 fill-pink-500" />
-                          Girls Only
-                        </span>
-                      ) : s.genderEligibility === "boys" ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                          <User className="w-3 h-3" />
-                          Boys Only
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                          <Users className="w-3 h-3" />
-                          Open to All
-                        </span>
-                      )}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {s.isNational ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#1D64EC] border border-blue-200">
+                            <Landmark className="w-3 h-3" />
+                            National
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                            <Globe className="w-3 h-3" />
+                            International
+                          </span>
+                        )}
+
+                        {s.genderEligibility === "girls" ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200">
+                            <Heart className="w-3 h-3 fill-pink-500" />
+                            Girls Only
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                            <Users className="w-3 h-3" />
+                            Open
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     <td className="py-3.5 px-4 whitespace-nowrap font-bold text-slate-800">
@@ -558,11 +666,43 @@ export default function AdminScholarshipsPage() {
                             ? "bg-sky-50 text-sky-700 border-sky-200"
                             : s.applicationStatus === "upcoming"
                             ? "bg-amber-50 text-amber-700 border-amber-200"
-                            : "bg-slate-100 text-slate-500 border-slate-200"
+                            : "bg-red-50 text-red-700 border-red-200"
                         }`}
                       >
                         {s.applicationStatus}
                       </span>
+                    </td>
+
+                    {/* Link Health */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {s.verificationStatus === "broken" ? (
+                        <span
+                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 cursor-help"
+                          title={s.verificationNotes || "Broken link"}
+                        >
+                          <AlertCircle className="w-3 h-3 text-rose-600" />
+                          Broken Link
+                        </span>
+                      ) : s.verificationStatus === "closed" ? (
+                        <span
+                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 cursor-help"
+                          title="Cycle closed / application link hidden"
+                        >
+                          Closed
+                        </span>
+                      ) : s.verificationStatus === "pending" ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                          Pending
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-help"
+                          title={s.verificationNotes || "Verified URL accessible"}
+                        >
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          Verified
+                        </span>
+                      )}
                     </td>
 
                     {/* Verified Toggle */}
@@ -607,6 +747,14 @@ export default function AdminScholarshipsPage() {
                     {/* Actions */}
                     <td className="py-3.5 px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => handleVerifySingleLink(s.id)}
+                          disabled={verifyingId === s.id}
+                          className="p-1.5 text-slate-400 hover:text-[#1D64EC] hover:bg-blue-50 rounded-lg transition"
+                          title="Verify URL accessibility now"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${verifyingId === s.id ? "animate-spin text-[#1D64EC]" : ""}`} />
+                        </button>
                         <Link
                           href={`/opportunities/scholarships/${s.slug}`}
                           target="_blank"
@@ -723,6 +871,26 @@ export default function AdminScholarshipsPage() {
                       className="w-full border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-[#1D64EC]"
                     />
                   </div>
+
+                  <div className="sm:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                    <label className="flex items-start gap-2.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.isNational}
+                        onChange={(e) => setFormData({ ...formData, isNational: e.target.checked })}
+                        className="w-4 h-4 rounded text-[#1D64EC] mt-0.5"
+                      />
+                      <div>
+                        <div className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                          <Landmark className="w-3.5 h-3.5 text-[#1D64EC]" />
+                          <span>National Level Scheme / Indian Organization</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-normal mt-0.5">
+                          Enable for Central/State Government scholarships, AICTE, UGC, or Indian corporate schemes (e.g. Reliance, Tata, Infosys). Uncheck for international or study abroad scholarships.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
                 </div>
 
                 <div>
@@ -753,7 +921,6 @@ export default function AdminScholarshipsPage() {
                     >
                       <option value="all">Open to All Students</option>
                       <option value="girls">Girls Only</option>
-                      <option value="boys">Boys Only</option>
                     </select>
                   </div>
 
@@ -931,7 +1098,19 @@ export default function AdminScholarshipsPage() {
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-700 mb-1">Official Website URL</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block font-bold text-slate-700">Official Website URL</label>
+                      {formData.officialUrl && (
+                        <button
+                          type="button"
+                          onClick={() => window.open(formData.officialUrl, "_blank")}
+                          className="text-[11px] font-semibold text-[#1D64EC] hover:underline flex items-center gap-1"
+                        >
+                          <span>Test Link</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="url"
                       value={formData.officialUrl}
@@ -942,12 +1121,49 @@ export default function AdminScholarshipsPage() {
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-700 mb-1">Official Application Portal URL</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block font-bold text-slate-700">Official Application Portal URL</label>
+                      {formData.applicationUrl && (
+                        <button
+                          type="button"
+                          onClick={() => window.open(formData.applicationUrl, "_blank")}
+                          className="text-[11px] font-semibold text-[#1D64EC] hover:underline flex items-center gap-1"
+                        >
+                          <span>Test Link</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="url"
                       value={formData.applicationUrl}
                       onChange={(e) => setFormData({ ...formData, applicationUrl: e.target.value })}
-                      placeholder="https://..."
+                      placeholder="https://... (leave blank if applications are closed)"
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-[#1D64EC]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Link Verification Status</label>
+                    <select
+                      value={formData.verificationStatus}
+                      onChange={(e) => setFormData({ ...formData, verificationStatus: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-white"
+                    >
+                      <option value="verified">Verified (Links Accessible & Active)</option>
+                      <option value="pending">Pending Verification</option>
+                      <option value="broken">Broken Link (404 / Connection Error)</option>
+                      <option value="closed">Closed Application Cycle</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Verification Audit Remarks</label>
+                    <input
+                      type="text"
+                      value={formData.verificationNotes}
+                      onChange={(e) => setFormData({ ...formData, verificationNotes: e.target.value })}
+                      placeholder="e.g. Official: 200 OK · Application: 200 OK"
                       className="w-full border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-[#1D64EC]"
                     />
                   </div>

@@ -12,7 +12,7 @@ export const revalidate = 0;
 export const metadata: Metadata = {
   title: "Scholarships & Financial Aid for Engineering Students | Zenvora",
   description:
-    "Discover verified government, corporate, and international scholarships for Indian B.Tech and engineering students. Find financial aid for girls, boys, and all students.",
+    "Discover verified government, corporate, and international scholarships for Indian B.Tech and engineering students. Find financial aid for girls, national schemes, and all students.",
 };
 
 export default async function ScholarshipsPage() {

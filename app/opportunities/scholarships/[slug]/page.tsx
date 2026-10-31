@@ -17,6 +17,7 @@ import {
   Globe,
   Clock,
   Heart,
+  Landmark,
   User,
   Users,
   Building2,
@@ -127,15 +128,17 @@ export default async function ScholarshipDetailPage({ params }: Props) {
                     </span>
                   )}
 
+                  {scholarship.isNational && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      <Landmark className="w-3.5 h-3.5" />
+                      National Scheme
+                    </span>
+                  )}
+
                   {scholarship.genderEligibility === "girls" ? (
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200">
                       <Heart className="w-3 h-3 fill-pink-500 text-pink-500" />
                       Girls Only
-                    </span>
-                  ) : scholarship.genderEligibility === "boys" ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                      <User className="w-3 h-3" />
-                      Boys Only
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
@@ -152,7 +155,7 @@ export default async function ScholarshipDetailPage({ params }: Props) {
                         ? "bg-sky-50 text-sky-700 border-sky-200"
                         : scholarship.applicationStatus === "upcoming"
                         ? "bg-amber-50 text-amber-700 border-amber-200"
-                        : "bg-slate-100 text-slate-500 border-slate-200"
+                        : "bg-red-50 text-red-700 border-red-200"
                     }`}
                   >
                     {scholarship.applicationStatus === "open"
@@ -207,8 +210,9 @@ export default async function ScholarshipDetailPage({ params }: Props) {
               <ScholarshipDetailActions
                 scholarshipId={scholarship.id}
                 scholarshipSlug={scholarship.slug}
-                applicationUrl={scholarship.applicationUrl || scholarship.officialUrl}
+                applicationUrl={scholarship.applicationUrl}
                 officialUrl={scholarship.officialUrl}
+                applicationStatus={scholarship.applicationStatus}
               />
             </div>
           </div>
@@ -287,8 +291,6 @@ export default async function ScholarshipDetailPage({ params }: Props) {
                     <p className="text-slate-800 font-medium">
                       {scholarship.genderEligibility === "girls"
                         ? "Female Candidates Only"
-                        : scholarship.genderEligibility === "boys"
-                        ? "Male Candidates Only"
                         : "Open to All Genders"}
                     </p>
                   </div>
@@ -380,7 +382,11 @@ export default async function ScholarshipDetailPage({ params }: Props) {
                 </div>
 
                 <div className="space-y-3">
-                  {scholarship.applicationUrl && (
+                  {scholarship.applicationStatus === "closed" ? (
+                    <div className="w-full bg-slate-50 border border-slate-200 text-slate-500 text-xs font-semibold py-2.5 px-4 rounded-xl text-center">
+                      Applications Closed · Next cycle not announced
+                    </div>
+                  ) : scholarship.applicationUrl ? (
                     <a
                       href={scholarship.applicationUrl}
                       target="_blank"
@@ -390,7 +396,7 @@ export default async function ScholarshipDetailPage({ params }: Props) {
                       <span>Apply on Official Portal</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
-                  )}
+                  ) : null}
 
                   {scholarship.officialUrl && (
                     <a

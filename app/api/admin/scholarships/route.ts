@@ -74,6 +74,9 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         organization: organization.trim(),
         slug,
+        isNational: rest.isNational !== undefined ? Boolean(rest.isNational) : true,
+        verificationStatus: rest.verificationStatus || "verified",
+        verificationNotes: rest.verificationNotes || null,
         benefits: typeof rest.benefits === "object" ? JSON.stringify(rest.benefits) : rest.benefits,
         requiredDocuments:
           typeof rest.requiredDocuments === "object"
@@ -125,6 +128,19 @@ export async function PATCH(req: NextRequest) {
     }
     if (data.tags && typeof data.tags === "object") {
       data.tags = JSON.stringify(data.tags);
+    }
+
+    if (data.isNational !== undefined) {
+      data.isNational = Boolean(data.isNational);
+    }
+    if (data.isVerified !== undefined) {
+      data.isVerified = Boolean(data.isVerified);
+    }
+    if (data.isFeatured !== undefined) {
+      data.isFeatured = Boolean(data.isFeatured);
+    }
+    if (data.isPublished !== undefined) {
+      data.isPublished = Boolean(data.isPublished);
     }
 
     const scholarship = await prisma.scholarship.update({

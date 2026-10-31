@@ -37,6 +37,7 @@ import {
   Clock,
   MapPin,
   FileCheck,
+  ShieldCheck,
 } from "lucide-react";
 
 export interface ScholarshipItem {
@@ -79,7 +80,10 @@ export interface ScholarshipItem {
   applicationUrl: string | null;
   notificationUrl: string | null;
   lastVerified: string | null;
+  verificationStatus?: string | null;
+  verificationNotes?: string | null;
 
+  isNational?: boolean;
   isVerified: boolean;
   isFeatured: boolean;
   isPublished: boolean;
@@ -92,9 +96,9 @@ export interface ScholarshipItem {
 const SCHOLARSHIP_CATEGORIES = [
   { key: "all", label: "All Scholarships", icon: Globe },
   { key: "girls", label: "For Girls", icon: Heart },
-  { key: "boys", label: "For Boys", icon: User },
+  { key: "national", label: "National", icon: Landmark },
   { key: "open_to_all", label: "Open to All", icon: Users },
-  { key: "government", label: "Government", icon: Landmark },
+  { key: "government", label: "Government", icon: Building2 },
   { key: "indian_companies", label: "Indian Companies", icon: Building2 },
   { key: "international", label: "International", icon: Compass },
   { key: "financial_aid", label: "Financial Aid", icon: Wallet },
@@ -103,9 +107,8 @@ const SCHOLARSHIP_CATEGORIES = [
 // ─── Filter Options ────────────────────────────────────────────────────────────
 
 const GENDER_OPTIONS = [
-  { value: "all_genders", label: "All" },
+  { value: "all_genders", label: "All Genders" },
   { value: "girls_only", label: "Girls Only" },
-  { value: "boys_only", label: "Boys Only" },
   { value: "open_to_all", label: "Open to All" },
 ];
 
@@ -286,6 +289,32 @@ export default function ScholarshipsClient({
     showSavedOnly,
   ]);
 
+  // ── Dynamic Statistics Row (Updated: Replaced For Boys with National) ──
+  const stats = useMemo(() => {
+    const total = scholarships.length;
+    const open = scholarships.filter(
+      (s) => s.applicationStatus === "open" || s.applicationStatus === "year_round"
+    ).length;
+    const girls = scholarships.filter((s) => s.genderEligibility === "girls").length;
+    const national = scholarships.filter(
+      (s) =>
+        s.isNational === true ||
+        (s.country?.toLowerCase() === "india" &&
+          (s.organizationType?.toLowerCase().includes("government") ||
+            s.organizationType?.toLowerCase().includes("private") ||
+            s.organizationType?.toLowerCase().includes("non-profit")))
+    ).length;
+    const international = scholarships.filter(
+      (s) =>
+        !s.isNational &&
+        (s.country?.toLowerCase() !== "india" ||
+          s.organizationType?.toLowerCase().includes("international") ||
+          s.organizationType?.toLowerCase().includes("foreign"))
+    ).length;
+
+    return { total, open, girls, national, international };
+  }, [scholarships]);
+
   // ── Filtering Logic ──
   const filteredScholarships = useMemo(() => {
     return scholarships.filter((s) => {
@@ -319,7 +348,7 @@ export default function ScholarshipsClient({
 
       // 2. Category Tab
       if (activeCategory === "girls" && s.genderEligibility !== "girls") return false;
-      if (activeCategory === "boys" && s.genderEligibility !== "boys") return false;
+      if (activeCategory === "national" && !s.isNational) return false;
       if (activeCategory === "open_to_all" && s.genderEligibility !== "all") return false;
       if (
         activeCategory === "government" &&
@@ -347,7 +376,6 @@ export default function ScholarshipsClient({
 
       // 3. Dropdown Gender Filter
       if (filterGender === "girls_only" && s.genderEligibility !== "girls") return false;
-      if (filterGender === "boys_only" && s.genderEligibility !== "boys") return false;
       if (filterGender === "open_to_all" && s.genderEligibility !== "all") return false;
 
       // 4. Academic Year
@@ -440,13 +468,13 @@ export default function ScholarshipsClient({
         </h1>
 
         {/* Description */}
-        <p className="text-slate-600 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl mx-auto mb-7 font-normal">
+        <p className="text-slate-600 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl mx-auto mb-6 font-normal">
           Discover scholarships, financial aid, and educational funding opportunities from trusted Indian
           and international organizations, curated for engineering and computer science students.
         </p>
 
         {/* Search Bar */}
-        <div className="relative max-w-xl mx-auto mb-2">
+        <div className="relative max-w-xl mx-auto mb-6">
           <div className="relative flex items-center">
             <Search className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
             <input
@@ -464,6 +492,40 @@ export default function ScholarshipsClient({
                 <X className="w-4 h-4" />
               </button>
             )}
+          </div>
+        </div>
+
+        {/* ── Updated Dynamic Statistics Row: Total | Open | For Girls | National | International ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 max-w-3xl mx-auto pt-2 pb-4 border-t border-slate-100">
+          <div className="text-center p-2">
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">{stats.total}</div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
+              Total Scholarships
+            </div>
+          </div>
+          <div className="text-center p-2">
+            <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600">{stats.open}</div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
+              Applications Open
+            </div>
+          </div>
+          <div className="text-center p-2">
+            <div className="text-2xl sm:text-3xl font-extrabold text-pink-600">{stats.girls}</div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
+              For Girls
+            </div>
+          </div>
+          <div className="text-center p-2">
+            <div className="text-2xl sm:text-3xl font-extrabold text-[#1D64EC]">{stats.national}</div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
+              National
+            </div>
+          </div>
+          <div className="text-center p-2 col-span-2 sm:col-span-1">
+            <div className="text-2xl sm:text-3xl font-extrabold text-violet-600">{stats.international}</div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
+              International
+            </div>
           </div>
         </div>
       </section>
@@ -715,54 +777,27 @@ export default function ScholarshipsClient({
               <GraduationCap className="w-7 h-7" />
             </div>
 
-            {activeCategory === "boys" || filterGender === "boys_only" ? (
-              <>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                  Most Scholarships are Open to All Students
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Most state, central government, and corporate tech scholarships are open to all
-                  eligible students regardless of gender. Explore the Open to All category to
-                  discover major engineering funding opportunities.
-                </p>
-                <div className="pt-2">
-                  <button
-                    onClick={() => {
-                      setActiveCategory("open_to_all");
-                      setFilterGender("all_genders");
-                    }}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-[#1D64EC] text-white hover:bg-[#1a56d4] transition shadow-xs"
-                  >
-                    <Users className="w-4 h-4" />
-                    <span>Explore Open to All Scholarships</span>
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                  No scholarships match your filters
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Try clearing your search query or loosening your eligibility filters to discover more
-                  funding programs.
-                </p>
-                <div className="pt-2">
-                  <button
-                    onClick={resetAllFilters}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-[#1D64EC] text-white hover:bg-[#1a56d4] transition shadow-xs"
-                  >
-                    <span>Clear All Filters</span>
-                  </button>
-                </div>
-              </>
-            )}
+            <h3 className="text-base sm:text-lg font-bold text-slate-900">
+              No scholarships match your filters
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Try clearing your search query or loosening your eligibility filters to discover more
+              funding programs.
+            </p>
+            <div className="pt-2">
+              <button
+                onClick={resetAllFilters}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-[#1D64EC] text-white hover:bg-[#1a56d4] transition shadow-xs"
+              >
+                <span>Clear All Filters</span>
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredScholarships.map((s) => {
               const isSaved = savedIds.includes(s.id);
-              const benefitsList = parseJsonArray(s.benefits);
+              const isClosed = s.applicationStatus === "closed";
 
               return (
                 <div
@@ -821,22 +856,24 @@ export default function ScholarshipsClient({
                     </div>
                   </div>
 
-                  {/* Gender Eligibility Badge & Status */}
+                  {/* Badges: Gender & Status */}
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     {s.genderEligibility === "girls" ? (
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200/80">
                         <Heart className="w-3 h-3 fill-pink-500 text-pink-500" />
                         Girls Only
                       </span>
-                    ) : s.genderEligibility === "boys" ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/80">
-                        <User className="w-3 h-3" />
-                        Boys Only
-                      </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/80">
                         <Users className="w-3 h-3" />
                         Open to All
+                      </span>
+                    )}
+
+                    {s.isNational && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#1D64EC] border border-blue-200/70">
+                        <Landmark className="w-3 h-3" />
+                        National
                       </span>
                     )}
 
@@ -848,7 +885,7 @@ export default function ScholarshipsClient({
                           ? "bg-sky-50 text-sky-700 border-sky-200"
                           : s.applicationStatus === "upcoming"
                           ? "bg-amber-50 text-amber-700 border-amber-200"
-                          : "bg-slate-100 text-slate-500 border-slate-200"
+                          : "bg-red-50 text-red-700 border-red-200"
                       }`}
                     >
                       {s.applicationStatus === "open"
@@ -920,7 +957,7 @@ export default function ScholarshipsClient({
                     <span>{s.deadlineText || "Deadline not announced"}</span>
                   </div>
 
-                  {/* Card Action Buttons (View Details & Official Website) */}
+                  {/* Card Action Buttons: View Details & Official Website */}
                   <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
                     <Link
                       href={`/opportunities/scholarships/${s.slug}`}

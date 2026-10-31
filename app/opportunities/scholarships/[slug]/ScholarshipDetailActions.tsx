@@ -8,11 +8,13 @@ export default function ScholarshipDetailActions({
   scholarshipSlug,
   applicationUrl,
   officialUrl,
+  applicationStatus,
 }: {
   scholarshipId: string;
   scholarshipSlug: string;
   applicationUrl?: string | null;
   officialUrl?: string | null;
+  applicationStatus?: string;
 }) {
   const [isSaved, setIsSaved] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -51,16 +53,22 @@ export default function ScholarshipDetailActions({
 
   return (
     <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
-      {applicationUrl && (
-        <a
-          href={applicationUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-[#1D64EC] hover:bg-[#1a56d4] text-white text-xs sm:text-sm font-bold py-2.5 px-5 rounded-xl transition shadow-xs flex items-center gap-2"
-        >
-          <span>Apply on Official Portal</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </a>
+      {applicationStatus === "closed" ? (
+        <span className="bg-slate-100 text-slate-500 border border-slate-200 text-xs sm:text-sm font-semibold py-2.5 px-4 rounded-xl inline-flex items-center gap-1.5 cursor-not-allowed">
+          Applications Closed
+        </span>
+      ) : (
+        applicationUrl && (
+          <a
+            href={applicationUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-[#1D64EC] hover:bg-[#1a56d4] text-white text-xs sm:text-sm font-bold py-2.5 px-5 rounded-xl transition shadow-xs flex items-center gap-2"
+          >
+            <span>Apply on Official Portal</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        )
       )}
 
       {officialUrl && (

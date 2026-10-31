@@ -377,9 +377,12 @@ model Scholarship {
   applicationUrl        String?
   notificationUrl       String?
   lastVerified          DateTime? @default(now())
+  verificationStatus    String    @default("verified") // "verified" | "pending" | "broken" | "expired"
+  verificationNotes     String?
 
   // Flags & Metadata
-  isVerified            Boolean   @default(false)
+  isNational            Boolean   @default(true)
+  isVerified            Boolean   @default(true)
   isFeatured            Boolean   @default(false)
   isPublished           Boolean   @default(true)
   tags                  String?
@@ -389,6 +392,7 @@ model Scholarship {
   updatedAt             DateTime  @updatedAt
 
   @@index([slug])
+  @@index([isPublished, isNational])
   @@index([isPublished, genderEligibility])
   @@index([isPublished, applicationStatus])
 }
