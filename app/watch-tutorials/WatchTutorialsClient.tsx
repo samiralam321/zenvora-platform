@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Search, X, Filter, Youtube, Plus, Folder, Tv, ExternalLink, Film } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Category {
   id: string;
@@ -53,6 +54,83 @@ interface WatchTutorialsClientProps {
   watchModalEnabled?: boolean;
 }
 
+// ─── Memoized Video Card with Virtualized Paint Optimization ────────────────
+const VideoCard = React.memo(function VideoCard({
+  video,
+  channelName,
+  badgeLabel,
+}: {
+  video: VideoItem;
+  channelName?: string | null;
+  badgeLabel?: string | null;
+}) {
+  const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}`;
+  return (
+    <div
+      className="bg-white rounded-2xl border border-slate-100 hover:border-slate-300 shadow-2xs hover:shadow-md transition-all overflow-hidden flex flex-col group"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "320px 360px" }}
+    >
+      <a
+        href={youtubeUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative aspect-video w-full overflow-hidden block bg-slate-100"
+      >
+        <Image
+          src={video.thumbnail}
+          alt={video.title}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          loading="lazy"
+          className="object-cover transition-transform duration-300 group-hover:scale-102"
+        />
+        {video.duration && (
+          <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-mono">
+            {video.duration}
+          </div>
+        )}
+      </a>
+
+      <div className="p-5 flex flex-col justify-between flex-1">
+        <div>
+          {badgeLabel && (
+            <div className="mb-2">
+              <span className="inline-block bg-[#EEF4FF] text-[#1D64EC] font-semibold text-[11px] px-2.5 py-0.5 rounded-full">
+                {badgeLabel}
+              </span>
+            </div>
+          )}
+          <h4 className="font-bold text-slate-900 text-sm mb-1.5 line-clamp-2 hover:text-[#1D64EC] transition-colors leading-snug">
+            <a href={youtubeUrl} target="_blank" rel="noopener noreferrer">
+              {video.title}
+            </a>
+          </h4>
+          {video.description && (
+            <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed">
+              {video.description}
+            </p>
+          )}
+        </div>
+
+        <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+          <span className="text-[11px] text-slate-400 font-medium truncate max-w-[65%]">
+            {channelName || video.playlist?.channelName || "YouTube Course"}
+          </span>
+          <a
+            href={youtubeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#1D64EC] font-semibold hover:underline flex items-center gap-1 shrink-0"
+          >
+            <span>Watch</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export default function WatchTutorialsClient({
   initialVideos,
   categories,
@@ -61,11 +139,51 @@ export default function WatchTutorialsClient({
   initialPlaylist = "all",
   watchModalEnabled = false,
 }: WatchTutorialsClientProps) {
+  const [isPending, startTransition] = useTransition();
   const [searchQuery, setSearchQuery] = useState("");
+  // Urgent state for the tab buttons & sliding pill (updates in 0ms)
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
+  // Deferred state for filtering the heavy video list (non-blocking)
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedPlaylist, setSelectedPlaylist] = useState(initialPlaylist);
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "featured">("newest");
-  const [visibleCount, setVisibleCount] = useState(12);
+
+  // Precomputed category counts — O(N) once, instead of O(N*C) inside every render
+  const categoryCountMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const v of initialVideos) {
+      const slug = v.category?.slug;
+      if (slug) map.set(slug, (map.get(slug) || 0) + 1);
+    }
+    return map;
+  }, [initialVideos]);
+
+  // Handle category switch with immediate pill animation + non-blocking list filtering
+  const handleCategoryClick = (slug: string) => {
+    setActiveCategory(slug);
+    startTransition(() => {
+      setSelectedCategory(slug);
+      setSelectedPlaylist("all");
+    });
+  };
+
+  // Standalone sliding pill measurement
+  const catTabContainerRef = useRef<HTMLDivElement>(null);
+  const catBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [catPillStyle, setCatPillStyle] = useState<{
+    left: number; width: number; top: number; height: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const el = catBtnRefs.current.get(activeCategory);
+    if (!el) return;
+    setCatPillStyle({
+      left: el.offsetLeft,
+      width: el.offsetWidth,
+      top: el.offsetTop,
+      height: el.offsetHeight,
+    });
+  }, [activeCategory]);
 
   const allCategories = useMemo(() => {
     return [{ id: "all", name: "All Domains", slug: "all" }, ...categories];
@@ -206,26 +324,46 @@ export default function WatchTutorialsClient({
         </div>
       </div>
 
-      {/* Domain Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide border-b border-slate-100">
+      {/* Domain Filter Pills — Smooth Google-Style Sliding Pill */}
+      <div
+        ref={catTabContainerRef}
+        className="relative flex items-center gap-1.5 overflow-x-auto pb-3 mb-4 scrollbar-hide border-b border-slate-100"
+      >
+        {/* Standalone sliding pill — only this element moves; text remains sharp and stationary */}
+        {catPillStyle && (
+          <motion.div
+            className="absolute bg-[#1D64EC] rounded-xl shadow-2xs pointer-events-none"
+            initial={false}
+            animate={{
+              left: catPillStyle.left,
+              top: catPillStyle.top,
+              width: catPillStyle.width,
+              height: catPillStyle.height,
+            }}
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            style={{ zIndex: 0 }}
+          />
+        )}
+
         {allCategories.map((cat) => {
-          const isActive = selectedCategory === cat.slug;
+          const isActive = activeCategory === cat.slug;
           const count =
             cat.slug === "all"
               ? initialVideos.length
-              : initialVideos.filter((v) => v.category?.slug === cat.slug).length;
+              : categoryCountMap.get(cat.slug) || 0;
 
           return (
             <button
               key={cat.id}
-              onClick={() => {
-                setSelectedCategory(cat.slug);
-                setSelectedPlaylist("all");
+              ref={(el) => {
+                if (el) catBtnRefs.current.set(cat.slug, el);
+                else catBtnRefs.current.delete(cat.slug);
               }}
-              className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              onClick={() => handleCategoryClick(cat.slug)}
+              className={`relative z-10 shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
                 isActive
-                  ? "bg-[#1D64EC] text-white shadow-2xs font-semibold"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "text-white"
+                  : "text-slate-700 hover:text-slate-900"
               }`}
             >
               {cat.name} ({count})
@@ -301,8 +439,9 @@ export default function WatchTutorialsClient({
         </div>
       )}
 
-      {/* Videos & Playlists Content View */}
-      {filteredVideos.length === 0 ? (
+      {/* Videos & Playlists Content View with smooth, instant fade transition */}
+      <div className={`transition-opacity duration-150 ${isPending ? "opacity-60" : "opacity-100"}`}>
+        {filteredVideos.length === 0 ? (
         <div className="py-20 text-center rounded-3xl bg-slate-50 border border-dashed border-slate-200 p-8 max-w-xl mx-auto">
           <div className="w-12 h-12 rounded-2xl bg-[#EEF4FF] text-[#1D64EC] flex items-center justify-center mx-auto mb-3">
             <Youtube className="w-6 h-6 text-rose-500" />
@@ -329,6 +468,7 @@ export default function WatchTutorialsClient({
               <button
                 onClick={() => {
                   setSearchQuery("");
+                  setActiveCategory("all");
                   setSelectedCategory("all");
                   setSelectedPlaylist("all");
                 }}
@@ -386,65 +526,13 @@ export default function WatchTutorialsClient({
 
               {/* Grid of lectures inside playlist */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {pVideos.map((video, vIdx) => {
-                  const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}`;
-                  return (
-                    <div
-                      key={video.id}
-                      className="bg-white rounded-2xl border border-slate-100 hover:border-slate-300 shadow-2xs hover:shadow-md transition-all overflow-hidden flex flex-col group"
-                    >
-                      <a
-                        href={youtubeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative aspect-video w-full overflow-hidden block bg-slate-100"
-                      >
-                        <Image
-                          src={video.thumbnail}
-                          alt={video.title}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-102"
-                        />
-                        {video.duration && (
-                          <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-mono">
-                            {video.duration}
-                          </div>
-                        )}
-
-                      </a>
-
-                      <div className="p-5 flex flex-col justify-between flex-1">
-                        <div>
-                          <h4 className="font-bold text-slate-900 text-sm mb-1.5 line-clamp-2 hover:text-[#1D64EC] transition-colors leading-snug">
-                            <a href={youtubeUrl} target="_blank" rel="noopener noreferrer">
-                              {video.title}
-                            </a>
-                          </h4>
-                          {video.description && (
-                            <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed">
-                              {video.description}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                          <span className="text-[11px] text-slate-400 font-medium">
-                            {playlist.channelName || "YouTube Course"}
-                          </span>
-                          <a
-                            href={youtubeUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#1D64EC] font-semibold hover:underline flex items-center gap-1"
-                          >
-                            <span>Watch</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {pVideos.map((video) => (
+                  <VideoCard
+                    key={video.id}
+                    video={video}
+                    channelName={playlist.channelName}
+                  />
+                ))}
               </div>
             </div>
           ))}
@@ -467,64 +555,13 @@ export default function WatchTutorialsClient({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {standaloneVideos.map((video) => {
-                  const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}`;
-                  return (
-                    <div
-                      key={video.id}
-                      className="bg-white rounded-2xl border border-slate-100 hover:border-slate-300 shadow-2xs hover:shadow-md transition-all overflow-hidden flex flex-col group"
-                    >
-                      <a
-                        href={youtubeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative aspect-video w-full overflow-hidden block bg-slate-100"
-                      >
-                        <Image
-                          src={video.thumbnail}
-                          alt={video.title}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-102"
-                        />
-                        {video.duration && (
-                          <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-mono">
-                            {video.duration}
-                          </div>
-                        )}
-                      </a>
-
-                      <div className="p-5 flex flex-col justify-between flex-1">
-                        <div>
-                          <div className="mb-2">
-                            <span className="inline-block bg-[#EEF4FF] text-[#1D64EC] font-semibold text-[11px] px-2.5 py-0.5 rounded-full">
-                              {video.category?.name || "Curriculum"}
-                            </span>
-                          </div>
-                          <h4 className="font-bold text-slate-900 text-sm mb-1.5 line-clamp-2 hover:text-[#1D64EC] transition-colors leading-snug">
-                            <a href={youtubeUrl} target="_blank" rel="noopener noreferrer">
-                              {video.title}
-                            </a>
-                          </h4>
-                        </div>
-
-                        <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                          <span className="text-[11px] text-slate-400">
-                            {video.channelName || "YouTube"}
-                          </span>
-                          <a
-                            href={youtubeUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#1D64EC] font-semibold hover:underline flex items-center gap-1"
-                          >
-                            <span>Watch</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {standaloneVideos.map((video) => (
+                  <VideoCard
+                    key={video.id}
+                    video={video}
+                    badgeLabel={video.category?.name || "Curriculum"}
+                  />
+                ))}
               </div>
             </div>
           )}
@@ -610,55 +647,17 @@ export default function WatchTutorialsClient({
 
                   {/* Single-row preview: max 3 cards */}
                   <div className="flex overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 sm:pb-0 lg:grid lg:grid-cols-3 gap-5 snap-x snap-mandatory scrollbar-hide">
-                    {subVideos.slice(0, 3).map((video) => {
-                      const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}`;
-                      return (
-                        <div
-                          key={video.id}
-                          className="w-[80vw] max-w-[300px] sm:w-auto sm:max-w-none shrink-0 snap-start lg:shrink bg-white rounded-2xl border border-slate-100 hover:border-slate-300 shadow-2xs hover:shadow-md transition-all overflow-hidden flex flex-col group"
-                        >
-                          <a
-                            href={youtubeUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="relative aspect-video w-full overflow-hidden block bg-slate-100"
-                          >
-                            <Image
-                              src={video.thumbnail}
-                              alt={video.title}
-                              fill
-                              className="object-cover transition-transform duration-300 group-hover:scale-102"
-                            />
-                            {video.duration && (
-                              <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-mono">
-                                {video.duration}
-                              </div>
-                            )}
-                          </a>
-                          <div className="p-4 flex flex-col justify-between flex-1">
-                            <h4 className="font-bold text-slate-900 text-sm mb-1.5 line-clamp-2 hover:text-[#1D64EC] transition-colors leading-snug">
-                              <a href={youtubeUrl} target="_blank" rel="noopener noreferrer">
-                                {video.title}
-                              </a>
-                            </h4>
-                            <div className="pt-3 mt-auto border-t border-slate-100 flex items-center justify-between text-xs">
-                              <span className="text-[11px] text-slate-400 font-medium truncate max-w-[60%]">
-                                {channel}
-                              </span>
-                              <a
-                                href={youtubeUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[#1D64EC] font-semibold hover:underline flex items-center gap-1 shrink-0"
-                              >
-                                <span>Watch</span>
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {subVideos.slice(0, 3).map((video) => (
+                      <div
+                        key={video.id}
+                        className="w-[80vw] max-w-[300px] sm:w-auto sm:max-w-none shrink-0 snap-start lg:shrink"
+                      >
+                        <VideoCard
+                          video={video}
+                          channelName={channel}
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -666,76 +665,19 @@ export default function WatchTutorialsClient({
           ) : (
             /* Single channel: flat full grid of all lectures */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {filteredVideos.map((video) => {
-                const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}`;
-                return (
-                  <div
-                    key={video.id}
-                    className="bg-white rounded-2xl border border-slate-100 shadow-2xs overflow-hidden flex flex-col hover:shadow-md transition-shadow group"
-                  >
-                    <a
-                      href={youtubeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="relative aspect-video w-full overflow-hidden block cursor-pointer bg-slate-100"
-                    >
-                      <Image
-                        src={video.thumbnail}
-                        alt={video.title}
-                        fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-102"
-                      />
-                      {video.duration && (
-                        <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-white text-[11px] px-2 py-0.5 rounded font-mono">
-                          {video.duration}
-                        </div>
-                      )}
-                    </a>
-                    <div className="p-6 flex flex-col justify-between flex-1">
-                      <div>
-                        <div className="flex items-center gap-2 mb-2.5">
-                          <span className="inline-block bg-[#EEF4FF] text-[#1D64EC] font-semibold text-xs px-2.5 py-0.5 rounded-full">
-                            {video.category?.name || "Tech Lecture"}
-                          </span>
-                          {video.channelName && (
-                            <span className="inline-block bg-slate-100 text-slate-600 font-semibold text-[10px] px-2 py-0.5 rounded">
-                              {video.channelName}
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="font-bold text-slate-900 text-lg mb-2 line-clamp-2 hover:text-[#1D64EC] transition-colors">
-                          <a href={youtubeUrl} target="_blank" rel="noopener noreferrer">
-                            {video.title}
-                          </a>
-                        </h3>
-                        {video.description && (
-                          <p className="text-slate-500 text-sm line-clamp-2 leading-relaxed mb-4">
-                            {video.description}
-                          </p>
-                        )}
-                      </div>
-                      <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                        <span className="text-xs text-slate-400">
-                          {video.playlist?.title || "Course Video"}
-                        </span>
-                        <a
-                          href={youtubeUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#1D64EC] font-semibold text-sm hover:underline inline-flex items-center gap-1"
-                        >
-                          <span>Watch</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {filteredVideos.map((video) => (
+                <VideoCard
+                  key={video.id}
+                  video={video}
+                  badgeLabel={video.category?.name || "Tech Lecture"}
+                  channelName={video.channelName || video.playlist?.channelName}
+                />
+              ))}
             </div>
           )}
         </div>
       )}
+      </div>
 
       {/* CP Component 3: Priyansh Agrawal CP Sheet (immediately after YouTube playlist) */}
       {selectedCategory === "competitive-programming" && (

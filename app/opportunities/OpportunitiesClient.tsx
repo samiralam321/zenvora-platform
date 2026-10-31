@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useLayoutEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -160,8 +160,17 @@ export default function OpportunitiesClient({
 }) {
   // Always initialise with safe defaults (identical on server + client = no hydration mismatch).
   // State is restored from sessionStorage inside useLayoutEffect after hydration.
+  const [isPending, startTransition] = useTransition();
   const [activeCategory, setActiveCategory] = useState("All Opportunities");
+  const [deferredCategory, setDeferredCategory] = useState("All Opportunities");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const handleCategoryClick = (key: string) => {
+    setActiveCategory(key);
+    startTransition(() => {
+      setDeferredCategory(key);
+    });
+  };
   const [academicYearFilter, setAcademicYearFilter] = useState("All Years");
   const [genderFilter, setGenderFilter] = useState("all");
   const [participationFilter, setParticipationFilter] = useState("all");
@@ -185,7 +194,10 @@ export default function OpportunitiesClient({
     restoredRef.current = true;
 
     const saved = loadState();
-    if (saved.activeCategory) setActiveCategory(saved.activeCategory);
+    if (saved.activeCategory) {
+      setActiveCategory(saved.activeCategory);
+      setDeferredCategory(saved.activeCategory);
+    }
     if (saved.searchQuery) setSearchQuery(saved.searchQuery);
     if (saved.academicYearFilter) setAcademicYearFilter(saved.academicYearFilter);
     if (saved.genderFilter) setGenderFilter(saved.genderFilter);
@@ -288,12 +300,12 @@ export default function OpportunitiesClient({
       if (opp.isHistorical && !showHistorical) return false;
 
       // Category
-      if (activeCategory !== "All Opportunities") {
-        const primary = opp.category === activeCategory;
+      if (deferredCategory !== "All Opportunities") {
+        const primary = opp.category === deferredCategory;
         let inExtra = false;
         if (opp.categories) {
           const extra = parseJsonArray(opp.categories);
-          inExtra = extra.includes(activeCategory);
+          inExtra = extra.includes(deferredCategory);
         }
         if (!primary && !inExtra) return false;
       }
@@ -335,7 +347,7 @@ export default function OpportunitiesClient({
     });
   }, [
     opportunities,
-    activeCategory,
+    deferredCategory,
     searchQuery,
     academicYearFilter,
     genderFilter,
@@ -468,7 +480,7 @@ export default function OpportunitiesClient({
                     if (el) oppBtnRefs.current.set(key, el);
                     else oppBtnRefs.current.delete(key);
                   }}
-                  onClick={() => setActiveCategory(key)}
+                  onClick={() => handleCategoryClick(key)}
                   className={`relative z-10 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap ${
                     isActive ? "text-white" : "text-slate-600 hover:text-slate-900"
                   }`}
@@ -592,7 +604,7 @@ export default function OpportunitiesClient({
       </section>
 
       {/* ── Content Area ────────────────────────────────────────────────────── */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <section className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 transition-opacity duration-150 ${isPending ? "opacity-60" : "opacity-100"}`}>
         {filtered.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -610,7 +622,7 @@ export default function OpportunitiesClient({
         ) : (
           <>
             {/* Featured grid */}
-            {featured.length > 0 && activeCategory === "All Opportunities" && (
+            {featured.length > 0 && deferredCategory === "All Opportunities" && (
               <div className="mb-10">
                 <div className="flex items-center gap-2 mb-5">
                   <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
@@ -625,13 +637,13 @@ export default function OpportunitiesClient({
             )}
 
             {/* All / regular */}
-            {(activeCategory !== "All Opportunities" || regular.length > 0) && (
+            {(deferredCategory !== "All Opportunities" || regular.length > 0) && (
               <div>
-                {featured.length > 0 && activeCategory === "All Opportunities" && (
+                {featured.length > 0 && deferredCategory === "All Opportunities" && (
                   <h2 className="text-lg font-extrabold text-slate-900 mb-5">All Programs</h2>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {(activeCategory !== "All Opportunities" ? filtered : regular).map((opp) => (
+                  {(deferredCategory !== "All Opportunities" ? filtered : regular).map((opp) => (
                     <OpportunityCard key={opp.id} opp={opp} />
                   ))}
                 </div>
@@ -646,7 +658,7 @@ export default function OpportunitiesClient({
 
 // ─── Opportunity Card ─────────────────────────────────────────────────────────
 
-function OpportunityCard({ opp, featured }: { opp: OpportunityItem; featured?: boolean }) {
+const OpportunityCard = React.memo(function OpportunityCard({ opp, featured }: { opp: OpportunityItem; featured?: boolean }) {
   const academicYears = parseJsonArray(opp.academicYears);
   const availStatus = opp.availabilityStatus || "Information Available";
   const statusClass = AVAILABILITY_COLORS[availStatus] || AVAILABILITY_COLORS["Information Available"];
@@ -665,6 +677,7 @@ function OpportunityCard({ opp, featured }: { opp: OpportunityItem; featured?: b
 
   return (
     <div
+      style={{ contentVisibility: "auto", containIntrinsicSize: "320px 420px" }}
       className={`group flex flex-col bg-white rounded-2xl border shadow-2xs overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 ${
         featured ? "border-[#1D64EC]/30 ring-1 ring-[#1D64EC]/10" : "border-slate-200"
       }`}
@@ -792,6 +805,6 @@ function OpportunityCard({ opp, featured }: { opp: OpportunityItem; featured?: b
       </div>
     </div>
   );
-}
+});
 
 

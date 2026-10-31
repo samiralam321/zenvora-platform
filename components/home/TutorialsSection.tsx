@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Youtube, Plus, Folder, Tv, ArrowRight, Play, Film, ExternalLink } from "lucide-react";
@@ -55,7 +55,26 @@ export default function TutorialsSection({
   const linkText = data.linkText || "Browse all courses";
   const linkUrl = data.linkUrl || "/watch-tutorials";
 
+  const [isPending, startTransition] = useTransition();
   const [activeDomain, setActiveDomain] = useState<string>("all");
+  const [deferredDomain, setDeferredDomain] = useState<string>("all");
+
+  const handleDomainClick = (slug: string) => {
+    setActiveDomain(slug);
+    startTransition(() => {
+      setDeferredDomain(slug);
+    });
+  };
+
+  // Precomputed domain counts map: O(N) once, instead of repeated .filter in render loop
+  const domainVideoCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const v of videos) {
+      const slug = v.category?.slug;
+      if (slug) map.set(slug, (map.get(slug) || 0) + 1);
+    }
+    return map;
+  }, [videos]);
 
   // Refs for the separate-pill animation (pill is a standalone element, text never moves)
   const tabContainerRef = useRef<HTMLDivElement>(null);
@@ -77,17 +96,17 @@ export default function TutorialsSection({
     return Array.from(map.entries()).map(([slug, name]) => ({ id: slug, slug, name }));
   }, [categories, videos]);
 
-  // Filter playlists and videos by selected domain
+  // Filter playlists and videos by deferred domain (non-blocking)
   const filteredPlaylists = useMemo(() => {
-    if (activeDomain === "all") return playlists;
-    return playlists.filter((p) => p.category?.slug === activeDomain);
-  }, [playlists, activeDomain]);
+    if (deferredDomain === "all") return playlists;
+    return playlists.filter((p) => p.category?.slug === deferredDomain);
+  }, [playlists, deferredDomain]);
 
   const filteredStandaloneVideos = useMemo(() => {
     const standalone = videos.filter((v) => !v.playlistId);
-    if (activeDomain === "all") return standalone;
-    return standalone.filter((v) => v.category?.slug === activeDomain);
-  }, [videos, activeDomain]);
+    if (deferredDomain === "all") return standalone;
+    return standalone.filter((v) => v.category?.slug === deferredDomain);
+  }, [videos, deferredDomain]);
 
   const totalItemCount = videos.length;
 
@@ -162,8 +181,8 @@ export default function TutorialsSection({
             {/* All Domains button — completely stationary, z-index above pill */}
             <button
               ref={allBtnRef}
-              onClick={() => setActiveDomain("all")}
-              className={`relative z-10 shrink-0 px-4 py-2 rounded-xl text-xs font-bold ${
+              onClick={() => handleDomainClick("all")}
+              className={`relative z-10 shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
                 activeDomain === "all" ? "text-white" : "text-slate-700 hover:text-slate-900"
               }`}
             >
@@ -171,14 +190,14 @@ export default function TutorialsSection({
             </button>
 
             {availableDomains.map((dom, idx) => {
-              const domVideoCount = videos.filter((v) => v.category?.slug === dom.slug).length;
+              const domVideoCount = domainVideoCounts.get(dom.slug) || 0;
               const isActive = activeDomain === dom.slug;
               return (
                 <button
                   key={dom.slug}
                   ref={(el) => { domBtnRefs.current[idx] = el; }}
-                  onClick={() => setActiveDomain(dom.slug)}
-                  className={`relative z-10 shrink-0 px-4 py-2 rounded-xl text-xs font-bold ${
+                  onClick={() => handleDomainClick(dom.slug)}
+                  className={`relative z-10 shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
                     isActive ? "text-white" : "text-slate-700 hover:text-slate-900"
                   }`}
                 >
@@ -190,6 +209,7 @@ export default function TutorialsSection({
         )}
 
         {/* Grouped by Distinct Course Playlists */}
+        <div className={`transition-opacity duration-150 ${isPending ? "opacity-60" : "opacity-100"}`}>
         {filteredPlaylists.length > 0 || filteredStandaloneVideos.length > 0 ? (
           <div className="space-y-12">
             {/* 1. Distinct Playlists / Courses */}
@@ -414,6 +434,7 @@ export default function TutorialsSection({
             </div>
           </div>
         )}
+        </div>
       </div>
     </section>
   );
