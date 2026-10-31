@@ -3,6 +3,8 @@
 import React, { useEffect, Suspense } from "react";
 import { SessionProvider } from "next-auth/react";
 import Lenis from "lenis";
+import { MusicProvider } from "@/context/MusicContext";
+import YouTubeAudioEngine from "@/components/music/YouTubeAudioEngine";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -30,7 +32,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <SessionProvider>
-      {children}
+      <MusicProvider>
+        {children}
+        <YouTubeAudioEngine />
+      </MusicProvider>
     </SessionProvider>
   );
 }

@@ -26,7 +26,10 @@ import {
   X,
   Bookmark,
   RefreshCw,
+  Headphones,
 } from "lucide-react";
+import { useMusic } from "@/context/MusicContext";
+import FocusAudioPopover from "@/components/music/FocusAudioPopover";
 
 interface PdfViewerProps {
   url?: string | null;
@@ -77,6 +80,13 @@ export default function PdfViewer({
   const [copied, setCopied] = useState<boolean>(false);
   const [outline, setOutline] = useState<any[]>([]);
   const [sidebarMode, setSidebarMode] = useState<"none" | "outline" | "thumbnails">("none");
+
+  const {
+    isPlaying: isMusicPlaying,
+    isPopoverOpen: isMusicPopoverOpen,
+    togglePopover: toggleMusicPopover,
+    setPopoverOpen: setMusicPopoverOpen,
+  } = useMusic();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const annotationLayerRef = useRef<HTMLDivElement>(null);
@@ -602,7 +612,9 @@ export default function PdfViewer({
       }
 
       if (e.key === "Escape") {
-        if (sidebarMode !== "none") {
+        if (isMusicPopoverOpen) {
+          setMusicPopoverOpen(false);
+        } else if (sidebarMode !== "none") {
           setSidebarMode("none");
         } else if (isFullscreen) {
           exitFullscreen();
@@ -790,6 +802,20 @@ export default function PdfViewer({
 
             {/* Header Right Actions */}
             <div className="flex items-center gap-2.5 shrink-0">
+              {/* Focus Audio Button */}
+              <button
+                onClick={toggleMusicPopover}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition border shadow-2xs ${
+                  isMusicPlaying || isMusicPopoverOpen
+                    ? "bg-blue-50 text-[#1D64EC] border-blue-200"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                }`}
+                title="Focus Audio"
+              >
+                <Headphones className={`w-3.5 h-3.5 ${isMusicPlaying ? "text-[#1D64EC] animate-pulse" : "text-slate-500"}`} />
+                <span>{isMusicPlaying ? "Audio Playing" : "Focus Audio"}</span>
+              </button>
+
               <button
                 onClick={handleShare}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition shadow-2xs"
@@ -959,6 +985,20 @@ export default function PdfViewer({
               title="Fit Entire Page"
             >
               <Maximize className="w-4 h-4" />
+            </button>
+
+            {/* Focus Audio in Fullscreen Header */}
+            <button
+              onClick={toggleMusicPopover}
+              className={`p-1.5 rounded-lg transition flex items-center gap-1.5 text-xs font-semibold ${
+                isMusicPopoverOpen || isMusicPlaying
+                  ? "bg-[#1D64EC] text-white"
+                  : "hover:bg-slate-800 text-slate-300"
+              }`}
+              title="Focus Audio"
+            >
+              <Headphones className={`w-4 h-4 ${isMusicPlaying ? "animate-pulse text-blue-200" : ""}`} />
+              <span className="hidden xl:inline">{isMusicPlaying ? "Audio Playing" : "Focus Audio"}</span>
             </button>
 
             {/* Download */}
@@ -1304,6 +1344,28 @@ export default function PdfViewer({
               <RotateCw className="w-3.5 h-3.5" />
             </button>
 
+            {/* Focus Audio Toggle */}
+            <button
+              onClick={toggleMusicPopover}
+              className={`p-1.5 rounded-full transition relative ${
+                isMusicPopoverOpen || isMusicPlaying
+                  ? "bg-[#1D64EC] text-white hover:bg-[#1a56d4]"
+                  : isFullscreen
+                  ? "hover:bg-slate-800 text-slate-300"
+                  : "hover:bg-slate-100 text-slate-600"
+              }`}
+              title="Focus Audio (Study Music)"
+              aria-label="Focus Audio"
+            >
+              <Headphones className="w-3.5 h-3.5" />
+              {isMusicPlaying && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+              )}
+            </button>
+
             {/* Fullscreen Toggle */}
             <button
               onClick={toggleFullscreen}
@@ -1322,6 +1384,13 @@ export default function PdfViewer({
               )}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ── Focus Audio Popover (Positioned neatly above floating bottom toolbar) ── */}
+      {isMusicPopoverOpen && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
+          <FocusAudioPopover onClose={() => setMusicPopoverOpen(false)} />
         </div>
       )}
 
