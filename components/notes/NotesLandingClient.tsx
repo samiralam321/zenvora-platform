@@ -2,11 +2,11 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { Search, BookOpen, ArrowRight } from "lucide-react";
+import { Search, BookOpen, ArrowRight, Sparkles, ChevronRight } from "lucide-react";
 import { DomainNotes, NOTES_DOMAINS } from "@/lib/notesData";
 import { getCategoryIcon } from "@/lib/notesIcons";
 
-// â”€â”€ 3D Pushpin Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- 3D Pushpin Component ---
 function CSSPushPin({ color = "#EA580C" }: { color: string }) {
   const light = blendWithWhite(color, 0.55);
   const dark = darken(color, 0.35);
@@ -91,7 +91,7 @@ function CSSPushPin({ color = "#EA580C" }: { color: string }) {
   );
 }
 
-// â”€â”€ Color helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Color helpers ---
 function hexToRgb(hex: string) {
   const clean = hex.replace("#", "");
   const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
@@ -233,7 +233,7 @@ function StickyCard({ domain, index, visible, onCardRef }: StickyCardProps) {
 }
 
 
-// â”€â”€ Main NotesLandingClient Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Main NotesLandingClient Component ---
 export default function NotesLandingClient({
   dbDomains,
 }: {
@@ -313,13 +313,13 @@ export default function NotesLandingClient({
 
   const isSearchActive = !!searchQuery.trim();
 
-  // Row 1: Cards 01â€“05
+  // Row 1: Cards 01-05
   const row1Domains = useMemo(() => {
     if (isSearchActive) return filteredDomains;
     return filteredDomains.slice(0, 5);
   }, [filteredDomains, isSearchActive]);
 
-  // Row 2: Cards 06â€“10
+  // Row 2: Cards 06-10
   const row2Domains = useMemo(() => {
     if (isSearchActive) return [];
     return filteredDomains.slice(5, 10);
@@ -353,21 +353,21 @@ export default function NotesLandingClient({
         aria-hidden="true"
       />
 
-      {/* â”€â”€ STANDARD CENTERED CONTAINER â”€â”€ */}
+      {/* --- STANDARD CENTERED CONTAINER --- */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-24">
 
-        {/* â”€â”€ Hero Section â”€â”€ */}
+        {/* --- Hero Section --- */}
         <div className="text-center max-w-3xl mx-auto mb-14">
           {/* Breadcrumb */}
           <nav className="text-xs text-slate-400 mb-4 font-medium flex items-center justify-center gap-1.5">
             <Link href="/" className="hover:text-slate-600 transition">Home</Link>
-            <span>â€º</span>
+            <ChevronRight className="w-3 h-3 text-slate-400" />
             <span className="text-slate-600 font-semibold">Notes</span>
           </nav>
 
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EEF4FF] border border-blue-200/80 text-[#1D64EC] text-xs font-bold mb-4 shadow-2xs">
-            <span className="text-[#1D64EC]">âœ¨</span>
+            <Sparkles className="w-3.5 h-3.5 text-[#1D64EC]" />
             <span className="uppercase tracking-wider">YOUR LEARNING LIBRARY</span>
           </div>
 
@@ -410,7 +410,7 @@ export default function NotesLandingClient({
           </div>
         </div>
 
-        {/* â”€â”€ DOMAIN CARDS â”€â”€ */}
+        {/* --- DOMAIN CARDS --- */}
         {filteredDomains.length === 0 ? (
           <div className="text-center py-20 bg-slate-50/70 rounded-2xl border border-slate-200/80 p-8 max-w-md mx-auto">
             <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-3" />
