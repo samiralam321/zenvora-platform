@@ -331,3 +331,65 @@ model Opportunity {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 }
+
+model Scholarship {
+  id                    String    @id @default(cuid())
+  name                  String
+  slug                  String    @unique
+  organization          String
+  organizationType      String?   // "Indian Government" | "Indian Private Company" | "International Company" | "Foreign Government" | "International Foundation" | "University" | "Non-Profit Organization"
+  country               String?   @default("India")
+  logoUrl               String?
+  description           String
+
+  // Eligibility
+  genderEligibility     String    @default("all") // "all" | "girls" | "boys"
+  eligibleDegrees       String?   // e.g. "B.Tech, B.E., BCA, MCA, M.Tech"
+  eligibleBranches      String?   // e.g. "CSE, IT, ECE, All Engineering Branches"
+  eligibleYears         String?   // e.g. "1st Year, 2nd Year, 3rd Year, 4th Year, Any Year"
+  minimumPercentage     Float?
+  familyIncomeLimit     Float?    // in INR e.g. 250000, 500000, 800000
+  nationality           String?   @default("Indian")
+  categoryRestrictions  String?   // e.g. "General, OBC, SC, ST, EWS" or "All Categories"
+
+  // Funding & Benefits
+  amount                Float?
+  amountType            String?   // "per_year" | "one_time" | "per_semester" | "fully_funded" | "tuition_fee" | "not_disclosed"
+  amountText            String?   // e.g. "₹2,00,000 / year"
+  currency              String?   @default("INR")
+  fundingType           String?   // "Merit Based" | "Need Based" | "Merit-cum-Means" | "Corporate Scholarship" | "Government Scholarship"
+  duration              String?
+  benefits              String?   // JSON array string of benefits
+
+  // Detailed Process & Documents
+  requiredDocuments     String?   // JSON array string of documents
+  applicationProcess    String?   // Step-by-step application instructions or JSON
+  scholarshipType       String?   // "Merit Based" | "Need Based" | "Merit-cum-Means" | "Category Based" | "Disability Based" | "Research Based" | "Sports Based" | "Corporate Scholarship" | "Government Scholarship"
+
+  // Application & Timeline
+  applicationStart      DateTime?
+  applicationDeadline   DateTime?
+  deadlineText          String?   // e.g. "31 Dec 2026", "Year-round applications", "Deadline not announced"
+  applicationStatus     String    @default("open") // "open" | "upcoming" | "closed" | "year_round"
+
+  // URLs & Sources
+  officialUrl           String?
+  applicationUrl        String?
+  notificationUrl       String?
+  lastVerified          DateTime? @default(now())
+
+  // Flags & Metadata
+  isVerified            Boolean   @default(false)
+  isFeatured            Boolean   @default(false)
+  isPublished           Boolean   @default(true)
+  tags                  String?
+  displayOrder          Int       @default(0)
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([isPublished, genderEligibility])
+  @@index([isPublished, applicationStatus])
+}
+

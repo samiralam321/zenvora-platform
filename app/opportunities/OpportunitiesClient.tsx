@@ -23,6 +23,7 @@ import {
   ChevronDown,
   Zap,
   BookOpen,
+  GraduationCap,
 } from "lucide-react";
 
 export interface OpportunityItem {
@@ -75,6 +76,7 @@ const CATEGORIES = [
   { key: "Coding Contests", label: "Coding Contests", icon: Code2, desc: "Test your problem-solving skills", color: "bg-purple-50 text-purple-700" },
   { key: "Opportunities for Girls", label: "For Girls", icon: Heart, desc: "Programs built for women in tech", color: "bg-pink-50 text-pink-700" },
   { key: "Campus Ambassador Programs", label: "Ambassador", icon: Users2, desc: "Lead campus communities, grow your profile", color: "bg-violet-50 text-violet-700" },
+  { key: "Scholarships", label: "Scholarships", icon: GraduationCap, desc: "Fund your future with trusted scholarships", color: "bg-amber-50 text-amber-700" },
 ];
 
 const ACADEMIC_YEAR_OPTIONS = [
@@ -459,13 +461,25 @@ export default function OpportunitiesClient({
             )}
 
             {CATEGORIES.map(({ key, label, icon: Icon }) => {
-              // Ambassador tab links to its dedicated page — not part of the pill system
+              // Ambassador & Scholarships tabs link to their dedicated pages — not part of the internal opportunity filter system
               if (key === "Campus Ambassador Programs") {
                 return (
                   <Link
                     key={key}
                     href="/opportunities/campus-ambassador-programs"
                     className="relative z-10 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap text-slate-600 hover:text-violet-700"
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </Link>
+                );
+              }
+              if (key === "Scholarships") {
+                return (
+                  <Link
+                    key={key}
+                    href="/opportunities/scholarships"
+                    className="relative z-10 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap text-slate-600 hover:text-[#1D64EC]"
                   >
                     <Icon className="w-4 h-4" />
                     {label}

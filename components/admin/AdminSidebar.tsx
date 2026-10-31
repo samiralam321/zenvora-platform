@@ -24,6 +24,7 @@ import {
   Code2,
   Trophy,
   NotebookPen,
+  GraduationCap,
 } from "lucide-react";
 
 const navLinks = [
@@ -31,6 +32,7 @@ const navLinks = [
   { label: "Domains & Stacks", href: "/admin/domains", icon: Code2 },
   { label: "Lectures & Videos", href: "/admin/tutorials", icon: Youtube },
   { label: "Opportunities", href: "/admin/opportunities", icon: Trophy },
+  { label: "Scholarships", href: "/admin/scholarships", icon: GraduationCap },
   { label: "Developer Tools", href: "/admin/tools", icon: Wrench },
   { label: "Notes Management", href: "/admin/notes", icon: NotebookPen },
   { label: "Home Page Builder", href: "/admin/sections", icon: Layers },
