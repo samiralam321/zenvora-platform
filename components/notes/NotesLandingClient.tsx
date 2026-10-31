@@ -267,10 +267,7 @@ export default function NotesLandingClient({
         .filter((d) => d.isPublished)
         .map((d, i) => {
           const staticMatch = NOTES_DOMAINS.find((s) => s.slug === d.slug);
-          const realNoteCount =
-            d._count?.notes !== undefined && d._count.notes > 0
-              ? d._count.notes
-              : (staticMatch?.resources?.length ?? 0);
+          const realNoteCount = d._count?.notes ?? 0;
 
           if (staticMatch) {
             return {
@@ -278,7 +275,7 @@ export default function NotesLandingClient({
               name: d.name,
               shortName: d.name.replace(/ Notes$/i, " Notes"),
               description: d.description,
-              resources: staticMatch.resources,
+              resources: [],
               notesCount: realNoteCount,
             } as any;
           }

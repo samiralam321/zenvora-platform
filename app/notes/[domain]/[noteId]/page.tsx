@@ -4,7 +4,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import PdfViewer from "@/components/notes/PdfViewer";
-import NotesReaderClient from "@/components/notes/NotesReaderClient";
 import { NOTES_DOMAINS } from "@/lib/notesData";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -54,7 +53,7 @@ export default async function NoteReaderPage({ params }: NoteReaderPageProps) {
     getCachedNavItems("header"),
   ]);
 
-  // 1. Try loading from database first
+  // 1. Try loading published note from database
   let dbNote: any = null;
   try {
     dbNote = await prisma.note.findFirst({
@@ -69,21 +68,31 @@ export default async function NoteReaderPage({ params }: NoteReaderPageProps) {
   if (dbNote) {
     const domainName = dbNote.domain?.name || "Notes";
     const domainSlug = dbNote.domain?.slug || params.domain;
+    const formattedDate = dbNote.updatedAt
+      ? new Date(dbNote.updatedAt).toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        })
+      : undefined;
 
     return (
-      <div className="flex flex-col min-h-screen bg-[#0B1120] text-slate-100 font-sans">
+      <div className="flex flex-col min-h-screen bg-slate-50/70 text-slate-900 font-sans">
         <Header
           brandName={settings.brandName || "Zenvora"}
           avatarUrl={settings.avatarUrl || "/images/zenvora-logo.png"}
           navItems={navItems.length > 0 ? navItems : undefined}
         />
 
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 pt-24">
+        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
           <PdfViewer
             url={dbNote.storagePath || null}
             title={dbNote.title}
             domainName={domainName}
             domainSlug={domainSlug}
+            category={dbNote.category}
+            difficulty={dbNote.difficulty}
+            fileSize={dbNote.fileSize}
+            updatedAt={formattedDate}
             totalPages={dbNote.pageCount || 1}
             downloadFileName={dbNote.originalFilename || `${dbNote.slug}.pdf`}
             backHref={`/notes/${domainSlug}`}
@@ -96,51 +105,35 @@ export default async function NoteReaderPage({ params }: NoteReaderPageProps) {
     );
   }
 
-  // 2. Fall back to static domains data
+  // 2. Fall back to static domains data if note exists with storagePath
   const staticDomain = NOTES_DOMAINS.find((d) => d.slug === params.domain);
-  if (!staticDomain) notFound();
+  const staticResource = staticDomain?.resources.find((r) => r.id === params.noteId);
 
-  const staticResource = staticDomain.resources.find((r) => r.id === params.noteId);
-  if (!staticResource) notFound();
-
-  // If static note has a storagePath, use PdfViewer as well
-  if ((staticResource as any).storagePath) {
-    return (
-      <div className="flex flex-col min-h-screen bg-[#0B1120] text-slate-100 font-sans">
-        <Header
-          brandName={settings.brandName || "Zenvora"}
-          avatarUrl={settings.avatarUrl || "/images/zenvora-logo.png"}
-          navItems={navItems.length > 0 ? navItems : undefined}
-        />
-
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 pt-24">
-          <PdfViewer
-            url={(staticResource as any).storagePath}
-            title={staticResource.title}
-            domainName={staticDomain.name}
-            domainSlug={staticDomain.slug}
-            totalPages={staticResource.pages || 1}
-            downloadFileName={staticResource.downloadFileName}
-            backHref={`/notes/${staticDomain.slug}`}
-          />
-        </main>
-
-        <Footer settings={settings} />
-        <ScrollToTop />
-      </div>
-    );
+  if (!staticDomain || !staticResource) {
+    notFound();
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F1F5F9] text-slate-900 font-sans">
+    <div className="flex flex-col min-h-screen bg-slate-50/70 text-slate-900 font-sans">
       <Header
         brandName={settings.brandName || "Zenvora"}
         avatarUrl={settings.avatarUrl || "/images/zenvora-logo.png"}
         navItems={navItems.length > 0 ? navItems : undefined}
       />
 
-      <main className="flex-1">
-        <NotesReaderClient domain={staticDomain} resource={staticResource} />
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
+        <PdfViewer
+          url={(staticResource as any).storagePath || null}
+          title={staticResource.title}
+          domainName={staticDomain.name}
+          domainSlug={staticDomain.slug}
+          category={staticResource.topic}
+          difficulty={staticResource.difficulty}
+          updatedAt={staticResource.lastUpdated}
+          totalPages={staticResource.pages || 1}
+          downloadFileName={staticResource.downloadFileName}
+          backHref={`/notes/${staticDomain.slug}`}
+        />
       </main>
 
       <Footer settings={settings} />

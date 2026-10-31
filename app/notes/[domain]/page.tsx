@@ -80,26 +80,37 @@ export default async function DomainNotesPage({ params }: DomainPageProps) {
         resources: [],
       };
 
-  // ALWAYS merge DB notes when they exist — this overwrites any static mock resources
-  if (dbNotes.length > 0) {
-    domain.resources = dbNotes.map((n: any) => ({
-      id: n.id,
-      title: n.title,
-      description: n.description || "",
-      topic: "General",
-      difficulty: "Beginner" as const,
-      pages: n.pageCount || 0,
-      lastUpdated: new Date(n.updatedAt).toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric",
-      }),
-      downloadFileName: n.originalFilename || `${n.slug}.pdf`,
-      storagePath: n.storagePath || null,
-      outline: [],
-      chapters: [],
-      relatedNotes: [],
-    }));
-  }
+  // Build dynamic specializations and resources
+  const curatedTopics = staticDomain
+    ? staticDomain.topics.filter((t) => t !== "All Notes")
+    : [];
+
+  const dbCategories = Array.from(
+    new Set(dbNotes.map((n: any) => n.category || "General").filter(Boolean))
+  );
+
+  // Combine curated domain specializations and any custom categories from notes
+  const combinedSpecializationsSet = new Set([...curatedTopics, ...dbCategories]);
+  const combinedSpecializations = Array.from(combinedSpecializationsSet);
+
+  domain.topics = ["All Notes", ...combinedSpecializations];
+  domain.resources = dbNotes.map((n: any) => ({
+    id: n.id,
+    title: n.title,
+    description: n.description || "",
+    topic: n.category || "General",
+    difficulty: (n.difficulty || "Beginner") as any,
+    pages: n.pageCount || 0,
+    lastUpdated: new Date(n.updatedAt).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    }),
+    downloadFileName: n.originalFilename || `${n.slug}.pdf`,
+    storagePath: n.storagePath || null,
+    outline: [],
+    chapters: [],
+    relatedNotes: [],
+  }));
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50/50 text-slate-900 font-sans">

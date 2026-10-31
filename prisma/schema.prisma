@@ -232,6 +232,8 @@ model Note {
   domain           NotesDomain @relation(fields: [domainId], references: [id], onDelete: Cascade)
   title            String
   slug             String
+  category         String?     @default("General") // Specialization e.g. "Modern JavaScript (ES6+)", "Arrays"
+  difficulty       String?     @default("Beginner") // "Beginner" | "Intermediate" | "Advanced"
   description      String?
   storagePath      String?     // path/url to the PDF
   originalFilename String?

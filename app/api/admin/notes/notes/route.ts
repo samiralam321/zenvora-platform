@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   if (!session) return requireAdmin();
   try {
     const body = await req.json();
-    const { domainId, title, description, storagePath, originalFilename, fileSize, pageCount, displayOrder, status } = body;
+    const { domainId, title, description, storagePath, originalFilename, fileSize, pageCount, displayOrder, status, category, difficulty } = body;
     if (!domainId || !title) {
       return NextResponse.json({ error: "domainId and title are required" }, { status: 400 });
     }
@@ -53,6 +53,8 @@ export async function POST(req: NextRequest) {
         domainId,
         title,
         slug,
+        category: category || "General",
+        difficulty: difficulty || "Beginner",
         description: description || "",
         storagePath: storagePath || null,
         originalFilename: originalFilename || null,
@@ -62,6 +64,7 @@ export async function POST(req: NextRequest) {
         status: status || "draft",
         publishedAt: status === "published" ? new Date() : null,
       },
+      include: { domain: { select: { name: true, slug: true } } },
     });
 
     try {
@@ -89,7 +92,11 @@ export async function PATCH(req: NextRequest) {
       if (status === "published") updateData.publishedAt = new Date();
       else updateData.publishedAt = null;
     }
-    const note = await prisma.note.update({ where: { id }, data: updateData });
+    const note = await prisma.note.update({
+      where: { id },
+      data: updateData,
+      include: { domain: { select: { name: true, slug: true } } },
+    });
     try {
       revalidatePath("/notes");
       revalidateTag("notes_domains");
@@ -107,6 +114,13 @@ export async function DELETE(req: NextRequest) {
   try {
     const { id } = await req.json();
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+    const note = await prisma.note.findUnique({ where: { id } });
+    if (note?.storagePath?.startsWith("/api/notes/pdf/")) {
+      const fileId = note.storagePath.replace("/api/notes/pdf/", "");
+      try {
+        await prisma.noteFile.delete({ where: { id: fileId } });
+      } catch {}
+    }
     await prisma.note.delete({ where: { id } });
     try {
       revalidatePath("/notes");

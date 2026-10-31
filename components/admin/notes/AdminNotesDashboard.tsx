@@ -22,6 +22,7 @@ import {
   List,
 } from "lucide-react";
 import { getCategoryIcon } from "@/lib/notesIcons";
+import { getSuggestedSpecializations } from "@/lib/notesData";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface DbDomain {
@@ -45,6 +46,8 @@ interface DbNote {
   domainId: string;
   title: string;
   slug: string;
+  category?: string | null;
+  difficulty?: string | null;
   description: string | null;
   storagePath: string | null;
   originalFilename: string | null;
@@ -146,7 +149,7 @@ function PdfUploadArea({
     setProgress(5);
 
     try {
-      const CHUNK_SIZE = 2 * 1024 * 1024; // 2 MB slices - safely under Vercel's 4.5 MB serverless limit
+      const CHUNK_SIZE = 1 * 1024 * 1024; // 1 MB slices - safe across all hosting providers and reverse proxies
       const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
       const uploadId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `up_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
@@ -170,17 +173,23 @@ function PdfUploadArea({
           body: fd,
         });
 
-        // Safe response parsing: handle non-JSON or HTML error responses cleanly
         const text = await res.text();
+        if (!res.ok) {
+          let errMsg = `Upload failed with HTTP ${res.status}`;
+          try {
+            const errJson = JSON.parse(text);
+            if (errJson.error) errMsg = errJson.error;
+          } catch {
+            if (text && text.length < 200) errMsg = text.trim();
+          }
+          throw new Error(errMsg);
+        }
+
         let json: any = {};
         try {
           json = JSON.parse(text);
         } catch {
-          throw new Error(text.length < 150 ? text : `Upload failed with HTTP ${res.status}`);
-        }
-
-        if (!res.ok) {
-          throw new Error(json.error || `Upload error on part ${i + 1}/${totalChunks}`);
+          throw new Error("Invalid response received from upload server.");
         }
 
         const pct = Math.round(((i + 1) / totalChunks) * 100);
@@ -626,6 +635,22 @@ function NoteModal({
   const [domainId, setDomainId] = useState(
     note?.domainId || defaultDomainId || domains[0]?.id || ""
   );
+
+  const selectedDomain = domains.find((d) => d.id === domainId);
+  const suggestedSpecializations = selectedDomain
+    ? getSuggestedSpecializations(selectedDomain.slug)
+    : [];
+
+  const initialCat = note?.category || suggestedSpecializations[0] || "General";
+  const [category, setCategory] = useState(initialCat);
+  const [isCustomCategory, setIsCustomCategory] = useState(
+    !!note?.category && !suggestedSpecializations.includes(note.category)
+  );
+
+  const [difficulty, setDifficulty] = useState<"Beginner" | "Intermediate" | "Advanced">(
+    ((note?.difficulty as any) || "Beginner") as "Beginner" | "Intermediate" | "Advanced"
+  );
+
   const [title, setTitle] = useState(note?.title || "");
   const [desc, setDesc] = useState(note?.description || "");
   const [pdf, setPdf] = useState<{ url: string; name: string; size: number } | null>(
@@ -648,10 +673,13 @@ function NoteModal({
     setSaving(true);
     try {
       const finalStatus = publishNow ? "published" : status;
+      const finalCategory = category.trim() || "General";
       const payload = {
         ...(isEdit ? { id: note!.id } : {}),
         domainId,
         title: title.trim(),
+        category: finalCategory,
+        difficulty,
         description: desc,
         storagePath: pdf?.url || null,
         originalFilename: pdf?.name || null,
@@ -715,6 +743,71 @@ function NoteModal({
               placeholder="e.g. Arrays and Strings Complete Notes"
               className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
             />
+          </div>
+
+          {/* Specialization / Category & Difficulty */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-slate-700">
+                  Specialization Topic *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomCategory(!isCustomCategory)}
+                  className="text-[11px] text-[#1D64EC] hover:underline font-semibold"
+                >
+                  {isCustomCategory ? "Choose from list" : "+ Custom topic"}
+                </button>
+              </div>
+
+              {isCustomCategory ? (
+                <input
+                  type="text"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  placeholder="e.g. React Architecture"
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+                />
+              ) : (
+                <select
+                  value={category}
+                  onChange={(e) => {
+                    if (e.target.value === "__custom__") {
+                      setIsCustomCategory(true);
+                      setCategory("");
+                    } else {
+                      setCategory(e.target.value);
+                    }
+                  }}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+                >
+                  {suggestedSpecializations.map((topic) => (
+                    <option key={topic} value={topic}>
+                      {topic}
+                    </option>
+                  ))}
+                  <option value="__custom__">+ Custom Specialization...</option>
+                </select>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Difficulty Level
+              </label>
+              <select
+                value={difficulty}
+                onChange={(e) =>
+                  setDifficulty(e.target.value as "Beginner" | "Intermediate" | "Advanced")
+                }
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
+              >
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
           </div>
 
           {/* Description */}
@@ -1235,9 +1328,29 @@ export default function AdminNotesDashboard({
                     >
                       <td className="px-4 py-3">
                         <div className="font-semibold text-slate-800 line-clamp-1">{n.title}</div>
-                        {n.pageCount && (
-                          <div className="text-slate-400 text-[10px]">{n.pageCount} pages</div>
-                        )}
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          {n.category && (
+                            <span className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-slate-100 text-slate-600">
+                              {n.category}
+                            </span>
+                          )}
+                          {n.difficulty && (
+                            <span
+                              className={`text-[10px] font-semibold px-1.5 py-0.2 rounded ${
+                                n.difficulty === "Beginner"
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : n.difficulty === "Intermediate"
+                                  ? "bg-blue-50 text-[#1D64EC]"
+                                  : "bg-purple-50 text-purple-700"
+                              }`}
+                            >
+                              {n.difficulty}
+                            </span>
+                          )}
+                          {n.pageCount && (
+                            <span className="text-slate-400 text-[10px]">{n.pageCount} pages</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 hidden sm:table-cell">
                         <span className="text-slate-600">{n.domain.name}</span>
