@@ -222,10 +222,13 @@ export const NOTES_DOMAINS: DomainNotes[] = [
     rotationDeg: 2.8,
     topics: [
       "All Notes",
-      "LLM Architectures",
+      "GenAI Foundations",
+      "Transformers & Attention",
+      "Large Language Models",
       "Prompt Engineering",
-      "RAG Systems & Vector DBs",
-      "LangChain & LlamaIndex",
+      "Retrieval Augmented Generation",
+      "Diffusion & Image Generation",
+      "Fine-Tuning & Alignment",
       "Autonomous AI Agents",
     ],
     resources: [],
@@ -340,12 +343,28 @@ export const NOTES_DOMAINS: DomainNotes[] = [
   },
 ];
 
+const DOMAIN_SLUG_ALIASES: Record<string, string> = {
+  "gen-ai": "genai",
+  "backend-dev": "backend",
+  "ai-ml": "machine-learning",
+  "devops-cloud": "devops-cloud",
+};
+
 /**
  * Returns suggested specialization topics for a given domain slug
  */
 export function getSuggestedSpecializations(domainSlug?: string): string[] {
   if (!domainSlug) return [];
-  const domain = NOTES_DOMAINS.find((d) => d.slug === domainSlug || d.id === domainSlug);
+  const normalized = domainSlug.toLowerCase().trim();
+  const mapped = DOMAIN_SLUG_ALIASES[normalized] || normalized;
+  const domain = NOTES_DOMAINS.find(
+    (d) =>
+      d.slug === mapped ||
+      d.id === mapped ||
+      d.slug === normalized ||
+      d.id === normalized ||
+      d.slug.replace(/[^a-z0-9]/g, "") === normalized.replace(/[^a-z0-9]/g, "")
+  );
   if (!domain) return [];
   return domain.topics.filter((t) => t !== "All Notes");
 }

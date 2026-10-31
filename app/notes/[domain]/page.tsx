@@ -54,13 +54,24 @@ export default async function DomainNotesPage({ params }: DomainPageProps) {
     }
   } catch {}
 
-  // Fall back to static data if DB domain not found
-  const staticDomain = NOTES_DOMAINS.find((d) => d.slug === slug);
+  // Fall back to static data if DB domain not found (support slug aliases)
+  const SLUG_ALIASES: Record<string, string> = {
+    "gen-ai": "genai",
+    "backend-dev": "backend",
+    "ai-ml": "machine-learning",
+  };
+  const targetSlug = SLUG_ALIASES[slug] || slug;
+  const staticDomain = NOTES_DOMAINS.find(
+    (d) =>
+      d.slug === targetSlug ||
+      d.slug === slug ||
+      d.slug.replace(/[^a-z0-9]/g, "") === slug.replace(/[^a-z0-9]/g, "")
+  );
   if (!dbDomain && !staticDomain) notFound();
 
   // Build the domain object — prefer DB metadata, fall back to static
   const domain: any = staticDomain
-    ? { ...staticDomain }
+    ? { ...staticDomain, ...(dbDomain ? { name: dbDomain.name, shortName: dbDomain.name, description: dbDomain.description } : {}) }
     : {
         id: dbDomain.id,
         slug: dbDomain.slug,
@@ -86,14 +97,19 @@ export default async function DomainNotesPage({ params }: DomainPageProps) {
     : [];
 
   const dbCategories = Array.from(
-    new Set(dbNotes.map((n: any) => n.category || "General").filter(Boolean))
-  );
+    new Set(
+      dbNotes
+        .map((n: any) => n.category?.trim())
+        .filter((c: any) => Boolean(c) && c.toLowerCase() !== "general")
+    )
+  ) as string[];
 
   // Combine curated domain specializations and any custom categories from notes
-  const combinedSpecializationsSet = new Set([...curatedTopics, ...dbCategories]);
+  // If notes have specific categories, prioritize them; else use curated topics
+  const combinedSpecializationsSet = new Set([...dbCategories, ...curatedTopics]);
   const combinedSpecializations = Array.from(combinedSpecializationsSet);
 
-  domain.topics = ["All Notes", ...combinedSpecializations];
+  domain.topics = ["All Notes", ...(combinedSpecializations.length > 0 ? combinedSpecializations : ["General"])];
   domain.resources = dbNotes.map((n: any) => ({
     id: n.id,
     title: n.title,

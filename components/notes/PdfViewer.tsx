@@ -66,13 +66,23 @@ export default function PdfViewer({
   const [copied, setCopied] = useState<boolean>(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const annotationLayerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pdfDocRef = useRef<any>(null);
   const renderTaskRef = useRef<any>(null);
 
-  // 1. Load PDF.js library from Mozilla CDN once
+  // 1. Load PDF.js library & companion annotation stylesheet from Mozilla CDN once
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Load PDF viewer stylesheet for annotations & interactive elements
+    if (!document.getElementById("pdfjs-viewer-css")) {
+      const link = document.createElement("link");
+      link.id = "pdfjs-viewer-css";
+      link.rel = "stylesheet";
+      link.href = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css";
+      document.head.appendChild(link);
+    }
 
     if ((window as any).pdfjsLib) {
       setPdfLibReady(true);
@@ -177,6 +187,84 @@ export default function PdfViewer({
         const renderTask = page.render(renderContext);
         renderTaskRef.current = renderTask;
         await renderTask.promise;
+
+        // Render interactive annotations (links, buttons, table of contents jumps, widgets)
+        const annotDiv = annotationLayerRef.current;
+        if (annotDiv) {
+          annotDiv.innerHTML = "";
+          annotDiv.style.width = `${Math.floor(viewport.width)}px`;
+          annotDiv.style.height = `${Math.floor(viewport.height)}px`;
+
+          try {
+            const annotations = await page.getAnnotations({ intent: "display" });
+            const pdfjs = (window as any).pdfjsLib;
+
+            if (annotations && annotations.length > 0 && pdfjs?.AnnotationLayer) {
+              const linkService = {
+                getDestinationHash: (dest: any) => "#",
+                getAnchorUrl: (hash: string) => hash || "#",
+                setHash: (hash: string) => {},
+                executeNamedAction: (action: string) => {
+                  if (action === "NextPage") setCurrentPage((p) => Math.min(p + 1, numPages));
+                  else if (action === "PrevPage") setCurrentPage((p) => Math.max(p - 1, 1));
+                  else if (action === "FirstPage") setCurrentPage(1);
+                  else if (action === "LastPage") setCurrentPage(numPages);
+                },
+                navigateTo: async (dest: any) => {
+                  try {
+                    let destArray = dest;
+                    if (typeof dest === "string") {
+                      destArray = await pdfDocRef.current?.getDestination(dest);
+                    }
+                    if (Array.isArray(destArray) && destArray[0]) {
+                      const pageIndex = await pdfDocRef.current?.getPageIndex(destArray[0]);
+                      if (typeof pageIndex === "number" && !isNaN(pageIndex)) {
+                        setCurrentPage(pageIndex + 1);
+                        return;
+                      }
+                    }
+                    if (typeof dest === "number" && dest >= 1 && dest <= numPages) {
+                      setCurrentPage(dest);
+                    }
+                  } catch (e) {
+                    console.warn("PDF link navigation failed:", e);
+                  }
+                },
+                goToPage: (val: any) => {
+                  if (typeof val === "number" && val >= 1 && val <= numPages) {
+                    setCurrentPage(val);
+                  }
+                },
+                addLinkAttributes: (
+                  element: HTMLAnchorElement,
+                  linkUrl: string,
+                  newWindow?: boolean
+                ) => {
+                  if (linkUrl) {
+                    element.href = linkUrl;
+                    element.target = newWindow !== false ? "_blank" : "_self";
+                    element.rel = "noopener noreferrer nofollow";
+                  }
+                },
+              };
+
+              const annotLayer = new pdfjs.AnnotationLayer({
+                div: annotDiv,
+                page: page,
+                viewport: viewport.clone({ dontFlip: true }),
+              });
+
+              await annotLayer.render({
+                annotations,
+                linkService,
+                renderForms: true,
+                imageResourcesPath: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/images/",
+              });
+            }
+          } catch (annotErr) {
+            console.warn("Annotation layer render warning:", annotErr);
+          }
+        }
       } catch (err: any) {
         if (err?.name !== "RenderingCancelledException") {
           console.error("Page render error:", err);
@@ -185,7 +273,7 @@ export default function PdfViewer({
         setPageRendering(false);
       }
     },
-    [scale, rotation]
+    [scale, rotation, numPages]
   );
 
   useEffect(() => {
@@ -390,11 +478,17 @@ export default function PdfViewer({
           style={{ minWidth: 280 }}
         >
           {pageRendering && (
-            <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
+            <div className="absolute inset-0 z-20 bg-white/60 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
               <Loader2 className="w-6 h-6 animate-spin text-[#1D64EC]" />
             </div>
           )}
-          <canvas ref={canvasRef} className="block select-none" />
+          <div className="relative inline-block overflow-hidden">
+            <canvas ref={canvasRef} className="block select-none" />
+            <div
+              ref={annotationLayerRef}
+              className="annotationLayer absolute inset-0 pointer-events-auto"
+            />
+          </div>
         </div>
       </div>
 
@@ -488,6 +582,46 @@ export default function PdfViewer({
           </div>
         </div>
       )}
+      {/* Interactive PDF Annotation Layer Styling */}
+      <style jsx global>{`
+        .annotationLayer {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          pointer-events: none;
+          transform-origin: 0 0;
+        }
+        .annotationLayer section {
+          position: absolute;
+          text-align: initial;
+          pointer-events: auto;
+          box-sizing: border-box;
+          transform-origin: 0 0;
+        }
+        .annotationLayer .linkAnnotation > a,
+        .annotationLayer .buttonWidgetAnnotation > a,
+        .annotationLayer .buttonWidgetAnnotation > button,
+        .annotationLayer .buttonWidgetAnnotation > input {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          cursor: pointer !important;
+          pointer-events: auto !important;
+          background-color: transparent;
+          border-radius: 4px;
+          transition: background-color 0.15s ease, outline 0.15s ease;
+        }
+        .annotationLayer .linkAnnotation > a:hover,
+        .annotationLayer .buttonWidgetAnnotation > a:hover,
+        .annotationLayer .buttonWidgetAnnotation > button:hover {
+          background-color: rgba(29, 100, 236, 0.18) !important;
+          outline: 1.5px solid rgba(29, 100, 236, 0.5) !important;
+        }
+      `}</style>
     </div>
   );
 }

@@ -121,20 +121,99 @@ function Toast({
 
 // ── PDF Metadata & Chunked Upload Helpers ────────────────────────────────────
 
+const KNOWN_ACRONYMS = new Set([
+  "AI", "DSA", "LLM", "LLMS", "RAG", "DBMS", "SQL", "API", "APIS",
+  "UI", "UX", "CSS", "HTML", "JS", "TS", "OS", "CAP", "RLHF", "DPO", "PEFT",
+  "OOP", "AWS", "CI", "CD", "REST", "SDK", "BST", "DP", "TCP", "UDP", "IP"
+]);
+
 export function cleanFilenameToTitle(filename: string): string {
   if (!filename) return "";
-  let name = filename.replace(/\.[^/.]+$/, "");
-  name = name.replace(/^[\d\s._-]+/, "");
-  name = name.replace(/[-_.]+/g, " ");
-  name = name.replace(/\s+/g, " ").trim();
-  return name
+  let raw = filename.replace(/\.[^/.]+$/, "").trim();
+  // Strip platform brand prefixes
+  raw = raw.replace(/^(zenvora|zen|platform)[-_\s]*/i, "");
+  // Strip common domain prefixes
+  raw = raw.replace(
+    /^(genai|gen-ai|dsa|webdev|web-dev|backend|backend-dev|fullstack|cs|cs-fundamentals|ml|ai-ml|system-design|devops|devops-cloud)[-_\s]*/i,
+    ""
+  );
+  // Strip leading numbers like 01-, 1_, 1. 02_
+  raw = raw.replace(/^[\d\s._-]+/, "");
+  // Strip trailing notes/handbook
+  raw = raw.replace(/[-_\s]*(notes|handbook|guide|exclusive notes)$/i, "");
+  // Clean separators
+  raw = raw.replace(/[-_.]+/g, " ").replace(/\s+/g, " ").trim();
+
+  if (!raw) raw = filename.replace(/\.[^/.]+$/, "").trim();
+
+  return raw
     .split(" ")
     .map((word) => {
       if (!word) return "";
-      if (word.length <= 4 && word === word.toUpperCase()) return word;
+      const upper = word.toUpperCase();
+      if (KNOWN_ACRONYMS.has(upper)) return upper;
+      const lower = word.toLowerCase();
+      if (lower === "and") return "and";
+      if (lower === "vs") return "vs";
+      if (lower === "in" || lower === "of" || lower === "for" || lower === "to") return lower;
       return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
     })
     .join(" ");
+}
+
+export function extractTopicFromFilename(
+  filename: string,
+  domainSlug?: string,
+  availableTopics: string[] = []
+): string {
+  const cleanTitle = cleanFilenameToTitle(filename);
+  const lowerFile = filename.toLowerCase();
+  const lowerTitle = cleanTitle.toLowerCase();
+
+  // 1. Try matching against provided domain topics
+  if (availableTopics.length > 0) {
+    for (const t of availableTopics) {
+      if (t === "All Notes" || t.toLowerCase() === "general") continue;
+      const lowerT = t.toLowerCase();
+      if (lowerFile.includes(lowerT) || lowerTitle.includes(lowerT)) {
+        return t;
+      }
+      const topicWords = lowerT.split(/\s+/).filter((w) => w.length > 3 && w !== "notes");
+      if (
+        topicWords.length > 0 &&
+        topicWords.every((w) => lowerFile.includes(w) || lowerTitle.includes(w))
+      ) {
+        return t;
+      }
+    }
+  }
+
+  // 2. Keyword-based heuristics for common concepts
+  if (lowerFile.includes("transformer") || lowerFile.includes("attention")) return "Transformers & Attention";
+  if (lowerFile.includes("large language") || lowerFile.includes("llm")) return "Large Language Models";
+  if (lowerFile.includes("prompt")) return "Prompt Engineering";
+  if (lowerFile.includes("retrieval") || lowerFile.includes("rag")) return "Retrieval Augmented Generation";
+  if (lowerFile.includes("diffusion") || lowerFile.includes("image gen")) return "Diffusion & Image Generation";
+  if (lowerFile.includes("fine tuning") || lowerFile.includes("alignment") || lowerFile.includes("rlhf"))
+    return "Fine-Tuning & Alignment";
+  if (lowerFile.includes("agent") || lowerFile.includes("tool use")) return "Autonomous AI Agents";
+  if (lowerFile.includes("scaling") || lowerFile.includes("horizontal")) return "Horizontal vs Vertical Scaling";
+  if (lowerFile.includes("load balanc")) return "Load Balancing";
+  if (lowerFile.includes("caching") || lowerFile.includes("redis")) return "Caching (Redis, Memcached)";
+  if (lowerFile.includes("sharding") || lowerFile.includes("replication"))
+    return "Database Sharding & Replication";
+  if (lowerFile.includes("cap theorem")) return "CAP Theorem";
+  if (lowerFile.includes("rate limit")) return "Rate Limiting";
+  if (lowerFile.includes("docker")) return "Docker Fundamentals";
+  if (lowerFile.includes("kubernetes")) return "Kubernetes Architecture";
+  if (lowerFile.includes("network")) return "Computer Networks";
+  if (lowerFile.includes("operating system") || lowerFile.includes("os ")) return "Operating Systems";
+  if (lowerFile.includes("dbms") || lowerFile.includes("database")) return "DBMS & SQL";
+  if (lowerFile.includes("placement") || lowerFile.includes("interview")) return "Placement Patterns";
+  if (lowerFile.includes("generative ai") || lowerFile.includes("genai")) return "GenAI Foundations";
+
+  // 3. Fall back to the cleaned title itself rather than "General"
+  return cleanTitle || "Core Concepts";
 }
 
 function readBinarySlice(file: File, maxBytes = 2500000): Promise<string> {
@@ -147,12 +226,18 @@ function readBinarySlice(file: File, maxBytes = 2500000): Promise<string> {
   });
 }
 
-export async function extractPdfMetadata(file: File): Promise<{
+export async function extractPdfMetadata(
+  file: File,
+  domainSlug?: string,
+  availableTopics: string[] = []
+): Promise<{
   title: string;
+  topic: string;
   pageCount: number;
   size: number;
 }> {
   const title = cleanFilenameToTitle(file.name);
+  const topic = extractTopicFromFilename(file.name, domainSlug, availableTopics);
   let pageCount = 1;
 
   // 1. Try reading with PDF.js if available in browser
@@ -167,7 +252,7 @@ export async function extractPdfMetadata(file: File): Promise<{
       });
       const pdf = await loadingTask.promise;
       if (pdf && pdf.numPages > 0) {
-        return { title, pageCount: pdf.numPages, size: file.size };
+        return { title, topic, pageCount: pdf.numPages, size: file.size };
       }
     }
   } catch (err) {
@@ -186,17 +271,17 @@ export async function extractPdfMetadata(file: File): Promise<{
     if (countMatches.length > 0) {
       const maxCount = Math.max(...countMatches);
       if (maxCount > 0 && maxCount < 5000) {
-        return { title, pageCount: maxCount, size: file.size };
+        return { title, topic, pageCount: maxCount, size: file.size };
       }
     }
 
     const pageMatches = text.match(/\/Type\s*\/Page[^s]/g);
     if (pageMatches && pageMatches.length > 0) {
-      return { title, pageCount: pageMatches.length, size: file.size };
+      return { title, topic, pageCount: pageMatches.length, size: file.size };
     }
   } catch {}
 
-  return { title, pageCount, size: file.size };
+  return { title, topic, pageCount, size: file.size };
 }
 
 export async function uploadPdfFile(
@@ -277,11 +362,15 @@ function PdfUploadArea({
   onChange,
   onAutoFill,
   onMultipleFiles,
+  domainSlug,
+  availableTopics = [],
 }: {
   value: { url: string; name: string; size: number } | null;
   onChange: (v: { url: string; name: string; size: number } | null) => void;
-  onAutoFill?: (meta: { title: string; pageCount: number }) => void;
+  onAutoFill?: (meta: { title: string; topic: string; pageCount: number }) => void;
   onMultipleFiles?: (files: File[]) => void;
+  domainSlug?: string;
+  availableTopics?: string[];
 }) {
   const [mode, setMode] = useState<"upload" | "link">("upload");
   const [directUrl, setDirectUrl] = useState(
@@ -298,14 +387,19 @@ function PdfUploadArea({
   const handleProcessFile = async (file: File) => {
     setError("");
     const cleanTitle = cleanFilenameToTitle(file.name);
+    const initialTopic = extractTopicFromFilename(file.name, domainSlug, availableTopics);
     if (onAutoFill) {
-      onAutoFill({ title: cleanTitle, pageCount: 1 });
+      onAutoFill({ title: cleanTitle, topic: initialTopic, pageCount: 1 });
     }
 
     // Auto extract exact page count in parallel
-    extractPdfMetadata(file).then((meta) => {
+    extractPdfMetadata(file, domainSlug, availableTopics).then((meta) => {
       if (onAutoFill) {
-        onAutoFill({ title: meta.title || cleanTitle, pageCount: meta.pageCount });
+        onAutoFill({
+          title: meta.title || cleanTitle,
+          topic: meta.topic || initialTopic,
+          pageCount: meta.pageCount,
+        });
       }
     });
 
@@ -330,8 +424,9 @@ function PdfUploadArea({
     }
     const name = directName.trim() || directUrl.split("/").pop()?.split("?")[0] || "document.pdf";
     const cleanTitle = cleanFilenameToTitle(name);
+    const topic = extractTopicFromFilename(name, domainSlug, availableTopics);
     if (onAutoFill) {
-      onAutoFill({ title: cleanTitle, pageCount: 1 });
+      onAutoFill({ title: cleanTitle, topic, pageCount: 1 });
     }
     onChange({ url: directUrl.trim(), name, size: 0 });
   };
@@ -794,12 +889,17 @@ function BulkNotesUploadModal({
     const newItems: BulkItem[] = valid.map((file, idx) => {
       const id = `${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 7)}`;
       const title = cleanFilenameToTitle(file.name);
+      const topic = extractTopicFromFilename(
+        file.name,
+        selectedDomain?.slug,
+        suggestedSpecializations
+      );
       return {
         id,
         file,
         title,
         pageCount: 1,
-        category: defaultCategory,
+        category: topic,
         difficulty: globalDifficulty,
         size: file.size,
         status: "idle",
@@ -809,13 +909,19 @@ function BulkNotesUploadModal({
 
     setItems((prev) => [...prev, ...newItems]);
 
-    // Asynchronously detect exact page counts for each file
+    // Asynchronously detect exact page counts and refined topics for each file
     newItems.forEach((item) => {
-      extractPdfMetadata(item.file).then((meta) => {
+      extractPdfMetadata(item.file, selectedDomain?.slug, suggestedSpecializations).then((meta) => {
         setItems((current) =>
           current.map((ci) =>
             ci.id === item.id
-              ? { ...ci, pageCount: meta.pageCount, title: ci.title || meta.title }
+              ? {
+                  ...ci,
+                  pageCount: meta.pageCount,
+                  title: ci.title || meta.title,
+                  category:
+                    ci.category && ci.category !== "General" ? ci.category : meta.topic,
+                }
               : ci
           )
         );
@@ -864,9 +970,11 @@ function BulkNotesUploadModal({
         const payload = {
           domainId,
           title: item.title.trim() || cleanFilenameToTitle(item.file.name),
-          category: item.category.trim() || defaultCategory,
+          category:
+            item.category.trim() ||
+            extractTopicFromFilename(item.file.name, selectedDomain?.slug, suggestedSpecializations),
           difficulty: item.difficulty || globalDifficulty,
-          description: `Comprehensive study notes for ${item.title}.`,
+          description: `Comprehensive study notes for ${item.title.trim() || cleanFilenameToTitle(item.file.name)}.`,
           storagePath: uploadRes.url,
           originalFilename: uploadRes.filename,
           fileSize: uploadRes.size,
@@ -1077,16 +1185,22 @@ function BulkNotesUploadModal({
                         />
                       </div>
 
-                      {/* Specialization Topic */}
-                      <div className="w-full sm:w-36">
+                      {/* Specialization Topic with suggestions */}
+                      <div className="w-full sm:w-44">
                         <input
                           type="text"
+                          list={`topics_${it.id}`}
                           disabled={isProcessing || it.status === "done"}
                           value={it.category}
                           onChange={(e) => updateItem(it.id, { category: e.target.value })}
-                          placeholder="Topic"
+                          placeholder="Topic / Specialization"
                           className="w-full text-xs font-medium border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#1D64EC] bg-white"
                         />
+                        <datalist id={`topics_${it.id}`}>
+                          {suggestedSpecializations.map((top) => (
+                            <option key={top} value={top} />
+                          ))}
+                        </datalist>
                       </div>
 
                       {/* Page Count */}
@@ -1242,12 +1356,21 @@ function NoteModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const handleAutoFill = (meta: { title: string; pageCount: number }) => {
+  const handleAutoFill = (meta: { title: string; topic: string; pageCount: number }) => {
     if (!title.trim() || title === "e.g. Arrays and Strings Complete Notes") {
       setTitle(meta.title);
     }
     if (meta.pageCount > 0) {
       setPageCount(meta.pageCount.toString());
+    }
+    if (meta.topic && (!category || category === "General" || category === suggestedSpecializations[0])) {
+      if (suggestedSpecializations.includes(meta.topic)) {
+        setCategory(meta.topic);
+        setIsCustomCategory(false);
+      } else {
+        setCategory(meta.topic);
+        setIsCustomCategory(true);
+      }
     }
   };
 
@@ -1258,7 +1381,8 @@ function NoteModal({
     setSaving(true);
     try {
       const finalStatus = publishNow ? "published" : status;
-      const finalCategory = category.trim() || "General";
+      const finalCategory =
+        category.trim() || suggestedSpecializations[0] || "Core Concepts";
       const payload = {
         ...(isEdit ? { id: note!.id } : {}),
         domainId,
@@ -1446,6 +1570,8 @@ function NoteModal({
               value={pdf}
               onChange={setPdf}
               onAutoFill={handleAutoFill}
+              domainSlug={selectedDomain?.slug}
+              availableTopics={suggestedSpecializations}
               onMultipleFiles={(files) => {
                 if (onSwitchToBulk) onSwitchToBulk(files);
               }}
