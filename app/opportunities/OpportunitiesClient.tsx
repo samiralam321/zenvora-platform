@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   Search,
   ExternalLink,
@@ -408,29 +409,35 @@ export default function OpportunitiesClient({
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-1 overflow-x-auto py-3 scrollbar-hide">
             {CATEGORIES.map(({ key, label, icon: Icon }) => {
-              // Ambassador tab links to its dedicated page
+              // Ambassador tab links to its dedicated page — no pill needed
               if (key === "Campus Ambassador Programs") {
                 return (
                   <Link
                     key={key}
                     href="/opportunities/campus-ambassador-programs"
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all text-slate-600 hover:bg-violet-50 hover:text-violet-700"
+                    className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors text-slate-600 hover:text-violet-700"
                   >
                     <Icon className="w-4 h-4" />
                     {label}
                   </Link>
                 );
               }
+              const isActive = activeCategory === key;
               return (
                 <button
                   key={key}
                   onClick={() => setActiveCategory(key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
-                    activeCategory === key
-                      ? "bg-[#1D64EC] text-white shadow-sm"
-                      : "text-slate-600 hover:bg-slate-100"
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors z-10 ${
+                    isActive ? "text-white" : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
+                  {isActive && (
+                    <motion.span
+                      layoutId="opp-active-pill"
+                      className="absolute inset-0 bg-[#1D64EC] rounded-xl shadow-sm z-[-1]"
+                      transition={{ type: "spring", stiffness: 400, damping: 38 }}
+                    />
+                  )}
                   <Icon className="w-4 h-4" />
                   {label}
                 </button>
