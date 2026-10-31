@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   BookOpen,
   Plus,
@@ -20,6 +20,10 @@ import {
   Search,
   LayoutGrid,
   List,
+  Files,
+  Check,
+  Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import { getCategoryIcon } from "@/lib/notesIcons";
 import { getSuggestedSpecializations } from "@/lib/notesData";
@@ -115,13 +119,169 @@ function Toast({
   );
 }
 
+// ── PDF Metadata & Chunked Upload Helpers ────────────────────────────────────
+
+export function cleanFilenameToTitle(filename: string): string {
+  if (!filename) return "";
+  let name = filename.replace(/\.[^/.]+$/, "");
+  name = name.replace(/^[\d\s._-]+/, "");
+  name = name.replace(/[-_.]+/g, " ");
+  name = name.replace(/\s+/g, " ").trim();
+  return name
+    .split(" ")
+    .map((word) => {
+      if (!word) return "";
+      if (word.length <= 4 && word === word.toUpperCase()) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(" ");
+}
+
+function readBinarySlice(file: File, maxBytes = 2500000): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string) || "");
+    reader.onerror = () => resolve("");
+    const slice = file.slice(0, Math.min(file.size, maxBytes));
+    reader.readAsBinaryString(slice);
+  });
+}
+
+export async function extractPdfMetadata(file: File): Promise<{
+  title: string;
+  pageCount: number;
+  size: number;
+}> {
+  const title = cleanFilenameToTitle(file.name);
+  let pageCount = 1;
+
+  // 1. Try reading with PDF.js if available in browser
+  try {
+    const pdfjsLib = typeof window !== "undefined" ? (window as any)?.pdfjsLib : null;
+    if (pdfjsLib) {
+      const buffer = await file.arrayBuffer();
+      const loadingTask = pdfjsLib.getDocument({
+        data: buffer,
+        cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
+        cMapPacked: true,
+      });
+      const pdf = await loadingTask.promise;
+      if (pdf && pdf.numPages > 0) {
+        return { title, pageCount: pdf.numPages, size: file.size };
+      }
+    }
+  } catch (err) {
+    // fallback
+  }
+
+  // 2. Binary fallback scanning for /Count N and /Type /Page
+  try {
+    const text = await readBinarySlice(file);
+    const countMatches: number[] = [];
+    const countRegex = /\/Count\s+(\d+)/g;
+    let match: RegExpExecArray | null;
+    while ((match = countRegex.exec(text)) !== null) {
+      countMatches.push(parseInt(match[1]));
+    }
+    if (countMatches.length > 0) {
+      const maxCount = Math.max(...countMatches);
+      if (maxCount > 0 && maxCount < 5000) {
+        return { title, pageCount: maxCount, size: file.size };
+      }
+    }
+
+    const pageMatches = text.match(/\/Type\s*\/Page[^s]/g);
+    if (pageMatches && pageMatches.length > 0) {
+      return { title, pageCount: pageMatches.length, size: file.size };
+    }
+  } catch {}
+
+  return { title, pageCount, size: file.size };
+}
+
+export async function uploadPdfFile(
+  file: File,
+  onProgress?: (percent: number) => void
+): Promise<{ url: string; filename: string; size: number }> {
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    throw new Error("Only PDF files are accepted.");
+  }
+  if (file.size > 50 * 1024 * 1024) {
+    throw new Error("File exceeds 50 MB limit. Please select a smaller PDF or use 'Paste PDF Link'.");
+  }
+
+  const CHUNK_SIZE = 1 * 1024 * 1024; // 1 MB slices
+  const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
+  const uploadId =
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `up_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+  let resultData: any = null;
+
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE, file.size);
+    const chunkBlob = file.slice(start, end);
+
+    const fd = new FormData();
+    fd.append("file", chunkBlob, file.name);
+    fd.append("uploadId", uploadId);
+    fd.append("chunkIndex", i.toString());
+    fd.append("totalChunks", totalChunks.toString());
+    fd.append("filename", file.name);
+    fd.append("mimeType", file.type || "application/pdf");
+
+    const res = await fetch("/api/admin/notes/upload", {
+      method: "POST",
+      body: fd,
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+      let errMsg = `Upload failed with HTTP ${res.status}`;
+      try {
+        const errJson = JSON.parse(text);
+        if (errJson.error) errMsg = errJson.error;
+      } catch {
+        if (text && text.length < 200) errMsg = text.trim();
+      }
+      throw new Error(errMsg);
+    }
+
+    let json: any = {};
+    try {
+      json = JSON.parse(text);
+    } catch {
+      throw new Error("Invalid response received from upload server.");
+    }
+
+    const pct = Math.round(((i + 1) / totalChunks) * 100);
+    if (onProgress) onProgress(pct);
+
+    if (json.complete) {
+      resultData = json;
+    }
+  }
+
+  if (resultData) {
+    return { url: resultData.url, filename: resultData.filename, size: resultData.size };
+  } else {
+    throw new Error("Upload completed without receiving file URL");
+  }
+}
+
 // ── Drag-Drop & External Link PDF Upload ────────────────────────────────────
 function PdfUploadArea({
   value,
   onChange,
+  onAutoFill,
+  onMultipleFiles,
 }: {
   value: { url: string; name: string; size: number } | null;
   onChange: (v: { url: string; name: string; size: number } | null) => void;
+  onAutoFill?: (meta: { title: string; pageCount: number }) => void;
+  onMultipleFiles?: (files: File[]) => void;
 }) {
   const [mode, setMode] = useState<"upload" | "link">("upload");
   const [directUrl, setDirectUrl] = useState(
@@ -135,76 +295,25 @@ function PdfUploadArea({
   const [progress, setProgress] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const doUpload = async (file: File) => {
+  const handleProcessFile = async (file: File) => {
     setError("");
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      setError("Only PDF files are accepted.");
-      return;
+    const cleanTitle = cleanFilenameToTitle(file.name);
+    if (onAutoFill) {
+      onAutoFill({ title: cleanTitle, pageCount: 1 });
     }
-    if (file.size > 50 * 1024 * 1024) {
-      setError("File exceeds 50 MB limit. Please select a smaller PDF or use 'Paste PDF Link'.");
-      return;
-    }
+
+    // Auto extract exact page count in parallel
+    extractPdfMetadata(file).then((meta) => {
+      if (onAutoFill) {
+        onAutoFill({ title: meta.title || cleanTitle, pageCount: meta.pageCount });
+      }
+    });
+
     setUploading(true);
     setProgress(5);
-
     try {
-      const CHUNK_SIZE = 1 * 1024 * 1024; // 1 MB slices - safe across all hosting providers and reverse proxies
-      const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
-      const uploadId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `up_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-
-      let resultData: any = null;
-
-      for (let i = 0; i < totalChunks; i++) {
-        const start = i * CHUNK_SIZE;
-        const end = Math.min(start + CHUNK_SIZE, file.size);
-        const chunkBlob = file.slice(start, end);
-
-        const fd = new FormData();
-        fd.append("file", chunkBlob, file.name);
-        fd.append("uploadId", uploadId);
-        fd.append("chunkIndex", i.toString());
-        fd.append("totalChunks", totalChunks.toString());
-        fd.append("filename", file.name);
-        fd.append("mimeType", file.type || "application/pdf");
-
-        const res = await fetch("/api/admin/notes/upload", {
-          method: "POST",
-          body: fd,
-        });
-
-        const text = await res.text();
-        if (!res.ok) {
-          let errMsg = `Upload failed with HTTP ${res.status}`;
-          try {
-            const errJson = JSON.parse(text);
-            if (errJson.error) errMsg = errJson.error;
-          } catch {
-            if (text && text.length < 200) errMsg = text.trim();
-          }
-          throw new Error(errMsg);
-        }
-
-        let json: any = {};
-        try {
-          json = JSON.parse(text);
-        } catch {
-          throw new Error("Invalid response received from upload server.");
-        }
-
-        const pct = Math.round(((i + 1) / totalChunks) * 100);
-        setProgress(pct);
-
-        if (json.complete) {
-          resultData = json;
-        }
-      }
-
-      if (resultData) {
-        onChange({ url: resultData.url, name: resultData.filename, size: resultData.size });
-      } else {
-        throw new Error("Upload completed without receiving file URL");
-      }
+      const res = await uploadPdfFile(file, (p) => setProgress(p));
+      onChange({ url: res.url, name: res.filename, size: res.size });
     } catch (e: any) {
       console.error("Upload error:", e);
       setError(e.message || "Upload failed");
@@ -220,14 +329,24 @@ function PdfUploadArea({
       return;
     }
     const name = directName.trim() || directUrl.split("/").pop()?.split("?")[0] || "document.pdf";
+    const cleanTitle = cleanFilenameToTitle(name);
+    if (onAutoFill) {
+      onAutoFill({ title: cleanTitle, pageCount: 1 });
+    }
     onChange({ url: directUrl.trim(), name, size: 0 });
   };
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) doUpload(file);
+    const files = Array.from(e.dataTransfer.files).filter(
+      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
+    );
+    if (files.length > 1 && onMultipleFiles) {
+      onMultipleFiles(files);
+      return;
+    }
+    if (files[0]) handleProcessFile(files[0]);
   };
 
   return (
@@ -321,11 +440,18 @@ function PdfUploadArea({
           <input
             ref={inputRef}
             type="file"
-            accept="application/pdf"
+            accept="application/pdf,.pdf"
+            multiple
             className="hidden"
             onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) doUpload(f);
+              const files = Array.from(e.target.files || []).filter(
+                (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
+              );
+              if (files.length > 1 && onMultipleFiles) {
+                onMultipleFiles(files);
+                return;
+              }
+              if (files[0]) handleProcessFile(files[0]);
               e.target.value = "";
             }}
           />
@@ -617,6 +743,454 @@ function DomainModal({
   );
 }
 
+// ── Bulk Upload Modal ───────────────────────────────────────────────────────
+interface BulkItem {
+  id: string;
+  file: File;
+  title: string;
+  pageCount: number;
+  category: string;
+  difficulty: "Beginner" | "Intermediate" | "Advanced";
+  size: number;
+  status: "idle" | "uploading" | "saving" | "done" | "error";
+  progress: number;
+  error?: string;
+  noteResult?: DbNote;
+}
+
+function BulkNotesUploadModal({
+  domains,
+  initialFiles,
+  defaultDomainId,
+  onClose,
+  onSavedBatch,
+}: {
+  domains: DbDomain[];
+  initialFiles?: File[];
+  defaultDomainId?: string;
+  onClose: () => void;
+  onSavedBatch: (notes: DbNote[]) => void;
+}) {
+  const [domainId, setDomainId] = useState(defaultDomainId || domains[0]?.id || "");
+  const [globalDifficulty, setGlobalDifficulty] = useState<"Beginner" | "Intermediate" | "Advanced">("Beginner");
+  const [globalStatus, setGlobalStatus] = useState<"published" | "draft">("published");
+  const [items, setItems] = useState<BulkItem[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const selectedDomain = domains.find((d) => d.id === domainId);
+  const suggestedSpecializations = selectedDomain
+    ? getSuggestedSpecializations(selectedDomain.slug)
+    : [];
+  const defaultCategory = suggestedSpecializations[0] || "General";
+
+  const addFiles = (files: File[]) => {
+    const valid = files.filter(
+      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
+    );
+    if (valid.length === 0) return;
+
+    const newItems: BulkItem[] = valid.map((file, idx) => {
+      const id = `${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 7)}`;
+      const title = cleanFilenameToTitle(file.name);
+      return {
+        id,
+        file,
+        title,
+        pageCount: 1,
+        category: defaultCategory,
+        difficulty: globalDifficulty,
+        size: file.size,
+        status: "idle",
+        progress: 0,
+      };
+    });
+
+    setItems((prev) => [...prev, ...newItems]);
+
+    // Asynchronously detect exact page counts for each file
+    newItems.forEach((item) => {
+      extractPdfMetadata(item.file).then((meta) => {
+        setItems((current) =>
+          current.map((ci) =>
+            ci.id === item.id
+              ? { ...ci, pageCount: meta.pageCount, title: ci.title || meta.title }
+              : ci
+          )
+        );
+      });
+    });
+  };
+
+  useEffect(() => {
+    if (initialFiles && initialFiles.length > 0) {
+      addFiles(initialFiles);
+    }
+  }, [initialFiles]);
+
+  const removeItem = (id: string) => {
+    if (isProcessing) return;
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const updateItem = (id: string, updates: Partial<BulkItem>) => {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...updates } : i)));
+  };
+
+  const handleStartBulkUpload = async () => {
+    if (!domainId) return;
+    const pendingItems = items.filter((i) => i.status !== "done");
+    if (pendingItems.length === 0) return;
+
+    setIsProcessing(true);
+    const createdNotes: DbNote[] = [];
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.status === "done") continue;
+
+      updateItem(item.id, { status: "uploading", progress: 5, error: undefined });
+
+      try {
+        // Step 1: Chunked upload
+        const uploadRes = await uploadPdfFile(item.file, (p) => {
+          updateItem(item.id, { progress: p });
+        });
+
+        // Step 2: Save to database
+        updateItem(item.id, { status: "saving" });
+
+        const payload = {
+          domainId,
+          title: item.title.trim() || cleanFilenameToTitle(item.file.name),
+          category: item.category.trim() || defaultCategory,
+          difficulty: item.difficulty || globalDifficulty,
+          description: `Comprehensive study notes for ${item.title}.`,
+          storagePath: uploadRes.url,
+          originalFilename: uploadRes.filename,
+          fileSize: uploadRes.size,
+          pageCount: item.pageCount || 1,
+          displayOrder: i,
+          status: globalStatus,
+        };
+
+        const res = await fetch("/api/admin/notes/notes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const resData = await res.json();
+        if (!res.ok) throw new Error(resData.error || "Failed to save note record");
+
+        createdNotes.push(resData.note);
+        updateItem(item.id, { status: "done", progress: 100, noteResult: resData.note });
+      } catch (err: any) {
+        console.error("Bulk upload error:", err);
+        updateItem(item.id, { status: "error", error: err.message || "Upload failed" });
+      }
+    }
+
+    setIsProcessing(false);
+    if (createdNotes.length > 0) {
+      onSavedBatch(createdNotes);
+    }
+  };
+
+  const completedCount = items.filter((i) => i.status === "done").length;
+  const pendingCount = items.filter((i) => i.status !== "done").length;
+  const totalBytes = items.reduce((acc, i) => acc + i.size, 0);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col my-auto border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0 bg-white">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200/80 text-indigo-600 flex items-center justify-center">
+              <Files className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                Bulk Upload PDF Notes
+              </h2>
+              <p className="text-xs text-slate-500">
+                Select multiple PDFs at once. Titles and page counts are automatically extracted.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            disabled={isProcessing}
+            className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition disabled:opacity-50"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Scrollable Body */}
+        <div className="p-6 space-y-5 overflow-y-auto flex-1 overscroll-contain">
+          {/* Settings Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl text-xs">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Target Domain *</label>
+              <select
+                value={domainId}
+                disabled={isProcessing}
+                onChange={(e) => setDomainId(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#1D64EC]"
+              >
+                {domains.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Default Difficulty</label>
+              <select
+                value={globalDifficulty}
+                disabled={isProcessing}
+                onChange={(e) => setGlobalDifficulty(e.target.value as any)}
+                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#1D64EC]"
+              >
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Publication Status</label>
+              <select
+                value={globalStatus}
+                disabled={isProcessing}
+                onChange={(e) => setGlobalStatus(e.target.value as any)}
+                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#1D64EC]"
+              >
+                <option value="published">Publish Live Immediately</option>
+                <option value="draft">Save as Drafts</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Multiple File Dropzone */}
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (!isProcessing) setDragActive(true);
+            }}
+            onDragLeave={() => setDragActive(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragActive(false);
+              if (!isProcessing) addFiles(Array.from(e.dataTransfer.files));
+            }}
+            onClick={() => !isProcessing && fileInputRef.current?.click()}
+            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+              dragActive
+                ? "border-indigo-500 bg-indigo-50/70"
+                : "border-slate-300 hover:border-indigo-500 hover:bg-slate-50"
+            } ${isProcessing ? "opacity-60 cursor-not-allowed" : ""}`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,application/pdf"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) addFiles(Array.from(e.target.files));
+                e.target.value = "";
+              }}
+            />
+            <Upload className="w-8 h-8 text-indigo-500 mx-auto mb-2" />
+            <p className="text-sm font-bold text-slate-800">
+              Click to browse or drop multiple PDF files here
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Select 2, 5, 10 or more PDF notes. Each will be processed and published automatically.
+            </p>
+          </div>
+
+          {/* Queue List */}
+          {items.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700 pb-1 border-b border-slate-100">
+                <span className="flex items-center gap-1.5">
+                  <Files className="w-3.5 h-3.5 text-indigo-600" />
+                  Files Queue ({items.length} PDFs · {fmtBytes(totalBytes)})
+                </span>
+                {!isProcessing && (
+                  <button
+                    onClick={() => setItems([])}
+                    className="text-xs text-rose-500 hover:text-rose-700 font-semibold"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-2.5 max-h-[40vh] overflow-y-auto pr-1">
+                {items.map((it) => (
+                  <div
+                    key={it.id}
+                    className={`p-3.5 rounded-xl border transition ${
+                      it.status === "done"
+                        ? "bg-emerald-50/70 border-emerald-200"
+                        : it.status === "error"
+                        ? "bg-rose-50/70 border-rose-200"
+                        : it.status === "uploading"
+                        ? "bg-blue-50/50 border-blue-200"
+                        : "bg-white border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
+                      <div className="flex items-center gap-2 min-w-0 sm:w-1/3">
+                        <FileText
+                          className={`w-4 h-4 shrink-0 ${
+                            it.status === "done"
+                              ? "text-emerald-600"
+                              : it.status === "error"
+                              ? "text-rose-600"
+                              : "text-slate-400"
+                          }`}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-slate-700 truncate" title={it.file.name}>
+                            {it.file.name}
+                          </p>
+                          <p className="text-[10px] text-slate-400">{fmtBytes(it.size)}</p>
+                        </div>
+                      </div>
+
+                      {/* Title input */}
+                      <div className="flex-1 min-w-0">
+                        <input
+                          type="text"
+                          disabled={isProcessing || it.status === "done"}
+                          value={it.title}
+                          onChange={(e) => updateItem(it.id, { title: e.target.value })}
+                          placeholder="Note Title"
+                          className="w-full text-xs font-medium border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#1D64EC] bg-white"
+                        />
+                      </div>
+
+                      {/* Specialization Topic */}
+                      <div className="w-full sm:w-36">
+                        <input
+                          type="text"
+                          disabled={isProcessing || it.status === "done"}
+                          value={it.category}
+                          onChange={(e) => updateItem(it.id, { category: e.target.value })}
+                          placeholder="Topic"
+                          className="w-full text-xs font-medium border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#1D64EC] bg-white"
+                        />
+                      </div>
+
+                      {/* Page Count */}
+                      <div className="flex items-center gap-1 w-full sm:w-20">
+                        <input
+                          type="number"
+                          disabled={isProcessing || it.status === "done"}
+                          value={it.pageCount}
+                          onChange={(e) =>
+                            updateItem(it.id, { pageCount: parseInt(e.target.value) || 1 })
+                          }
+                          title="Page Count"
+                          className="w-full text-xs font-semibold text-center border border-slate-200 rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-[#1D64EC] bg-white"
+                        />
+                        <span className="text-[10px] text-slate-400">pg</span>
+                      </div>
+
+                      {/* Status / Remove button */}
+                      <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-24 shrink-0">
+                        {it.status === "done" ? (
+                          <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
+                            <Check className="w-3.5 h-3.5" /> Done
+                          </span>
+                        ) : it.status === "uploading" ? (
+                          <span className="text-[11px] font-semibold text-blue-600 flex items-center gap-1">
+                            <Loader2 className="w-3 h-3 animate-spin" /> {it.progress}%
+                          </span>
+                        ) : it.status === "saving" ? (
+                          <span className="text-[11px] font-semibold text-indigo-600 flex items-center gap-1">
+                            <Loader2 className="w-3 h-3 animate-spin" /> Saving
+                          </span>
+                        ) : it.status === "error" ? (
+                          <span
+                            className="text-[10px] font-bold text-rose-600 truncate max-w-[80px]"
+                            title={it.error}
+                          >
+                            Error
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => removeItem(it.id)}
+                            disabled={isProcessing}
+                            className="text-slate-400 hover:text-rose-600 p-1 rounded-lg transition"
+                            title="Remove file"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Per-item progress bar when uploading */}
+                    {it.status === "uploading" && (
+                      <div className="w-full bg-blue-100 rounded-full h-1 mt-2">
+                        <div
+                          className="bg-[#1D64EC] h-1 rounded-full transition-all duration-200"
+                          style={{ width: `${it.progress}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sticky Footer */}
+        <div className="flex items-center justify-between p-4 bg-slate-50 border-t border-slate-100 shrink-0 rounded-b-2xl">
+          <div className="text-xs text-slate-500 font-medium">
+            {completedCount > 0 && `${completedCount} of ${items.length} uploaded`}
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isProcessing}
+              className="px-4 py-2 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold hover:bg-white transition disabled:opacity-50"
+            >
+              {completedCount === items.length && items.length > 0 ? "Done" : "Cancel"}
+            </button>
+
+            <button
+              type="button"
+              disabled={isProcessing || pendingCount === 0}
+              onClick={handleStartBulkUpload}
+              className="px-5 py-2.5 bg-[#1D64EC] hover:bg-[#1a56d4] text-white rounded-xl text-xs font-bold transition disabled:opacity-60 flex items-center gap-2 shadow-xs"
+            >
+              {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>
+                {isProcessing
+                  ? `Uploading (${completedCount}/${items.length})...`
+                  : `Upload All (${pendingCount} Notes)`}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Note Modal ─────────────────────────────────────────────────────────────
 function NoteModal({
   note,
@@ -624,12 +1198,14 @@ function NoteModal({
   defaultDomainId,
   onClose,
   onSaved,
+  onSwitchToBulk,
 }: {
   note: DbNote | null;
   domains: DbDomain[];
   defaultDomainId?: string;
   onClose: () => void;
   onSaved: (n: DbNote) => void;
+  onSwitchToBulk?: (files?: File[]) => void;
 }) {
   const isEdit = !!note;
   const [domainId, setDomainId] = useState(
@@ -665,6 +1241,15 @@ function NoteModal({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const handleAutoFill = (meta: { title: string; pageCount: number }) => {
+    if (!title.trim() || title === "e.g. Arrays and Strings Complete Notes") {
+      setTitle(meta.title);
+    }
+    if (meta.pageCount > 0) {
+      setPageCount(meta.pageCount.toString());
+    }
+  };
 
   const handleSubmit = async (publishNow?: boolean) => {
     setError("");
@@ -703,18 +1288,39 @@ function NoteModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-          <h2 className="text-lg font-bold text-slate-900">
-            {isEdit ? "Edit Note" : "Add Note"}
-          </h2>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition">
-            <X className="w-4 h-4 text-slate-500" />
-          </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[88vh] flex flex-col my-auto border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        {/* Sticky Fixed Header */}
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0 bg-white">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-[#1D64EC]" />
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              {isEdit ? "Edit Note" : "Add Note"}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            {!isEdit && onSwitchToBulk && (
+              <button
+                type="button"
+                onClick={() => onSwitchToBulk()}
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
+                title="Switch to bulk multiple PDF upload"
+              >
+                <Files className="w-3.5 h-3.5" />
+                <span>Bulk Upload</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        <div className="p-6 space-y-4">
+        {/* Scrollable Form Body */}
+        <div className="p-6 space-y-4 overflow-y-auto flex-1 overscroll-contain">
           {/* Domain */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
@@ -734,9 +1340,16 @@ function NoteModal({
 
           {/* Title */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Note Title *
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700">
+                Note Title *
+              </label>
+              {title && (
+                <span className="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
+                  <Sparkles className="w-3 h-3" /> Auto-fetched from PDF
+                </span>
+              )}
+            </div>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -829,20 +1442,34 @@ function NoteModal({
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               PDF File
             </label>
-            <PdfUploadArea value={pdf} onChange={setPdf} />
+            <PdfUploadArea
+              value={pdf}
+              onChange={setPdf}
+              onAutoFill={handleAutoFill}
+              onMultipleFiles={(files) => {
+                if (onSwitchToBulk) onSwitchToBulk(files);
+              }}
+            />
           </div>
 
           {/* Page count + order */}
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Page Count
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Page Count
+                </label>
+                {pageCount && (
+                  <span className="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
+                    <Sparkles className="w-3 h-3" /> Auto-detected
+                  </span>
+                )}
+              </div>
               <input
                 type="number"
                 value={pageCount}
                 onChange={(e) => setPageCount(e.target.value)}
-                placeholder="e.g. 42"
+                placeholder="e.g. 15"
                 className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1D64EC] focus:ring-4 focus:ring-[#1D64EC]/10"
               />
             </div>
@@ -862,35 +1489,36 @@ function NoteModal({
           {error && (
             <p className="text-sm text-rose-600 bg-rose-50 rounded-xl px-3 py-2">{error}</p>
           )}
+        </div>
 
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 border border-slate-200 text-slate-700 rounded-xl py-2.5 text-sm font-semibold hover:bg-slate-50 transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => { setStatus("draft"); handleSubmit(false); }}
-              className="flex-1 border border-slate-300 text-slate-700 rounded-xl py-2.5 text-sm font-semibold hover:bg-slate-50 transition disabled:opacity-60 flex items-center justify-center gap-2"
-            >
-              {saving && status === "draft" && <Loader2 className="w-4 h-4 animate-spin" />}
-              Save as Draft
-            </button>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => handleSubmit(true)}
-              className="flex-1 bg-[#1D64EC] text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-[#1a56d4] transition disabled:opacity-60 flex items-center justify-center gap-2"
-            >
-              {saving && status === "published" && <Loader2 className="w-4 h-4 animate-spin" />}
-              <Globe className="w-3.5 h-3.5" />
-              Publish Note
-            </button>
-          </div>
+        {/* Sticky Fixed Footer */}
+        <div className="flex items-center justify-end gap-3 p-4 bg-slate-50 border-t border-slate-100 shrink-0 rounded-b-2xl">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-white transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => { setStatus("draft"); handleSubmit(false); }}
+            className="px-4 py-2.5 border border-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-white transition disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {saving && status === "draft" && <Loader2 className="w-4 h-4 animate-spin" />}
+            Save as Draft
+          </button>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => handleSubmit(true)}
+            className="px-5 py-2.5 bg-[#1D64EC] text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-[#1a56d4] transition disabled:opacity-60 flex items-center justify-center gap-2 shadow-xs"
+          >
+            {saving && status === "published" && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Globe className="w-3.5 h-3.5" />
+            Publish Note
+          </button>
         </div>
       </div>
     </div>
@@ -939,7 +1567,26 @@ export default function AdminNotesDashboard({
   // Modals
   const [domainModal, setDomainModal] = useState<DbDomain | null | false>(false);
   const [noteModal, setNoteModal] = useState<DbNote | null | false>(false);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [bulkInitialFiles, setBulkInitialFiles] = useState<File[]>([]);
   const [defaultDomainForNote, setDefaultDomainForNote] = useState<string | undefined>();
+
+  // Preload PDF.js in background for instant page count extraction
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if ((window as any).pdfjsLib) return;
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    script.async = true;
+    script.onload = () => {
+      const lib = (window as any).pdfjsLib;
+      if (lib) {
+        lib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+    };
+    document.head.appendChild(script);
+  }, []);
 
   // Filters
   const [noteSearch, setNoteSearch] = useState("");
@@ -1215,6 +1862,17 @@ export default function AdminNotesDashboard({
                     <button
                       onClick={() => {
                         setDefaultDomainForNote(d.id);
+                        setBulkInitialFiles([]);
+                        setBulkModalOpen(true);
+                      }}
+                      className="flex items-center gap-1.5 text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 transition px-2 py-1 rounded-lg hover:bg-indigo-50"
+                      title="Bulk upload multiple PDF notes to this domain"
+                    >
+                      <Files className="w-3 h-3" /> Bulk Upload
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDefaultDomainForNote(d.id);
                         setNoteModal(null);
                       }}
                       className="flex items-center gap-1.5 text-[11px] font-semibold text-[#1D64EC] hover:text-[#1a56d4] transition px-2 py-1 rounded-lg hover:bg-[#EEF4FF]"
@@ -1270,10 +1928,22 @@ export default function AdminNotesDashboard({
               <option value="published">Published</option>
               <option value="draft">Draft</option>
             </select>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setDefaultDomainForNote(noteDomainFilter !== "all" ? noteDomainFilter : undefined);
+                  setBulkInitialFiles([]);
+                  setBulkModalOpen(true);
+                }}
+                className="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-2xs"
+                title="Select multiple PDFs and upload them all at once"
+              >
+                <Files className="w-3.5 h-3.5" />
+                <span>Bulk Upload PDFs</span>
+              </button>
               <button
                 onClick={() => { setDefaultDomainForNote(undefined); setNoteModal(null); }}
-                className="flex items-center gap-2 bg-[#1D64EC] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#1a56d4] transition"
+                className="flex items-center gap-2 bg-[#1D64EC] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#1a56d4] transition shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Note
@@ -1297,12 +1967,25 @@ export default function AdminNotesDashboard({
                   : "Try adjusting your search or filters."}
               </p>
               {notes.length === 0 && (
-                <button
-                  onClick={() => { setDefaultDomainForNote(undefined); setNoteModal(null); }}
-                  className="bg-[#1D64EC] text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#1a56d4] transition"
-                >
-                  + Add Note
-                </button>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => {
+                      setDefaultDomainForNote(undefined);
+                      setBulkInitialFiles([]);
+                      setBulkModalOpen(true);
+                    }}
+                    className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-2xs"
+                  >
+                    <Files className="w-3.5 h-3.5" />
+                    Bulk Upload PDFs
+                  </button>
+                  <button
+                    onClick={() => { setDefaultDomainForNote(undefined); setNoteModal(null); }}
+                    className="bg-[#1D64EC] text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#1a56d4] transition shadow-xs"
+                  >
+                    + Add Note
+                  </button>
+                </div>
               )}
             </div>
           ) : (
@@ -1461,6 +2144,11 @@ export default function AdminNotesDashboard({
           domains={domains}
           defaultDomainId={defaultDomainForNote}
           onClose={() => { setNoteModal(false); setDefaultDomainForNote(undefined); }}
+          onSwitchToBulk={(files) => {
+            setNoteModal(false);
+            setBulkInitialFiles(files || []);
+            setBulkModalOpen(true);
+          }}
           onSaved={(n) => {
             const existing = notes.find((x) => x.id === n.id);
             if (existing) {
@@ -1483,6 +2171,38 @@ export default function AdminNotesDashboard({
             }
             setNoteModal(false);
             setDefaultDomainForNote(undefined);
+          }}
+        />
+      )}
+
+      {/* ── Bulk Upload Modal ── */}
+      {bulkModalOpen && (
+        <BulkNotesUploadModal
+          domains={domains}
+          defaultDomainId={defaultDomainForNote}
+          initialFiles={bulkInitialFiles}
+          onClose={() => {
+            setBulkModalOpen(false);
+            setBulkInitialFiles([]);
+            setDefaultDomainForNote(undefined);
+          }}
+          onSavedBatch={(newNotes) => {
+            // Attach domain info to each note
+            const notesWithDomain = newNotes.map((n) => {
+              const dom = domains.find((d) => d.id === n.domainId);
+              return { ...n, domain: { name: dom?.name || "", slug: dom?.slug || "" } };
+            });
+            setNotes((prev) => [...notesWithDomain, ...prev]);
+            setNotesLoaded(true);
+            const pubCount = newNotes.filter((n) => n.status === "published").length;
+            const draftCount = newNotes.length - pubCount;
+            setStats((s) => ({
+              ...s,
+              totalNotes: s.totalNotes + newNotes.length,
+              publishedNotes: s.publishedNotes + pubCount,
+              draftNotes: s.draftNotes + draftCount,
+            }));
+            showToast(`Batch completed: ${newNotes.length} notes added ✓`);
           }}
         />
       )}
