@@ -32,7 +32,7 @@ export default async function OpportunitiesPage() {
         navItems={navItems.length > 0 ? navItems : undefined}
       />
 
-      <main className="flex-1 pt-[75px]">
+      <main className="flex-1 pt-[68px]">
         <OpportunitiesClient opportunities={opportunities as any} />
       </main>
 

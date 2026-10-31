@@ -384,7 +384,7 @@ export default function OpportunitiesClient({
   return (
     <div className="bg-white min-h-screen">
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
-      <section className="bg-gradient-to-br from-[#EEF4FF] via-white to-[#F0FDF4] border-b border-slate-100 py-14 sm:py-20">
+      <section className="bg-gradient-to-br from-[#EEF4FF] via-white to-[#F0FDF4] border-b border-slate-100 pt-8 pb-14 sm:pt-12 sm:pb-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#1D64EC] bg-[#EEF4FF] px-4 py-1.5 rounded-full mb-5">
             <Trophy className="w-3.5 h-3.5" />
