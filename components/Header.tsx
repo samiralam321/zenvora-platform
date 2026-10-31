@@ -32,20 +32,17 @@ export default function Header({
   const router = useRouter();
   const headerRef = useRef<HTMLElement>(null);
 
-  // Smooth navigation handler — fires progress bar then routes after 180ms
+  // Immediate navigation handler — dispatches progress event and lets Next.js Link route instantly
   const handleNavClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>, url: string) => {
       const isExternal = url.startsWith("http");
       const isHashOnly = url.startsWith("/#") || url === "/";
-      if (isExternal || isHashOnly) return; // let browser/Next handle hash & external links normally
+      if (isExternal || isHashOnly) return;
 
-      e.preventDefault();
+      // Start progress bar visual feedback without delay
       startSmoothNavigation();
-      setTimeout(() => {
-        router.push(url);
-      }, 180);
     },
-    [router]
+    []
   );
 
   // Only toggle shadow/border on scroll — height/padding never changes
@@ -122,6 +119,7 @@ export default function Header({
                   <Link
                     key={item.label}
                     href={item.url}
+                    prefetch={true}
                     target={isExternal ? "_blank" : undefined}
                     rel={isExternal ? "noopener noreferrer" : undefined}
                     onClick={(e) => handleNavClick(e, item.url)}
@@ -142,6 +140,7 @@ export default function Header({
               {buttonItem && (
                 <Link
                   href={buttonItem.url}
+                  prefetch={true}
                   onClick={(e) => handleNavClick(e, buttonItem.url)}
                   className="btn-primary"
                 >
@@ -189,6 +188,7 @@ export default function Header({
                   <Link
                     key={item.label}
                     href={item.url}
+                    prefetch={true}
                     target={isExternal ? "_blank" : undefined}
                     rel={isExternal ? "noopener noreferrer" : undefined}
                     onClick={(e) => handleNavClick(e, item.url)}

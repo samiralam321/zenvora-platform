@@ -20,9 +20,9 @@ import {
   Layers,
 } from "lucide-react";
 import type { Metadata } from "next";
+import { getCachedSiteSettings, getCachedNavItems } from "@/lib/cachedData";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -33,18 +33,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CompetitiveProgrammingPage() {
-  let settings: any = {};
-  try {
-    const s = await prisma.setting.findUnique({
-      where: { key: "site_settings" },
-    });
-    if (s?.value) settings = JSON.parse(s.value);
-  } catch (e) {}
-
-  const navItems = await prisma.navItem.findMany({
-    where: { area: "header", visible: true },
-    orderBy: { order: "asc" },
-  });
+  const [settings, navItems] = await Promise.all([
+    getCachedSiteSettings(),
+    getCachedNavItems("header"),
+  ]);
 
   // Find Competitive Programming Category
   const cpCategory = await prisma.category.findFirst({

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 function requireAdmin() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -62,6 +63,12 @@ export async function POST(req: NextRequest) {
         publishedAt: status === "published" ? new Date() : null,
       },
     });
+
+    try {
+      revalidatePath("/notes");
+      revalidateTag("notes_domains");
+    } catch (e) {}
+
     return NextResponse.json({ note }, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
@@ -83,6 +90,10 @@ export async function PATCH(req: NextRequest) {
       else updateData.publishedAt = null;
     }
     const note = await prisma.note.update({ where: { id }, data: updateData });
+    try {
+      revalidatePath("/notes");
+      revalidateTag("notes_domains");
+    } catch (e) {}
     return NextResponse.json({ note });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
@@ -97,6 +108,10 @@ export async function DELETE(req: NextRequest) {
     const { id } = await req.json();
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
     await prisma.note.delete({ where: { id } });
+    try {
+      revalidatePath("/notes");
+      revalidateTag("notes_domains");
+    } catch (e) {}
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

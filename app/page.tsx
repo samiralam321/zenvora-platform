@@ -11,42 +11,25 @@ import BannerSection from "@/components/home/BannerSection";
 import ReelsSection from "@/components/home/ReelsSection";
 import AboutSection from "@/components/home/AboutSection";
 import CtaSection from "@/components/home/CtaSection";
+import {
+  getCachedSiteSettings,
+  getCachedNavItems,
+  getCachedCategoriesWithPlaylists,
+} from "@/lib/cachedData";
 
-// Always serve dynamic fresh data from DB
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Incremental Static Regeneration — instant CDN response, updates in background
+export const revalidate = 60;
 
 export default async function HomePage() {
-  // Fetch Site Settings
-  let settings: any = {};
-  try {
-    const s = await prisma.setting.findUnique({ where: { key: "site_settings" } });
-    if (s?.value) settings = JSON.parse(s.value);
-  } catch (e) {}
-
-  // Fetch Nav Items
-  const navItems = await prisma.navItem.findMany({
-    where: { area: "header", visible: true },
-    orderBy: { order: "asc" },
-  });
+  const [settings, navItems, { categories, playlists }] = await Promise.all([
+    getCachedSiteSettings(),
+    getCachedNavItems("header"),
+    getCachedCategoriesWithPlaylists(),
+  ]);
 
   // Fetch Sections for Home Page
   const sections = await prisma.section.findMany({
     where: { page: "home", visible: true },
-    orderBy: { order: "asc" },
-  });
-
-  // Fetch Categories & Playlists
-  const categories = await prisma.category.findMany({
-    orderBy: { order: "asc" },
-  });
-
-  const playlists = await prisma.playlist.findMany({
-    where: { visible: true },
-    include: {
-      category: true,
-      videos: { where: { visible: true }, orderBy: { order: "asc" } },
-    },
     orderBy: { order: "asc" },
   });
 

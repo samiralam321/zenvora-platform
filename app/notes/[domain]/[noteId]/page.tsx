@@ -8,9 +8,9 @@ import NotesReaderClient from "@/components/notes/NotesReaderClient";
 import { NOTES_DOMAINS } from "@/lib/notesData";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { getCachedSiteSettings, getCachedNavItems } from "@/lib/cachedData";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 interface NoteReaderPageProps {
   params: {
@@ -49,22 +49,10 @@ export async function generateMetadata({
 }
 
 export default async function NoteReaderPage({ params }: NoteReaderPageProps) {
-  let settings: any = {};
-  let navItems: any[] = [];
-
-  try {
-    const s = await prisma.setting.findUnique({
-      where: { key: "site_settings" },
-    });
-    if (s?.value) settings = JSON.parse(s.value);
-  } catch (e) {}
-
-  try {
-    navItems = await prisma.navItem.findMany({
-      where: { area: "header", visible: true },
-      orderBy: { order: "asc" },
-    });
-  } catch (e) {}
+  const [settings, navItems] = await Promise.all([
+    getCachedSiteSettings(),
+    getCachedNavItems("header"),
+  ]);
 
   // 1. Try loading from database first
   let dbNote: any = null;

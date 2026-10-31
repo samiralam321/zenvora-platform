@@ -7,9 +7,9 @@ import DomainNotesClient from "@/components/notes/DomainNotesClient";
 import { NOTES_DOMAINS } from "@/lib/notesData";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { getCachedSiteSettings, getCachedNavItems } from "@/lib/cachedData";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 interface DomainPageProps {
   params: { domain: string };
@@ -30,19 +30,11 @@ export async function generateMetadata({ params }: DomainPageProps): Promise<Met
 
 export default async function DomainNotesPage({ params }: DomainPageProps) {
   const slug = params.domain;
-  let settings: any = {};
-  let navItems: any[] = [];
 
-  try {
-    const s = await prisma.setting.findUnique({ where: { key: "site_settings" } });
-    if (s?.value) settings = JSON.parse(s.value);
-  } catch {}
-  try {
-    navItems = await prisma.navItem.findMany({
-      where: { area: "header", visible: true },
-      orderBy: { order: "asc" },
-    });
-  } catch {}
+  const [settings, navItems] = await Promise.all([
+    getCachedSiteSettings(),
+    getCachedNavItems("header"),
+  ]);
 
   // Load domain from DB — use findFirst so we can filter by both slug AND isPublished
   let dbDomain: any = null;

@@ -17,9 +17,9 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import { SYSTEM_DESIGN_RESOURCES } from "./systemDesignConfig";
+import { getCachedSiteSettings, getCachedNavItems } from "@/lib/cachedData";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -44,18 +44,10 @@ function YouTubeIcon({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 export default async function SystemDesignPage() {
-  let settings: any = {};
-  try {
-    const s = await prisma.setting.findUnique({
-      where: { key: "site_settings" },
-    });
-    if (s?.value) settings = JSON.parse(s.value);
-  } catch (e) {}
-
-  const navItems = await prisma.navItem.findMany({
-    where: { area: "header", visible: true },
-    orderBy: { order: "asc" },
-  });
+  const [settings, navItems] = await Promise.all([
+    getCachedSiteSettings(),
+    getCachedNavItems("header"),
+  ]);
 
   // ── Fetch ALL System Design playlists + videos from Admin Panel ──────────────
   const sdCategory = await prisma.category.findFirst({

@@ -1,35 +1,22 @@
 import React from "react";
-import prisma from "@/lib/prisma";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import { ExternalLink, Wrench, Youtube } from "lucide-react";
+import {
+  getCachedSiteSettings,
+  getCachedNavItems,
+  getCachedTools,
+} from "@/lib/cachedData";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export default async function RecommendedToolsPage() {
-  let settings: any = {};
-  let navItems: any[] = [];
-  let tools: any[] = [];
-
-  try {
-    const s = await prisma.setting.findUnique({ where: { key: "site_settings" } });
-    if (s?.value) settings = JSON.parse(s.value);
-  } catch (e) {}
-
-  try {
-    navItems = await prisma.navItem.findMany({
-      where: { area: "header", visible: true },
-      orderBy: { order: "asc" },
-    });
-  } catch (e) {}
-
-  try {
-    tools = await prisma.tool.findMany({
-      orderBy: { order: "asc" },
-    });
-  } catch (e) {}
+  const [settings, navItems, tools] = await Promise.all([
+    getCachedSiteSettings(),
+    getCachedNavItems("header"),
+    getCachedTools(),
+  ]);
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-slate-900 font-sans">
