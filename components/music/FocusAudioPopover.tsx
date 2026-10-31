@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useLayoutEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import {
   Play,
   Pause,
@@ -46,6 +47,35 @@ export default function FocusAudioPopover({
 
   const [showTracklist, setShowTracklist] = useState(false);
 
+  // ── Sliding pill refs ──
+  const tabContainerRef = useRef<HTMLDivElement>(null);
+  const tabBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [pillStyle, setPillStyle] = useState({ left: 0, width: 0 });
+
+  const updatePill = useCallback(() => {
+    const activeBtn = tabBtnRefs.current.get(activeCategory);
+    const container = tabContainerRef.current;
+    if (!activeBtn || !container) return;
+    const containerRect = container.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    setPillStyle({
+      left: btnRect.left - containerRect.left + container.scrollLeft,
+      width: btnRect.width,
+    });
+  }, [activeCategory]);
+
+  useLayoutEffect(() => {
+    updatePill();
+  }, [updatePill]);
+
+  useLayoutEffect(() => {
+    const container = tabContainerRef.current;
+    if (!container) return;
+    const observer = new ResizeObserver(updatePill);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [updatePill]);
+
   return (
     <div
       onClick={(e) => e.stopPropagation()}
@@ -88,14 +118,22 @@ export default function FocusAudioPopover({
 
       {/* ── Mood Filter Chips ── */}
       <div
+        ref={tabContainerRef}
         data-lenis-prevent="true"
         data-lenis-prevent-touch="true"
         style={{
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-x",
         }}
-        className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scroll text-[11px] font-semibold overscroll-contain"
+        className="relative flex items-center gap-1.5 overflow-x-auto pb-1 custom-scroll text-[11px] font-semibold overscroll-contain"
       >
+        {/* Sliding pill */}
+        <motion.div
+          className="absolute top-0 h-[26px] rounded-full bg-[#1D64EC] shadow-sm pointer-events-none"
+          animate={{ left: pillStyle.left, width: pillStyle.width }}
+          transition={{ type: "spring", stiffness: 500, damping: 38, mass: 0.6 }}
+        />
+
         {MUSIC_CATEGORIES.map((cat) => {
           const isActive = activeCategory === cat;
           let label: string = cat;
@@ -107,10 +145,14 @@ export default function FocusAudioPopover({
           return (
             <button
               key={cat}
+              ref={(el) => {
+                if (el) tabBtnRefs.current.set(cat, el);
+                else tabBtnRefs.current.delete(cat);
+              }}
               onClick={() => setActiveCategory(cat)}
-              className={`px-2.5 py-1 rounded-full whitespace-nowrap transition-all ${
+              className={`relative z-10 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors duration-200 ${
                 isActive
-                  ? "bg-[#1D64EC] text-white shadow-xs font-bold"
+                  ? "text-white font-bold"
                   : "bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/50"
               }`}
             >
