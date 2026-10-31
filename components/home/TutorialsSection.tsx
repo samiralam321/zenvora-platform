@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Youtube, Plus, Folder, Tv, ArrowRight, Play, Film, ExternalLink } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface CategoryItem {
   id: string;
@@ -110,31 +111,48 @@ export default function TutorialsSection({
           </Link>
         </div>
 
-        {/* Domain Filter Tabs */}
+        {/* Domain Filter Tabs — Animated Sliding Pill */}
         {availableDomains.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-10 scrollbar-hide border-b border-slate-100">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-4 mb-10 scrollbar-hide border-b border-slate-100">
+            {/* All Domains pill */}
             <button
               onClick={() => setActiveDomain("all")}
-              className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`relative shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-colors z-10 ${
                 activeDomain === "all"
-                  ? "bg-[#1D64EC] text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "text-white"
+                  : "text-slate-700 hover:text-slate-900"
               }`}
             >
+              {activeDomain === "all" && (
+                <motion.span
+                  layoutId="active-pill"
+                  className="absolute inset-0 bg-[#1D64EC] rounded-xl shadow-xs z-[-1]"
+                  transition={{ type: "spring", stiffness: 400, damping: 38 }}
+                />
+              )}
               All Domains ({totalItemCount})
             </button>
+
             {availableDomains.map((dom) => {
               const domVideoCount = videos.filter((v) => v.category?.slug === dom.slug).length;
+              const isActive = activeDomain === dom.slug;
               return (
                 <button
                   key={dom.slug}
                   onClick={() => setActiveDomain(dom.slug)}
-                  className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    activeDomain === dom.slug
-                      ? "bg-[#1D64EC] text-white shadow-xs"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  className={`relative shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-colors z-10 ${
+                    isActive
+                      ? "text-white"
+                      : "text-slate-700 hover:text-slate-900"
                   }`}
                 >
+                  {isActive && (
+                    <motion.span
+                      layoutId="active-pill"
+                      className="absolute inset-0 bg-[#1D64EC] rounded-xl shadow-xs z-[-1]"
+                      transition={{ type: "spring", stiffness: 400, damping: 38 }}
+                    />
+                  )}
                   {dom.name} ({domVideoCount})
                 </button>
               );
