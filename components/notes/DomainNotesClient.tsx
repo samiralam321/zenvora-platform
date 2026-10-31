@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ChevronRight,
   FileText,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import { DomainNotes, NoteResource } from "@/lib/notesData";
 import { getCategoryIcon } from "@/lib/notesIcons";
+import { startSmoothNavigation } from "@/components/NavigationProgress";
 
 function fmtBytes(b?: number | null) {
   if (!b) return "";
@@ -19,9 +21,59 @@ function fmtBytes(b?: number | null) {
 }
 
 export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
+  const router = useRouter();
   const [selectedTopic, setSelectedTopic] = useState("All Notes");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
+
+  const prewarmedSet = useRef(new Set<string>());
+
+  // Background preload PDF.js engine and viewer CSS while user browses notes list
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // 1. Preload viewer stylesheet
+    if (!document.getElementById("pdfjs-viewer-css")) {
+      const link = document.createElement("link");
+      link.id = "pdfjs-viewer-css";
+      link.rel = "stylesheet";
+      link.href = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css";
+      document.head.appendChild(link);
+    }
+
+    // 2. Preload main pdf.min.js engine
+    if (!document.getElementById("pdfjs-preload-script") && !(window as any).pdfjsLib) {
+      const script = document.createElement("script");
+      script.id = "pdfjs-preload-script";
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+      script.async = true;
+      script.onload = () => {
+        const lib = (window as any).pdfjsLib;
+        if (lib) {
+          lib.GlobalWorkerOptions.workerSrc =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        }
+      };
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  // Prewarm note route and PDF file into browser HTTP cache on hover/touch
+  const handleNoteHover = (res: NoteResource) => {
+    const noteHref = `/notes/${domain.slug}/${res.id}`;
+    try {
+      router.prefetch(noteHref);
+    } catch {}
+
+    const storagePath = (res as any).storagePath;
+    if (storagePath && typeof window !== "undefined" && !prewarmedSet.current.has(storagePath)) {
+      prewarmedSet.current.add(storagePath);
+      // Fetch PDF head/bytes so it hits the browser disk/memory cache ahead of time
+      try {
+        fetch(storagePath, { priority: "low" as any }).catch(() => {});
+      } catch {}
+    }
+  };
 
   const IconComponent = getCategoryIcon(domain);
 
@@ -216,14 +268,22 @@ export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
               {filteredResources.map((res) => (
                 <div
                   key={res.id}
+                  onMouseEnter={() => handleNoteHover(res)}
+                  onTouchStart={() => handleNoteHover(res)}
                   className="bg-white rounded-2xl border border-slate-200 shadow-2xs hover:shadow-xs transition p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5 group"
                 >
                   {/* Left: Icon & Details */}
                   <div className="flex items-start gap-4 max-w-2xl">
                     {/* PDF Icon Badge */}
-                    <div className="w-12 h-12 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 text-rose-600 shadow-2xs group-hover:scale-105 transition-transform">
+                    <Link
+                      href={`/notes/${domain.slug}/${res.id}`}
+                      prefetch={true}
+                      onClick={() => startSmoothNavigation()}
+                      className="w-12 h-12 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 text-rose-600 shadow-2xs group-hover:scale-105 transition-transform"
+                      title="Read Online"
+                    >
                       <FileText className="w-6 h-6" />
-                    </div>
+                    </Link>
 
                     <div className="space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
@@ -246,7 +306,14 @@ export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
                       </div>
 
                       <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-[#1D64EC] transition-colors">
-                        {res.title}
+                        <Link
+                          href={`/notes/${domain.slug}/${res.id}`}
+                          prefetch={true}
+                          onClick={() => startSmoothNavigation()}
+                          className="hover:underline"
+                        >
+                          {res.title}
+                        </Link>
                       </h3>
 
                       <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
@@ -277,6 +344,8 @@ export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
                   <div className="flex items-center gap-2.5 sm:self-center shrink-0">
                     <Link
                       href={`/notes/${domain.slug}/${res.id}`}
+                      prefetch={true}
+                      onClick={() => startSmoothNavigation()}
                       className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#EEF4FF] text-[#1D64EC] border border-blue-200/80 hover:bg-[#1D64EC] hover:text-white transition-all shadow-2xs group/btn cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" />

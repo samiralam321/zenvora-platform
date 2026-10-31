@@ -76,7 +76,9 @@ export default function PdfViewer({
   const [pageRendering, setPageRendering] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [pdfLibReady, setPdfLibReady] = useState<boolean>(false);
+  const [pdfLibReady, setPdfLibReady] = useState<boolean>(() => {
+    return typeof window !== "undefined" && Boolean((window as any).pdfjsLib);
+  });
   const [copied, setCopied] = useState<boolean>(false);
   const [outline, setOutline] = useState<any[]>([]);
   const [sidebarMode, setSidebarMode] = useState<"none" | "outline" | "thumbnails">("none");
@@ -101,10 +103,11 @@ export default function PdfViewer({
     setInputPage(currentPage.toString());
   }, [currentPage]);
 
-  // 1. Load PDF.js library, companion viewer helper & annotation stylesheet from Mozilla CDN once
+  // 1. Load PDF.js library, companion viewer helper & annotation stylesheet from Mozilla CDN in parallel
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // Load stylesheet immediately
     if (!document.getElementById("pdfjs-viewer-css")) {
       const link = document.createElement("link");
       link.id = "pdfjs-viewer-css";
@@ -113,31 +116,41 @@ export default function PdfViewer({
       document.head.appendChild(link);
     }
 
-    const loadViewerHelperScript = () => {
-      if (!document.getElementById("pdfjs-viewer-js")) {
-        const vScript = document.createElement("script");
-        vScript.id = "pdfjs-viewer-js";
-        vScript.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.js";
-        vScript.async = true;
-        document.head.appendChild(vScript);
-      }
-    };
+    // Load viewer helper script in parallel
+    if (!document.getElementById("pdfjs-viewer-js")) {
+      const vScript = document.createElement("script");
+      vScript.id = "pdfjs-viewer-js";
+      vScript.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.js";
+      vScript.async = true;
+      document.head.appendChild(vScript);
+    }
 
+    // If PDF.js already loaded, configure worker immediately
     if ((window as any).pdfjsLib) {
-      loadViewerHelperScript();
+      const pdfjsLib = (window as any).pdfjsLib;
+      if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
       setPdfLibReady(true);
       return;
     }
 
-    const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-    script.async = true;
+    // Otherwise load main engine script
+    let script = document.getElementById("pdfjs-main-script") as HTMLScriptElement | null;
+    if (!script) {
+      script = document.createElement("script");
+      script.id = "pdfjs-main-script";
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+      script.async = true;
+      document.head.appendChild(script);
+    }
+
     script.onload = () => {
       const pdfjsLib = (window as any).pdfjsLib;
       if (pdfjsLib) {
         pdfjsLib.GlobalWorkerOptions.workerSrc =
           "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-        loadViewerHelperScript();
         setPdfLibReady(true);
       }
     };
@@ -145,7 +158,6 @@ export default function PdfViewer({
       setError("Failed to load PDF viewer engine. You can still download the document below.");
       setLoading(false);
     };
-    document.head.appendChild(script);
   }, []);
 
   // 2. Load PDF document once URL and pdfjsLib are ready

@@ -198,3 +198,72 @@ export const getCachedNotesDomains = unstable_cache(
     tags: ["notes_domains"],
   }
 );
+
+/**
+ * Cached Notes Domain by slug
+ */
+export const getCachedNotesDomain = unstable_cache(
+  async (slug: string) => {
+    try {
+      return await prisma.notesDomain.findFirst({
+        where: { slug, isPublished: true },
+      });
+    } catch (e) {
+      console.error("Error loading cached notes domain:", e);
+      return null;
+    }
+  },
+  ["notes_domain_by_slug"],
+  {
+    revalidate: 3600,
+    tags: ["notes_domains", "notes"],
+  }
+);
+
+/**
+ * Cached notes for a specific domain
+ */
+export const getCachedNotesForDomain = unstable_cache(
+  async (domainId: string) => {
+    try {
+      return await prisma.note.findMany({
+        where: { domainId, status: "published" },
+        orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+      });
+    } catch (e) {
+      console.error("Error loading cached notes for domain:", e);
+      return [];
+    }
+  },
+  ["notes_for_domain"],
+  {
+    revalidate: 3600,
+    tags: ["notes", "notes_domains"],
+  }
+);
+
+/**
+ * Cached single published note by id or slug
+ */
+export const getCachedNote = unstable_cache(
+  async (idOrSlug: string) => {
+    try {
+      return await prisma.note.findFirst({
+        where: {
+          OR: [{ id: idOrSlug }, { slug: idOrSlug }],
+          status: "published",
+        },
+        include: { domain: true },
+      });
+    } catch (e) {
+      console.error("Error loading cached note:", e);
+      return null;
+    }
+  },
+  ["note_detail"],
+  {
+    revalidate: 3600,
+    tags: ["notes"],
+  }
+);
+

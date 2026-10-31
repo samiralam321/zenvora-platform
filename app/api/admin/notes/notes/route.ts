@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
     try {
       revalidatePath("/notes");
       revalidateTag("notes_domains");
+      revalidateTag("notes");
     } catch (e) {}
 
     return NextResponse.json({ note }, { status: 201 });
@@ -100,6 +101,7 @@ export async function PATCH(req: NextRequest) {
     try {
       revalidatePath("/notes");
       revalidateTag("notes_domains");
+      revalidateTag("notes");
     } catch (e) {}
     return NextResponse.json({ note });
   } catch (e: any) {
@@ -125,6 +127,7 @@ export async function DELETE(req: NextRequest) {
     try {
       revalidatePath("/notes");
       revalidateTag("notes_domains");
+      revalidateTag("notes");
     } catch (e) {}
     return NextResponse.json({ ok: true });
   } catch (e: any) {

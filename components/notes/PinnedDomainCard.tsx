@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import PushPin from "./PushPin";
 import { DomainNotes } from "@/lib/notesData";
+import { startSmoothNavigation } from "@/components/NavigationProgress";
 
 // Icon mapping
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -55,6 +56,8 @@ export default function PinnedDomainCard({ domain, index }: PinnedDomainCardProp
     >
       <Link
         href={`/notes/${domain.slug}`}
+        prefetch={true}
+        onClick={() => startSmoothNavigation()}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className="group block relative w-full max-w-[420px] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#1D64EC]/30 rounded-3xl"

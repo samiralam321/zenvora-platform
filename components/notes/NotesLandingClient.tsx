@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, BookOpen, ArrowRight, Sparkles, ChevronRight } from "lucide-react";
 import { DomainNotes, NOTES_DOMAINS } from "@/lib/notesData";
 import { getCategoryIcon } from "@/lib/notesIcons";
+import { startSmoothNavigation } from "@/components/NavigationProgress";
 
 // --- 3D Pushpin Component ---
 function CSSPushPin({ color = "#EA580C" }: { color: string }) {
@@ -145,6 +146,8 @@ function StickyCard({ domain, index, visible, onCardRef }: StickyCardProps) {
     <Link
       ref={onCardRef}
       href={`/notes/${domain.slug}`}
+      prefetch={true}
+      onClick={() => startSmoothNavigation()}
       className="group block relative focus:outline-none focus-visible:ring-4 focus-visible:ring-[#1D64EC]/30 rounded-2xl transition-all duration-300 w-full"
       aria-label={`Explore ${domain.name}`}
       onMouseEnter={() => setHovered(true)}

@@ -1,5 +1,4 @@
 import React from "react";
-import prisma from "@/lib/prisma";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -7,9 +6,13 @@ import PdfViewer from "@/components/notes/PdfViewer";
 import { NOTES_DOMAINS } from "@/lib/notesData";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getCachedSiteSettings, getCachedNavItems } from "@/lib/cachedData";
+import {
+  getCachedSiteSettings,
+  getCachedNavItems,
+  getCachedNote,
+} from "@/lib/cachedData";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 interface NoteReaderPageProps {
   params: {
@@ -22,16 +25,10 @@ export async function generateMetadata({
   params,
 }: NoteReaderPageProps): Promise<Metadata> {
   try {
-    const dbNote = await prisma.note.findFirst({
-      where: {
-        OR: [{ id: params.noteId }, { slug: params.noteId }],
-        status: "published",
-      },
-      include: { domain: true },
-    });
+    const dbNote = await getCachedNote(params.noteId);
     if (dbNote) {
       return {
-        title: `${dbNote.title} | ${dbNote.domain.name} | Zenvora`,
+        title: `${dbNote.title} | ${dbNote.domain?.name || "Notes"} | Zenvora`,
         description: dbNote.description || `Read ${dbNote.title} online on Zenvora`,
       };
     }
@@ -48,22 +45,11 @@ export async function generateMetadata({
 }
 
 export default async function NoteReaderPage({ params }: NoteReaderPageProps) {
-  const [settings, navItems] = await Promise.all([
+  const [settings, navItems, dbNote] = await Promise.all([
     getCachedSiteSettings(),
     getCachedNavItems("header"),
+    getCachedNote(params.noteId),
   ]);
-
-  // 1. Try loading published note from database
-  let dbNote: any = null;
-  try {
-    dbNote = await prisma.note.findFirst({
-      where: {
-        OR: [{ id: params.noteId }, { slug: params.noteId }],
-        status: "published",
-      },
-      include: { domain: true },
-    });
-  } catch (e) {}
 
   if (dbNote) {
     const domainName = dbNote.domain?.name || "Notes";

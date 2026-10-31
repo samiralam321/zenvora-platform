@@ -1,5 +1,4 @@
 import React from "react";
-import prisma from "@/lib/prisma";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -7,9 +6,14 @@ import DomainNotesClient from "@/components/notes/DomainNotesClient";
 import { NOTES_DOMAINS } from "@/lib/notesData";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getCachedSiteSettings, getCachedNavItems } from "@/lib/cachedData";
+import {
+  getCachedSiteSettings,
+  getCachedNavItems,
+  getCachedNotesDomain,
+  getCachedNotesForDomain,
+} from "@/lib/cachedData";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 interface DomainPageProps {
   params: { domain: string };
@@ -18,7 +22,7 @@ interface DomainPageProps {
 export async function generateMetadata({ params }: DomainPageProps): Promise<Metadata> {
   const slug = params.domain;
   try {
-    const dbDomain = await prisma.notesDomain.findUnique({ where: { slug } });
+    const dbDomain = await getCachedNotesDomain(slug);
     if (dbDomain) {
       return { title: `${dbDomain.name} Notes | Zenvora`, description: dbDomain.description };
     }
@@ -31,28 +35,17 @@ export async function generateMetadata({ params }: DomainPageProps): Promise<Met
 export default async function DomainNotesPage({ params }: DomainPageProps) {
   const slug = params.domain;
 
-  const [settings, navItems] = await Promise.all([
+  const [settings, navItems, dbDomain] = await Promise.all([
     getCachedSiteSettings(),
     getCachedNavItems("header"),
+    getCachedNotesDomain(slug),
   ]);
 
-  // Load domain from DB — use findFirst so we can filter by both slug AND isPublished
-  let dbDomain: any = null;
+  // Load published notes for this domain
   let dbNotes: any[] = [];
-  try {
-    dbDomain = await prisma.notesDomain.findFirst({
-      where: {
-        slug,
-        isPublished: true,
-      },
-    });
-    if (dbDomain) {
-      dbNotes = await prisma.note.findMany({
-        where: { domainId: dbDomain.id, status: "published" },
-        orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
-      });
-    }
-  } catch {}
+  if (dbDomain) {
+    dbNotes = await getCachedNotesForDomain(dbDomain.id);
+  }
 
   // Fall back to static data if DB domain not found (support slug aliases)
   const SLUG_ALIASES: Record<string, string> = {
@@ -82,18 +75,18 @@ export default async function DomainNotesPage({ params }: DomainPageProps) {
           : {}),
       }
     : {
-        id: dbDomain.id,
-        slug: dbDomain.slug,
+        id: dbDomain!.id,
+        slug: dbDomain!.slug,
         number: "01",
-        name: dbDomain.name,
-        shortName: dbDomain.name,
-        description: dbDomain.description,
-        iconName: dbDomain.iconName || "FileText",
-        pastelBg: dbDomain.pastelBg || "#EEF4FF",
-        pastelBorder: dbDomain.pastelBorder || "#BFDBFE",
-        accentColor: dbDomain.accentColor || "#1D64EC",
-        badgeBg: dbDomain.badgeBg || "#DBEAFE",
-        badgeText: dbDomain.badgeText || "#1E40AF",
+        name: dbDomain!.name,
+        shortName: dbDomain!.name,
+        description: dbDomain!.description,
+        iconName: dbDomain!.iconName || "FileText",
+        pastelBg: dbDomain!.pastelBg || "#EEF4FF",
+        pastelBorder: dbDomain!.pastelBorder || "#BFDBFE",
+        accentColor: dbDomain!.accentColor || "#1D64EC",
+        badgeBg: dbDomain!.badgeBg || "#DBEAFE",
+        badgeText: dbDomain!.badgeText || "#1E40AF",
         pinColor: "blue" as const,
         rotationDeg: -2,
         topics: ["All Notes"],
