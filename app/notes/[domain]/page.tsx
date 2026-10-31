@@ -9,7 +9,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getCachedSiteSettings, getCachedNavItems } from "@/lib/cachedData";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 interface DomainPageProps {
   params: { domain: string };
@@ -49,7 +49,7 @@ export default async function DomainNotesPage({ params }: DomainPageProps) {
     if (dbDomain) {
       dbNotes = await prisma.note.findMany({
         where: { domainId: dbDomain.id, status: "published" },
-        orderBy: [{ displayOrder: "asc" }, { publishedAt: "desc" }],
+        orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
       });
     }
   } catch {}
@@ -71,7 +71,16 @@ export default async function DomainNotesPage({ params }: DomainPageProps) {
 
   // Build the domain object — prefer DB metadata, fall back to static
   const domain: any = staticDomain
-    ? { ...staticDomain, ...(dbDomain ? { name: dbDomain.name, shortName: dbDomain.name, description: dbDomain.description } : {}) }
+    ? {
+        ...staticDomain,
+        ...(dbDomain
+          ? {
+              name: dbDomain.name,
+              shortName: dbDomain.name,
+              description: dbDomain.description,
+            }
+          : {}),
+      }
     : {
         id: dbDomain.id,
         slug: dbDomain.slug,
@@ -91,11 +100,8 @@ export default async function DomainNotesPage({ params }: DomainPageProps) {
         resources: [],
       };
 
-  // Build dynamic specializations and resources
-  const curatedTopics = staticDomain
-    ? staticDomain.topics.filter((t) => t !== "All Notes")
-    : [];
-
+  // Build 100% dynamic, database-driven specializations and resources
+  // Extract all unique categories that actually have published notes in the database
   const dbCategories = Array.from(
     new Set(
       dbNotes
@@ -104,19 +110,25 @@ export default async function DomainNotesPage({ params }: DomainPageProps) {
     )
   ) as string[];
 
-  // Combine curated domain specializations and any custom categories from notes
-  // If notes have specific categories, prioritize them; else use curated topics
-  const combinedSpecializationsSet = new Set([...dbCategories, ...curatedTopics]);
-  const combinedSpecializations = Array.from(combinedSpecializationsSet);
+  // If the database has notes with categories, the sidebar topics are strictly driven by the database!
+  // If no published notes exist yet in the database, fall back to curated domain topics as a placeholder
+  if (dbCategories.length > 0) {
+    domain.topics = ["All Notes", ...dbCategories];
+  } else if (staticDomain && staticDomain.topics && staticDomain.topics.length > 0) {
+    domain.topics = staticDomain.topics;
+  } else {
+    domain.topics = ["All Notes"];
+  }
 
-  domain.topics = ["All Notes", ...(combinedSpecializations.length > 0 ? combinedSpecializations : ["General"])];
   domain.resources = dbNotes.map((n: any) => ({
     id: n.id,
     title: n.title,
-    description: n.description || "",
+    description:
+      n.description || `Comprehensive study notes and reference handbook for ${n.title}.`,
     topic: n.category || "General",
     difficulty: (n.difficulty || "Beginner") as any,
     pages: n.pageCount || 0,
+    fileSize: n.fileSize || null,
     lastUpdated: new Date(n.updatedAt).toLocaleDateString("en-US", {
       month: "short",
       year: "numeric",

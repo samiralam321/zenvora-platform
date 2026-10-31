@@ -35,6 +35,7 @@ export interface NoteResource {
   topic: string;
   difficulty: "Beginner" | "Intermediate" | "Advanced" | "Cheat Sheets" | "Formulas";
   pages: number;
+  fileSize?: number | null;
   lastUpdated: string;
   downloadFileName: string;
   storagePath?: string | null;

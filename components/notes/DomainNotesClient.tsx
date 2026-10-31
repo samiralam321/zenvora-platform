@@ -12,6 +12,12 @@ import {
 import { DomainNotes, NoteResource } from "@/lib/notesData";
 import { getCategoryIcon } from "@/lib/notesIcons";
 
+function fmtBytes(b?: number | null) {
+  if (!b) return "";
+  if (b < 1024 * 1024) return Math.round(b / 1024) + " KB";
+  return (b / (1024 * 1024)).toFixed(1) + " MB";
+}
+
 export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
   const [selectedTopic, setSelectedTopic] = useState("All Notes");
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,8 +28,11 @@ export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
   // Filter notes based on topic, search query, and difficulty
   const filteredResources = useMemo(() => {
     return domain.resources.filter((res) => {
-      // 1. Topic filter
-      if (selectedTopic !== "All Notes" && res.topic !== selectedTopic) {
+      // 1. Topic filter (case-insensitive & trimmed)
+      if (
+        selectedTopic !== "All Notes" &&
+        res.topic.toLowerCase().trim() !== selectedTopic.toLowerCase().trim()
+      ) {
         return false;
       }
 
@@ -155,7 +164,9 @@ export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
                   const count =
                     topic === "All Notes"
                       ? domain.resources.length
-                      : domain.resources.filter((r) => r.topic === topic).length;
+                      : domain.resources.filter(
+                          (r) => r.topic?.toLowerCase().trim() === topic.toLowerCase().trim()
+                        ).length;
 
                   return (
                     <button
@@ -242,10 +253,20 @@ export default function DomainNotesClient({ domain }: { domain: DomainNotes }) {
                         {res.description}
                       </p>
 
-                      <div className="flex items-center gap-3 text-[11px] text-slate-400 font-medium pt-1">
+                      <div className="flex items-center gap-2.5 text-[11px] text-slate-400 font-medium pt-1 flex-wrap">
                         <span>PDF Format</span>
                         <span>&bull;</span>
-                        <span>{res.pages} Pages</span>
+                        <span>
+                          {res.pages && res.pages > 0
+                            ? `${res.pages} Pages`
+                            : "PDF Document"}
+                        </span>
+                        {res.fileSize && (
+                          <>
+                            <span>&bull;</span>
+                            <span>{fmtBytes(res.fileSize)}</span>
+                          </>
+                        )}
                         <span>&bull;</span>
                         <span>Updated {res.lastUpdated}</span>
                       </div>
