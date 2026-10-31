@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useLayoutEffect, useRef, useTransition, useCallback } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   Search,
   ExternalLink,
@@ -203,7 +204,47 @@ export default function ScholarshipsClient({
   const [scholarships] = useState<ScholarshipItem[]>(initialScholarships);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [deferredCategory, setDeferredCategory] = useState("all");
+  const [isPending, startTransition] = useTransition();
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Standalone sliding pill animation refs and style
+  const tabContainerRef = useRef<HTMLDivElement>(null);
+  const tabBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [pillStyle, setPillStyle] = useState<{
+    left: number;
+    width: number;
+    top: number;
+    height: number;
+  } | null>(null);
+
+  const updatePill = useCallback(() => {
+    const el = tabBtnRefs.current.get(activeCategory);
+    if (!el) return;
+    setPillStyle({
+      left: el.offsetLeft,
+      width: el.offsetWidth,
+      top: el.offsetTop,
+      height: el.offsetHeight,
+    });
+  }, [activeCategory]);
+
+  useLayoutEffect(() => {
+    updatePill();
+  }, [updatePill]);
+
+  useEffect(() => {
+    const handleResize = () => updatePill();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [updatePill]);
+
+  const handleCategoryClick = (key: string) => {
+    setActiveCategory(key);
+    startTransition(() => {
+      setDeferredCategory(key);
+    });
+  };
 
   // Advanced Filters
   const [filterGender, setFilterGender] = useState("all_genders");
@@ -254,6 +295,9 @@ export default function ScholarshipsClient({
   const resetAllFilters = () => {
     setSearchQuery("");
     setActiveCategory("all");
+    startTransition(() => {
+      setDeferredCategory("all");
+    });
     setFilterGender("all_genders");
     setFilterYear("All Years");
     setFilterField("All Fields");
@@ -347,28 +391,28 @@ export default function ScholarshipsClient({
       }
 
       // 2. Category Tab
-      if (activeCategory === "girls" && s.genderEligibility !== "girls") return false;
-      if (activeCategory === "national" && !s.isNational) return false;
-      if (activeCategory === "open_to_all" && s.genderEligibility !== "all") return false;
+      if (deferredCategory === "girls" && s.genderEligibility !== "girls") return false;
+      if (deferredCategory === "national" && !s.isNational) return false;
+      if (deferredCategory === "open_to_all" && s.genderEligibility !== "all") return false;
       if (
-        activeCategory === "government" &&
+        deferredCategory === "government" &&
         !s.organizationType?.toLowerCase().includes("government")
       )
         return false;
       if (
-        activeCategory === "indian_companies" &&
+        deferredCategory === "indian_companies" &&
         !s.organizationType?.toLowerCase().includes("indian private")
       )
         return false;
       if (
-        activeCategory === "international" &&
+        deferredCategory === "international" &&
         s.country?.toLowerCase() === "india" &&
         !s.organizationType?.toLowerCase().includes("international") &&
         !s.organizationType?.toLowerCase().includes("foreign")
       )
         return false;
       if (
-        activeCategory === "financial_aid" &&
+        deferredCategory === "financial_aid" &&
         !s.fundingType?.toLowerCase().includes("need") &&
         !s.fundingType?.toLowerCase().includes("means")
       )
@@ -438,7 +482,7 @@ export default function ScholarshipsClient({
   }, [
     scholarships,
     searchQuery,
-    activeCategory,
+    deferredCategory,
     filterGender,
     filterYear,
     filterField,
@@ -532,18 +576,41 @@ export default function ScholarshipsClient({
 
       {/* ── Scholarship Category Navigation Bar ──────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+        <div
+          ref={tabContainerRef}
+          className="relative flex items-center gap-1.5 overflow-x-auto py-2 no-scrollbar scrollbar-hide"
+        >
+          {/* Standalone sliding pill — only this element moves; icons and text never transform */}
+          {pillStyle && (
+            <motion.div
+              className="absolute bg-[#1D64EC] rounded-xl shadow-sm pointer-events-none"
+              initial={false}
+              animate={{
+                left: pillStyle.left,
+                top: pillStyle.top,
+                width: pillStyle.width,
+                height: pillStyle.height,
+              }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              style={{ zIndex: 0 }}
+            />
+          )}
+
           {SCHOLARSHIP_CATEGORIES.map((cat) => {
             const isActive = activeCategory === cat.key;
             const Icon = cat.icon;
             return (
               <button
                 key={cat.key}
-                onClick={() => setActiveCategory(cat.key)}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+                ref={(el) => {
+                  if (el) tabBtnRefs.current.set(cat.key, el);
+                  else tabBtnRefs.current.delete(cat.key);
+                }}
+                onClick={() => handleCategoryClick(cat.key)}
+                className={`relative z-10 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap cursor-pointer transition-colors duration-150 ${
                   isActive
-                    ? "bg-[#1D64EC] text-white shadow-sm"
-                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/60"
+                    ? (pillStyle ? "text-white" : "bg-[#1D64EC] text-white shadow-sm")
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <Icon className="w-4 h-4" />
