@@ -87,19 +87,6 @@ export interface ScholarshipItem {
   displayOrder: number;
 }
 
-// ─── Top Opportunities Navigation Items ────────────────────────────────────────
-
-const OPPORTUNITIES_NAV = [
-  { key: "All Opportunities", label: "All Opportunities", href: "/opportunities", icon: Globe },
-  { key: "Hackathons", label: "Hackathons", href: "/opportunities?cat=Hackathons", icon: Zap },
-  { key: "Open Source", label: "Open Source", href: "/opportunities?cat=Open+Source", icon: GitBranch },
-  { key: "Internships", label: "Internships", href: "/opportunities?cat=Internships", icon: Briefcase },
-  { key: "Coding Contests", label: "Coding Contests", href: "/opportunities?cat=Coding+Contests", icon: Code2 },
-  { key: "Opportunities for Girls", label: "For Girls", href: "/opportunities?cat=Opportunities+for+Girls", icon: Heart },
-  { key: "Campus Ambassador Programs", label: "Ambassador", href: "/opportunities/campus-ambassador-programs", icon: Users2 },
-  { key: "Scholarships", label: "Scholarships", href: "/opportunities/scholarships", icon: GraduationCap },
-];
-
 // ─── Scholarship Category Filter Tabs ──────────────────────────────────────────
 
 const SCHOLARSHIP_CATEGORIES = [
@@ -299,25 +286,6 @@ export default function ScholarshipsClient({
     showSavedOnly,
   ]);
 
-  // ── Dynamic Statistics Row ──
-  const stats = useMemo(() => {
-    const total = scholarships.length;
-    const open = scholarships.filter(
-      (s) => s.applicationStatus === "open" || s.applicationStatus === "year_round"
-    ).length;
-    const girls = scholarships.filter((s) => s.genderEligibility === "girls").length;
-    const boys = scholarships.filter((s) => s.genderEligibility === "boys").length;
-    const international = scholarships.filter(
-      (s) =>
-        (s.country && s.country.toLowerCase() !== "india") ||
-        (s.organizationType &&
-          (s.organizationType.toLowerCase().includes("international") ||
-            s.organizationType.toLowerCase().includes("foreign")))
-    ).length;
-
-    return { total, open, girls, boys, international };
-  }, [scholarships]);
-
   // ── Filtering Logic ──
   const filteredScholarships = useMemo(() => {
     return scholarships.filter((s) => {
@@ -456,35 +424,9 @@ export default function ScholarshipsClient({
   ]);
 
   return (
-    <div className="space-y-8 pb-20">
-      {/* ── Top Opportunities Navigation System ────────────────────────────── */}
-      <section className="border-b border-slate-100 bg-white sticky top-[75px] z-30 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-1.5 overflow-x-auto py-2.5 no-scrollbar">
-            {OPPORTUNITIES_NAV.map((item) => {
-              const isCurrent = item.key === "Scholarships";
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
-                    isCurrent
-                      ? "bg-[#1D64EC] text-white shadow-xs"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
+    <div className="space-y-6 pb-20">
       {/* ── Hero Section (Matching Specification) ───────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 text-center pt-4 sm:pt-6">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 text-center pt-6 sm:pt-8">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EEF4FF] border border-blue-200/80 text-[#1D64EC] text-xs font-bold mb-4 shadow-2xs">
           <GraduationCap className="w-4 h-4 text-[#1D64EC]" />
@@ -498,13 +440,13 @@ export default function ScholarshipsClient({
         </h1>
 
         {/* Description */}
-        <p className="text-slate-600 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl mx-auto mb-8 font-normal">
+        <p className="text-slate-600 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl mx-auto mb-7 font-normal">
           Discover scholarships, financial aid, and educational funding opportunities from trusted Indian
           and international organizations, curated for engineering and computer science students.
         </p>
 
         {/* Search Bar */}
-        <div className="relative max-w-xl mx-auto mb-8">
+        <div className="relative max-w-xl mx-auto mb-2">
           <div className="relative flex items-center">
             <Search className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
             <input
@@ -522,40 +464,6 @@ export default function ScholarshipsClient({
                 <X className="w-4 h-4" />
               </button>
             )}
-          </div>
-        </div>
-
-        {/* ── Dynamic Statistics Row ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 max-w-3xl mx-auto pt-2 pb-6 border-y border-slate-100">
-          <div className="text-center p-2">
-            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">{stats.total}</div>
-            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
-              Total Scholarships
-            </div>
-          </div>
-          <div className="text-center p-2">
-            <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600">{stats.open}</div>
-            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
-              Applications Open
-            </div>
-          </div>
-          <div className="text-center p-2">
-            <div className="text-2xl sm:text-3xl font-extrabold text-pink-600">{stats.girls}</div>
-            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
-              For Girls
-            </div>
-          </div>
-          <div className="text-center p-2">
-            <div className="text-2xl sm:text-3xl font-extrabold text-blue-600">{stats.boys}</div>
-            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
-              For Boys
-            </div>
-          </div>
-          <div className="text-center p-2 col-span-2 sm:col-span-1">
-            <div className="text-2xl sm:text-3xl font-extrabold text-violet-600">{stats.international}</div>
-            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
-              International
-            </div>
           </div>
         </div>
       </section>
