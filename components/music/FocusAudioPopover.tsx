@@ -74,19 +74,35 @@ export default function FocusAudioPopover({
   const [showOptionsTrackId, setShowOptionsTrackId] = useState<string | null>(null);
   const [copiedTrackId, setCopiedTrackId] = useState<string | null>(null);
 
-  // Category pill animation refs
+  // Category pill animation refs & functional scroll indicator
   const catContainerRef = useRef<HTMLDivElement>(null);
   const catBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const scrollTrackRef = useRef<HTMLDivElement>(null);
   const [catPillStyle, setCatPillStyle] = useState({ left: 0, width: 0 });
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [scrollMetrics, setScrollMetrics] = useState({
+    hasOverflow: false,
+    progress: 0,
+    thumbRatio: 1,
+  });
 
   const checkScrollLimits = useCallback(() => {
     const el = catContainerRef.current;
     if (!el) return;
-    const hasOverflow = el.scrollWidth > el.clientWidth + 2;
-    setCanScrollLeft(el.scrollLeft > 6);
-    setCanScrollRight(hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 6);
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    const maxScroll = scrollWidth - clientWidth;
+    const hasOverflow = maxScroll > 2;
+    const progress = maxScroll > 0 ? Math.min(1, Math.max(0, scrollLeft / maxScroll)) : 0;
+    const thumbRatio = scrollWidth > 0 ? Math.min(1, Math.max(0.18, clientWidth / scrollWidth)) : 1;
+
+    setCanScrollLeft(scrollLeft > 6);
+    setCanScrollRight(hasOverflow && scrollLeft < maxScroll - 6);
+    setScrollMetrics({
+      hasOverflow,
+      progress,
+      thumbRatio,
+    });
   }, []);
 
   const updateCatPill = useCallback(() => {
@@ -131,33 +147,82 @@ export default function FocusAudioPopover({
     }
   }, [updateCatPill, checkScrollLimits]);
 
-  // 2. Ensure active category is always smoothly scrolled into full view if necessary
-  useEffect(() => {
-    const container = catContainerRef.current;
-    if (!container) return;
-    if (activeCategory === "All") {
-      container.scrollTo({ left: 0, behavior: "smooth" });
-      setTimeout(checkScrollLimits, 250);
-      return;
-    }
-    const btn = catBtnRefs.current.get(activeCategory);
-    if (!btn) return;
-    const cRect = container.getBoundingClientRect();
-    const bRect = btn.getBoundingClientRect();
+  // 2. Interactive scrollbar track dragging & clicking
+  const handleTrackPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const track = scrollTrackRef.current;
+      const container = catContainerRef.current;
+      if (!track || !container) return;
 
-    if (bRect.left < cRect.left + 8) {
-      container.scrollTo({
-        left: Math.max(0, container.scrollLeft + (bRect.left - cRect.left) - 12),
-        behavior: "smooth",
-      });
-    } else if (bRect.right > cRect.right - 8) {
-      container.scrollTo({
-        left: container.scrollLeft + (bRect.right - cRect.right) + 12,
-        behavior: "smooth",
-      });
-    }
-    setTimeout(checkScrollLimits, 250);
-  }, [activeCategory, checkScrollLimits]);
+      const trackRect = track.getBoundingClientRect();
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      if (maxScroll <= 0) return;
+
+      const scrollToClientX = (clientX: number) => {
+        const clickX = Math.max(0, Math.min(trackRect.width, clientX - trackRect.left));
+        const percentage = clickX / trackRect.width;
+        container.scrollLeft = percentage * maxScroll;
+        updateCatPill();
+        checkScrollLimits();
+      };
+
+      scrollToClientX(e.clientX);
+
+      const onPointerMove = (moveEvt: PointerEvent) => {
+        scrollToClientX(moveEvt.clientX);
+      };
+
+      const onPointerUp = () => {
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+      };
+
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp);
+    },
+    [updateCatPill, checkScrollLimits]
+  );
+
+  // 3. User selects category: activate & automatically scroll fully into view
+  const handleSelectCategory = useCallback(
+    (catId: string) => {
+      setActiveCategory(catId);
+      if (activeTab !== "all") setActiveTab("all");
+
+      const container = catContainerRef.current;
+      if (!container) return;
+
+      if (catId === "All") {
+        container.scrollTo({ left: 0, behavior: "smooth" });
+        setTimeout(checkScrollLimits, 300);
+        return;
+      }
+
+      const btn = catBtnRefs.current.get(catId);
+      if (!btn) return;
+
+      const cRect = container.getBoundingClientRect();
+      const bRect = btn.getBoundingClientRect();
+
+      if (bRect.left < cRect.left + 8) {
+        const delta = cRect.left - bRect.left + 16;
+        container.scrollTo({
+          left: Math.max(0, container.scrollLeft - delta),
+          behavior: "smooth",
+        });
+      } else if (bRect.right > cRect.right - 8) {
+        const delta = bRect.right - cRect.right + 16;
+        container.scrollTo({
+          left: container.scrollLeft + delta,
+          behavior: "smooth",
+        });
+      }
+      setTimeout(checkScrollLimits, 300);
+    },
+    [activeTab, setActiveCategory, checkScrollLimits]
+  );
 
   // Tab tracks calculation
   const displayedTracks = useMemo(() => {
@@ -257,70 +322,89 @@ export default function FocusAudioPopover({
         </div>
 
         {/* ── 2. Category Filter Pills (All, Ambient, Focus, Cinema, Sleep) ── */}
-        <div className="relative w-full z-10 overflow-hidden">
-          {/* Subtle Left-Edge Fade Indicator */}
-          <div
-            className={`absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[#0A0D18] to-transparent pointer-events-none z-20 transition-opacity duration-300 ${
-              canScrollLeft ? "opacity-100" : "opacity-0"
-            }`}
-          />
-
-          {/* Subtle Right-Edge Fade Indicator (indicates off-screen categories like Sleep) */}
-          <div
-            className={`absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0A0D18] via-[#0A0D18]/85 to-transparent pointer-events-none z-20 transition-opacity duration-300 ${
-              canScrollRight ? "opacity-100" : "opacity-0"
-            }`}
-          />
-
-          <div
-            ref={catContainerRef}
-            onScroll={handleCategoryScroll}
-            data-lenis-prevent="true"
-            data-lenis-prevent-touch="true"
-            onWheel={(e) => e.stopPropagation()}
-            onTouchMove={(e) => e.stopPropagation()}
-            style={{
-              WebkitOverflowScrolling: "touch",
-              touchAction: "pan-x",
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-            }}
-            className="relative flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-1 px-1 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] w-full overscroll-contain"
-          >
-            {/* Animated sliding pill */}
-            <motion.div
-              className="absolute top-1 h-[32px] rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-[0_0_15px_rgba(99,102,241,0.55)] pointer-events-none"
-              animate={{ left: catPillStyle.left, width: catPillStyle.width }}
-              transition={{ type: "spring", stiffness: 450, damping: 35, mass: 0.6 }}
+        <div className="relative w-full z-10 flex flex-col gap-1">
+          <div className="relative w-full overflow-hidden">
+            {/* Subtle Left-Edge Fade Indicator */}
+            <div
+              className={`absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[#0A0D18] to-transparent pointer-events-none z-20 transition-opacity duration-300 ${
+                canScrollLeft ? "opacity-100" : "opacity-0"
+              }`}
             />
 
-            {CATEGORY_ITEMS.map((item) => {
-              const isActive = activeCategory === item.id;
-              const Icon = item.Icon;
+            {/* Subtle Right-Edge Fade Indicator */}
+            <div
+              className={`absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0A0D18] via-[#0A0D18]/85 to-transparent pointer-events-none z-20 transition-opacity duration-300 ${
+                canScrollRight ? "opacity-100" : "opacity-0"
+              }`}
+            />
 
-              return (
-                <button
-                  key={item.id}
-                  ref={(el) => {
-                    if (el) catBtnRefs.current.set(item.id, el);
-                    else catBtnRefs.current.delete(item.id);
-                  }}
-                  onClick={() => {
-                    setActiveCategory(item.id);
-                    if (activeTab !== "all") setActiveTab("all");
-                  }}
-                  className={`relative z-10 px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold whitespace-nowrap flex items-center gap-1 sm:gap-1.5 transition-colors duration-200 shrink-0 select-none ${
-                    isActive
-                      ? "text-white font-bold"
-                      : "bg-slate-900/80 text-slate-300 hover:text-white hover:bg-slate-800/70 border border-slate-800/80"
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
+            <div
+              ref={catContainerRef}
+              onScroll={handleCategoryScroll}
+              data-lenis-prevent="true"
+              data-lenis-prevent-touch="true"
+              onWheel={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
+              style={{
+                WebkitOverflowScrolling: "touch",
+                touchAction: "pan-x",
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+              }}
+              className="relative flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-1 px-1 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] w-full overscroll-contain"
+            >
+              {/* Animated sliding pill */}
+              <motion.div
+                className="absolute top-1 h-[32px] rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-[0_0_15px_rgba(99,102,241,0.55)] pointer-events-none"
+                animate={{ left: catPillStyle.left, width: catPillStyle.width }}
+                transition={{ type: "spring", stiffness: 450, damping: 35, mass: 0.6 }}
+              />
+
+              {CATEGORY_ITEMS.map((item) => {
+                const isActive = activeCategory === item.id;
+                const Icon = item.Icon;
+
+                return (
+                  <button
+                    key={item.id}
+                    ref={(el) => {
+                      if (el) catBtnRefs.current.set(item.id, el);
+                      else catBtnRefs.current.delete(item.id);
+                    }}
+                    onClick={() => handleSelectCategory(item.id)}
+                    className={`relative z-10 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-colors duration-200 shrink-0 select-none ${
+                      isActive
+                        ? "text-white font-bold"
+                        : "bg-slate-900/80 text-slate-300 hover:text-white hover:bg-slate-800/70 border border-slate-800/80"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5 shrink-0" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
+          {/* ── Thin Custom Horizontal Scroll Indicator (2.5px) ── */}
+          {scrollMetrics.hasOverflow && (
+            <div
+              ref={scrollTrackRef}
+              onPointerDown={handleTrackPointerDown}
+              className="w-full pt-0.5 pb-0.5 px-1 cursor-pointer select-none"
+              title="Drag or click to scroll categories"
+            >
+              <div className="w-full h-[2.5px] rounded-full bg-slate-800/80 relative overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 absolute top-0 transition-[left,width] duration-75"
+                  style={{
+                    width: `${scrollMetrics.thumbRatio * 100}%`,
+                    left: `${scrollMetrics.progress * (1 - scrollMetrics.thumbRatio) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── 3. Featured Now Playing Card (Matching Screenshot 2 Exactly) ── */}
