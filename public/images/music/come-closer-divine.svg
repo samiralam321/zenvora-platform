@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#140727"/>
+      <stop offset="35%" stop-color="#2a0d45"/>
+      <stop offset="70%" stop-color="#491369"/>
+      <stop offset="100%" stop-color="#731f8f"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+      <stop offset="30%" stop-color="#f5e6c8" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#e288f8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mountGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#551a70"/>
+      <stop offset="100%" stop-color="#2f0c40"/>
+    </linearGradient>
+    <linearGradient id="mountGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3b1050"/>
+      <stop offset="100%" stop-color="#1d0628"/>
+    </linearGradient>
+    <linearGradient id="mosqueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#240733"/>
+      <stop offset="100%" stop-color="#0e0214"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="400" height="400" rx="24" fill="url(#skyGrad)"/>
+
+  <!-- Stars -->
+  <g fill="#ffffff" opacity="0.8">
+    <circle cx="50" cy="40" r="1.5" />
+    <circle cx="85" cy="85" r="1.2" />
+    <circle cx="120" cy="50" r="1" />
+    <circle cx="160" cy="70" r="1.8" filter="url(#glow)"/>
+    <circle cx="280" cy="45" r="1.2" />
+    <circle cx="320" cy="75" r="1.5" />
+    <circle cx="360" cy="50" r="1" />
+    <circle cx="340" cy="110" r="1.4" />
+    <circle cx="70" cy="130" r="1" />
+    <circle cx="290" cy="140" r="1.6" filter="url(#glow)"/>
+  </g>
+
+  <!-- Moon Glow & Crescent Moon -->
+  <circle cx="240" cy="110" r="45" fill="url(#moonGlow)"/>
+  <!-- Crescent shape -->
+  <path d="M 245 80 A 30 30 0 1 0 245 140 A 24 24 0 1 1 245 80 Z" fill="#fff9ea" filter="url(#glow)"/>
+
+  <!-- Distant Mountains Layer 1 -->
+  <path d="M -20 280 Q 80 190 180 250 T 420 220 L 420 400 L -20 400 Z" fill="url(#mountGrad1)" opacity="0.6"/>
+
+  <!-- Mid Mountains Layer 2 -->
+  <path d="M -20 310 Q 110 240 220 290 T 420 270 L 420 400 L -20 400 Z" fill="url(#mountGrad2)"/>
+
+  <!-- Mosque Silhouette -->
+  <g fill="url(#mosqueGrad)">
+    <!-- Base podium -->
+    <rect x="70" y="320" width="260" height="80" rx="4"/>
+    
+    <!-- Central Dome -->
+    <!-- Dome neck -->
+    <rect x="165" y="275" width="70" height="45"/>
+    <!-- Dome onion shape -->
+    <path d="M 160 285 C 160 230 195 210 200 195 C 205 210 240 230 240 285 Z"/>
+    <!-- Dome finial crescent -->
+    <line x1="200" y1="195" x2="200" y2="185" stroke="#fff9ea" stroke-width="1.5"/>
+    <circle cx="200" cy="183" r="1.5" fill="#fff9ea"/>
+
+    <!-- Left Smaller Dome -->
+    <path d="M 125 305 C 125 270 142 255 145 245 C 148 255 165 270 165 305 Z"/>
+    <line x1="145" y1="245" x2="145" y2="238" stroke="#fff9ea" stroke-width="1"/>
+
+    <!-- Right Smaller Dome -->
+    <path d="M 235 305 C 235 270 252 255 255 245 C 258 255 275 270 275 305 Z"/>
+    <line x1="255" y1="245" x2="255" y2="238" stroke="#fff9ea" stroke-width="1"/>
+
+    <!-- Left Minaret -->
+    <rect x="95" y="225" width="16" height="100"/>
+    <polygon points="90,225 103,195 116,225"/>
+    <rect x="91" y="240" width="24" height="4" rx="1"/>
+    <line x1="103" y1="195" x2="103" y2="188" stroke="#fff9ea" stroke-width="1"/>
+
+    <!-- Right Minaret -->
+    <rect x="289" y="225" width="16" height="100"/>
+    <polygon points="284,225 297,195 310,225"/>
+    <rect x="285" y="240" width="24" height="4" rx="1"/>
+    <line x1="297" y1="195" x2="297" y2="188" stroke="#fff9ea" stroke-width="1"/>
+
+    <!-- Arches -->
+    <path d="M 185 350 A 15 15 0 0 1 215 350 L 215 380 L 185 380 Z" fill="#3b0f50"/>
+    <path d="M 145 355 A 10 10 0 0 1 165 355 L 165 380 L 145 380 Z" fill="#3b0f50"/>
+    <path d="M 235 355 A 10 10 0 0 1 255 355 L 255 380 L 235 380 Z" fill="#3b0f50"/>
+  </g>
+
+  <!-- Foreground Mist -->
+  <path d="M -20 360 Q 100 340 200 360 T 420 350 L 420 400 L -20 400 Z" fill="#170422" opacity="0.8"/>
+</svg>

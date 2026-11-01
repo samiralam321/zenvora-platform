@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="sunSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2a1b07"/>
+      <stop offset="50%" stop-color="#69400d"/>
+      <stop offset="100%" stop-color="#b0731e"/>
+    </linearGradient>
+    <radialGradient id="sunBurst" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#fff8db" stop-opacity="1"/>
+      <stop offset="25%" stop-color="#fcd34d" stop-opacity="0.8"/>
+      <stop offset="60%" stop-color="#d97706" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#78350f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="400" rx="24" fill="url(#sunSky)"/>
+  
+  <!-- Sun Core & Burst -->
+  <circle cx="160" cy="140" r="180" fill="url(#sunBurst)"/>
+
+  <!-- Sun Rays -->
+  <polygon points="160,140 -50,400 50,400" fill="#fef08a" opacity="0.15"/>
+  <polygon points="160,140 100,400 220,400" fill="#fef08a" opacity="0.2"/>
+  <polygon points="160,140 260,400 380,400" fill="#fef08a" opacity="0.18"/>
+  <polygon points="160,140 370,300 400,380" fill="#fef08a" opacity="0.15"/>
+
+  <!-- Forest Pines Silhouettes -->
+  <!-- Background Layer -->
+  <g fill="#451a03" opacity="0.7">
+    <polygon points="80,220 50,300 110,300"/>
+    <polygon points="80,180 55,240 105,240"/>
+    <polygon points="250,210 220,290 280,290"/>
+    <polygon points="250,170 225,230 275,230"/>
+    <polygon points="340,230 310,310 370,310"/>
+    <polygon points="340,190 315,250 365,250"/>
+  </g>
+
+  <!-- Foreground Layer -->
+  <g fill="#1f0c02">
+    <!-- Tall Tree 1 -->
+    <rect x="110" y="240" width="16" height="160"/>
+    <polygon points="118,100 80,190 156,190"/>
+    <polygon points="118,150 70,240 166,240"/>
+    <polygon points="118,200 60,290 176,290"/>
+
+    <!-- Tall Tree 2 -->
+    <rect x="280" y="230" width="18" height="170"/>
+    <polygon points="289,80 250,180 328,180"/>
+    <polygon points="289,140 240,230 338,230"/>
+    <polygon points="289,190 230,280 348,280"/>
+    
+    <!-- Forest floor -->
+    <path d="M 0 350 Q 150 330 280 345 T 400 340 L 400 400 L 0 400 Z"/>
+  </g>
+</svg>

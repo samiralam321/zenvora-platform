@@ -5,6 +5,7 @@ export interface Track {
   category: "Ambient & Nature" | "Deep Focus" | "Cinematic" | "Anime & Lofi";
   youtubeId: string;
   icon: string;
+  coverUrl?: string;
 }
 
 export const STUDY_TRACKS: Track[] = [
@@ -16,6 +17,7 @@ export const STUDY_TRACKS: Track[] = [
     category: "Ambient & Nature",
     youtubeId: "fv0rXRM3LGA",
     icon: "🕌",
+    coverUrl: "/images/music/come-closer-divine.svg",
   },
   {
     id: "relaxing-rain-sound",
@@ -24,6 +26,7 @@ export const STUDY_TRACKS: Track[] = [
     category: "Ambient & Nature",
     youtubeId: "7jQASnRrUzs",
     icon: "🌧️",
+    coverUrl: "/images/music/relaxing-rain.svg",
   },
   {
     id: "a-gentle-sunlight",
@@ -32,6 +35,7 @@ export const STUDY_TRACKS: Track[] = [
     category: "Ambient & Nature",
     youtubeId: "MDXE7gus1HY",
     icon: "☀️",
+    coverUrl: "/images/music/gentle-sunlight.svg",
   },
   {
     id: "snowfall",
@@ -40,6 +44,7 @@ export const STUDY_TRACKS: Track[] = [
     category: "Ambient & Nature",
     youtubeId: "OtLcqr3RQJY",
     icon: "❄️",
+    coverUrl: "/images/music/snowfall.svg",
   },
   {
     id: "winter-has-come",

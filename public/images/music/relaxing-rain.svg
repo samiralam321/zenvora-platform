@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="rainSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#081b24"/>
+      <stop offset="50%" stop-color="#0f343a"/>
+      <stop offset="100%" stop-color="#144d47"/>
+    </linearGradient>
+    <radialGradient id="waterGlow" cx="50%" cy="80%" r="50%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0f343a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="400" rx="24" fill="url(#rainSky)"/>
+  
+  <!-- Rain Pool / Lake -->
+  <ellipse cx="200" cy="330" rx="180" ry="60" fill="#082329"/>
+  <ellipse cx="200" cy="330" rx="180" ry="60" fill="url(#waterGlow)"/>
+
+  <!-- Water Ripples -->
+  <ellipse cx="140" cy="320" rx="30" ry="8" fill="none" stroke="#7dd3fc" stroke-width="1.2" opacity="0.6"/>
+  <ellipse cx="140" cy="320" rx="50" ry="14" fill="none" stroke="#7dd3fc" stroke-width="0.8" opacity="0.3"/>
+  <ellipse cx="260" cy="340" rx="25" ry="7" fill="none" stroke="#7dd3fc" stroke-width="1.2" opacity="0.6"/>
+  <ellipse cx="260" cy="340" rx="45" ry="12" fill="none" stroke="#7dd3fc" stroke-width="0.8" opacity="0.3"/>
+
+  <!-- Jungle / Rainforest Leaves -->
+  <path d="M 0 100 Q 80 140 100 220 Q 50 200 0 170 Z" fill="#0d4a3e" opacity="0.8"/>
+  <path d="M 400 90 Q 320 130 300 210 Q 350 190 400 160 Z" fill="#0d4a3e" opacity="0.8"/>
+  <path d="M -10 200 Q 70 230 80 310 Q 40 280 -10 260 Z" fill="#06322a"/>
+  <path d="M 410 190 Q 330 220 320 300 Q 360 270 410 250 Z" fill="#06322a"/>
+
+  <!-- Rain Drops -->
+  <g stroke="#bae6fd" stroke-width="1.5" stroke-linecap="round" opacity="0.7">
+    <line x1="80" y1="40" x2="70" y2="70"/>
+    <line x1="160" y1="20" x2="150" y2="50"/>
+    <line x1="240" y1="60" x2="230" y2="90"/>
+    <line x1="320" y1="30" x2="310" y2="60"/>
+    <line x1="110" y1="120" x2="100" y2="150"/>
+    <line x1="190" y1="100" x2="180" y2="130"/>
+    <line x1="270" y1="140" x2="260" y2="170"/>
+    <line x1="350" y1="110" x2="340" y2="140"/>
+    <line x1="70" y1="200" x2="60" y2="230"/>
+    <line x1="150" y1="180" x2="140" y2="210"/>
+    <line x1="230" y1="220" x2="220" y2="250"/>
+    <line x1="310" y1="190" x2="300" y2="220"/>
+  </g>
+</svg>

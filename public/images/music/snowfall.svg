@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="snowSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0b1329"/>
+      <stop offset="50%" stop-color="#142142"/>
+      <stop offset="100%" stop-color="#243763"/>
+    </linearGradient>
+    <radialGradient id="frostGlow" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#e0f2fe" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0b1329" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="400" rx="24" fill="url(#snowSky)"/>
+  <rect width="400" height="400" rx="24" fill="url(#frostGlow)"/>
+
+  <!-- Distant Blue Pines -->
+  <g fill="#172554">
+    <polygon points="60,180 30,260 90,260"/>
+    <polygon points="140,160 105,250 175,250"/>
+    <polygon points="260,170 225,260 295,260"/>
+    <polygon points="340,190 310,270 370,270"/>
+  </g>
+
+  <!-- Foreground Pine Trees with Snow Caps -->
+  <g>
+    <!-- Tree 1 -->
+    <polygon points="100,120 50,220 150,220" fill="#0f172a"/>
+    <polygon points="100,120 70,160 100,150 130,160" fill="#f8fafc"/>
+    <polygon points="100,180 40,280 160,280" fill="#0f172a"/>
+    <polygon points="100,180 60,230 100,215 140,230" fill="#f8fafc"/>
+
+    <!-- Tree 2 -->
+    <polygon points="220,100 165,210 275,210" fill="#020617"/>
+    <polygon points="220,100 185,150 220,140 255,150" fill="#f8fafc"/>
+    <polygon points="220,170 150,290 290,290" fill="#020617"/>
+    <polygon points="220,170 175,230 220,215 265,230" fill="#f8fafc"/>
+
+    <!-- Tree 3 -->
+    <polygon points="320,140 275,230 365,230" fill="#0f172a"/>
+    <polygon points="320,140 290,180 320,170 350,180" fill="#f8fafc"/>
+  </g>
+
+  <!-- Snow Dunes -->
+  <path d="M -20 320 Q 100 290 220 330 T 420 310 L 420 400 L -20 400 Z" fill="#e2e8f0"/>
+  <path d="M -20 350 Q 140 330 260 360 T 420 340 L 420 400 L -20 400 Z" fill="#f8fafc"/>
+
+  <!-- Falling Snow Flakes -->
+  <g fill="#ffffff">
+    <circle cx="50" cy="50" r="2.5" opacity="0.9"/>
+    <circle cx="120" cy="80" r="1.5" opacity="0.7"/>
+    <circle cx="180" cy="40" r="3" opacity="0.95"/>
+    <circle cx="250" cy="90" r="2" opacity="0.8"/>
+    <circle cx="310" cy="60" r="1.8" opacity="0.75"/>
+    <circle cx="360" cy="110" r="2.8" opacity="0.9"/>
+
+    <circle cx="70" cy="150" r="2" opacity="0.8"/>
+    <circle cx="150" cy="190" r="3.2" opacity="0.9"/>
+    <circle cx="210" cy="140" r="1.5" opacity="0.7"/>
+    <circle cx="280" cy="210" r="2.5" opacity="0.85"/>
+    <circle cx="340" cy="170" r="2" opacity="0.8"/>
+
+    <circle cx="40" cy="260" r="3" opacity="0.9"/>
+    <circle cx="110" cy="290" r="2.2" opacity="0.8"/>
+    <circle cx="190" cy="270" r="1.8" opacity="0.75"/>
+    <circle cx="260" cy="300" r="2.6" opacity="0.9"/>
+    <circle cx="370" cy="270" r="2" opacity="0.8"/>
+  </g>
+</svg>
