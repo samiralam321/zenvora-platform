@@ -186,15 +186,8 @@ export default function FocusAudioPopover({
             </div>
           </div>
 
-          {/* Right Action Icons (Expand & Close) */}
+          {/* Right Action Icons (Close only) */}
           <div className="flex items-center gap-2">
-            <button
-              onClick={(e) => handleOpenExternal(currentTrack, e)}
-              className="w-9 h-9 rounded-full bg-slate-800/60 border border-slate-700/60 hover:bg-slate-700/70 hover:border-slate-600 text-slate-300 hover:text-white flex items-center justify-center transition active:scale-95 shadow-sm"
-              title="Open in YouTube Music"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </button>
             {onClose && (
               <button
                 onClick={onClose}
@@ -216,7 +209,7 @@ export default function FocusAudioPopover({
             WebkitOverflowScrolling: "touch",
             touchAction: "pan-x",
           }}
-          className="relative flex items-center gap-2 overflow-x-auto pb-0.5 custom-scroll z-10"
+          className="relative flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-hide z-10"
         >
           {/* Animated sliding pill */}
           <motion.div
@@ -516,7 +509,7 @@ export default function FocusAudioPopover({
           data-lenis-prevent-touch="true"
           onWheel={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
-          className="max-h-[220px] overflow-y-auto space-y-1.5 custom-scroll pr-1 overscroll-contain z-10"
+          className="max-h-[220px] overflow-y-auto space-y-1.5 scrollbar-hide pr-1 overscroll-contain z-10"
           style={{
             WebkitOverflowScrolling: "touch",
             touchAction: "pan-y",
