@@ -1,876 +1,250 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1080" width="100%" height="100%" style="background:#070a14; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 830" width="100%" height="100%" style="background:#131417; font-family:'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;">
   <defs>
-    <!-- Background Ambient Gradients -->
-    <radialGradient id="bgGlowBlue" cx="15%" cy="20%" r="55%">
-      <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#070a14" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="bgGlowPurple" cx="50%" cy="50%" r="60%">
-      <stop offset="0%" stop-color="#4c1d95" stop-opacity="0.20"/>
-      <stop offset="100%" stop-color="#070a14" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="bgGlowCyan" cx="85%" cy="80%" r="55%">
-      <stop offset="0%" stop-color="#064e3b" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#070a14" stop-opacity="0"/>
-    </radialGradient>
+    <!-- Arrow Marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#71717a"/>
+    </marker>
+    <marker id="arrow-white" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#e4e4e7"/>
+    </marker>
 
-    <!-- Card Background Gradients -->
-    <linearGradient id="clientCardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#111827"/>
-      <stop offset="100%" stop-color="#0b0f19"/>
-    </linearGradient>
-
-    <linearGradient id="edgeCardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0c1e3d"/>
-      <stop offset="100%" stop-color="#081226"/>
-    </linearGradient>
-
-    <linearGradient id="appCardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1b1238"/>
-      <stop offset="100%" stop-color="#0d091e"/>
-    </linearGradient>
-
-    <linearGradient id="dbCardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#062e24"/>
-      <stop offset="100%" stop-color="#041712"/>
-    </linearGradient>
-
-    <linearGradient id="extCardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#2d0c1e"/>
-      <stop offset="100%" stop-color="#17060e"/>
-    </linearGradient>
-
-    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#3b82f6"/>
-      <stop offset="40%" stop-color="#8b5cf6"/>
-      <stop offset="100%" stop-color="#ec4899"/>
-    </linearGradient>
-
-    <!-- Dropshadow filter -->
-    <filter id="shadowFilter" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.6"/>
+    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
     </filter>
-
-    <filter id="glowBlue" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#38bdf8" flood-opacity="0.6"/>
-    </filter>
-    <filter id="glowPurple" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#c084fc" flood-opacity="0.6"/>
-    </filter>
-
-    <!-- Arrow Markers -->
-    <!-- Blue (PDF Stream) -->
-    <marker id="arrow-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 9 5 L 0 9 z" fill="#38bdf8"/>
-    </marker>
-    <!-- Purple (Focus Audio) -->
-    <marker id="arrow-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 9 5 L 0 9 z" fill="#c084fc"/>
-    </marker>
-    <!-- Crimson (Direct Audio Stream) -->
-    <marker id="arrow-crimson" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 9 5 L 0 9 z" fill="#f43f5e"/>
-    </marker>
-    <!-- Amber (Admin Upload) -->
-    <marker id="arrow-amber" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 9 5 L 0 9 z" fill="#fbbf24"/>
-    </marker>
-    <!-- Emerald (Prisma / DB) -->
-    <marker id="arrow-emerald" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 9 5 L 0 9 z" fill="#34d399"/>
-    </marker>
-    <!-- Cyan (Opportunities) -->
-    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 9 5 L 0 9 z" fill="#22d3ee"/>
-    </marker>
   </defs>
 
-  <!-- Base Canvas Backgrounds -->
-  <rect width="1600" height="1080" fill="#070a14"/>
-  <rect width="1600" height="1080" fill="url(#bgGlowBlue)"/>
-  <rect width="1600" height="1080" fill="url(#bgGlowPurple)"/>
-  <rect width="1600" height="1080" fill="url(#bgGlowCyan)"/>
+  <!-- Base background -->
+  <rect width="1360" height="830" fill="#131417"/>
 
-  <!-- Blueprint Circuit Grid Lines -->
-  <g stroke="#ffffff" stroke-width="0.5" opacity="0.03">
-    <line x1="0" y1="0" x2="0" y2="1080"/>
-    <line x1="80" y1="0" x2="80" y2="1080"/>
-    <line x1="160" y1="0" x2="160" y2="1080"/>
-    <line x1="240" y1="0" x2="240" y2="1080"/>
-    <line x1="320" y1="0" x2="320" y2="1080"/>
-    <line x1="400" y1="0" x2="400" y2="1080"/>
-    <line x1="480" y1="0" x2="480" y2="1080"/>
-    <line x1="560" y1="0" x2="560" y2="1080"/>
-    <line x1="640" y1="0" x2="640" y2="1080"/>
-    <line x1="720" y1="0" x2="720" y2="1080"/>
-    <line x1="800" y1="0" x2="800" y2="1080"/>
-    <line x1="880" y1="0" x2="880" y2="1080"/>
-    <line x1="960" y1="0" x2="960" y2="1080"/>
-    <line x1="1040" y1="0" x2="1040" y2="1080"/>
-    <line x1="1120" y1="0" x2="1120" y2="1080"/>
-    <line x1="1200" y1="0" x2="1200" y2="1080"/>
-    <line x1="1280" y1="0" x2="1280" y2="1080"/>
-    <line x1="1360" y1="0" x2="1360" y2="1080"/>
-    <line x1="1440" y1="0" x2="1440" y2="1080"/>
-    <line x1="1520" y1="0" x2="1520" y2="1080"/>
-    <line x1="1600" y1="0" x2="1600" y2="1080"/>
-    <line x1="0" y1="0" x2="1600" y2="0"/>
-    <line x1="0" y1="80" x2="1600" y2="80"/>
-    <line x1="0" y1="160" x2="1600" y2="160"/>
-    <line x1="0" y1="240" x2="1600" y2="240"/>
-    <line x1="0" y1="320" x2="1600" y2="320"/>
-    <line x1="0" y1="400" x2="1600" y2="400"/>
-    <line x1="0" y1="480" x2="1600" y2="480"/>
-    <line x1="0" y1="560" x2="1600" y2="560"/>
-    <line x1="0" y1="640" x2="1600" y2="640"/>
-    <line x1="0" y1="720" x2="1600" y2="720"/>
-    <line x1="0" y1="800" x2="1600" y2="800"/>
-    <line x1="0" y1="880" x2="1600" y2="880"/>
-    <line x1="0" y1="960" x2="1600" y2="960"/>
-    <line x1="0" y1="1040" x2="1600" y2="1040"/>
-  </g>
+  <!-- ====================================================================== -->
+  <!-- 1. LAYER 1: CLIENT & PRESENTATION LAYER                               -->
+  <!-- ====================================================================== -->
+  <g transform="translate(30, 25)">
+    <!-- Container -->
+    <rect x="0" y="0" width="1300" height="135" rx="6" fill="#18191e" stroke="#2b2d35" stroke-width="1.2"/>
+    <!-- Top Header Bar -->
+    <path d="M 0 6 Q 0 0 6 0 L 1294 0 Q 1300 0 1300 6 L 1300 28 L 0 28 z" fill="#20222a"/>
+    <text x="16" y="19" font-size="12" font-weight="700" fill="#e4e4e7">1. Client &amp; Presentation Layer (Next.js 14 / React 18)</text>
 
-  <!-- TOP BANNER & METRICS BAR -->
-  <g transform="translate(50, 24)">
-    <!-- Brand Logo Mark -->
-    <rect x="0" y="0" width="50" height="50" rx="14" fill="url(#headerGrad)"/>
-    <path d="M 17 17 L 33 17 L 17 33 L 33 33" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Card 1.1: Focus Audio Player -->
+    <g transform="translate(20, 42)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="230" height="72" rx="6" fill="#1e2027" stroke="#323540" stroke-width="1.2"/>
+      <text x="115" y="30" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">🎧 Focus Audio Player</text>
+      <text x="115" y="50" font-size="10.5" fill="#a1a1aa" text-anchor="middle">(63 Study Tracks + Mood Pills)</text>
+    </g>
 
-    <!-- Title & Subtitle -->
-    <text x="66" y="24" font-size="22" font-weight="800" fill="#ffffff" letter-spacing="-0.5">ZenVora Detailed System Architecture &amp; Data Pipeline</text>
-    <text x="66" y="44" font-size="12.5" font-weight="500" fill="#94a3b8">Interactive Request Cycles, Streaming Pipelines, Chunked Stitching &amp; Database Topology</text>
+    <!-- Card 1.2: Tech Roadmaps & System Design -->
+    <g transform="translate(275, 42)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="245" height="72" rx="6" fill="#1e2027" stroke="#323540" stroke-width="1.2"/>
+      <text x="122" y="30" font-size="12.5" font-weight="700" fill="#ffffff" text-anchor="middle">📖 Tech Roadmaps &amp; System Design</text>
+      <text x="122" y="50" font-size="10.5" fill="#a1a1aa" text-anchor="middle">(Curated Resource Hub)</text>
+    </g>
 
-    <!-- Key Metrics Badges -->
-    <g transform="translate(860, 4)">
-      <!-- Badge 1: 0 KB/s Audio -->
-      <g transform="translate(0, 0)">
-        <rect x="0" y="0" width="150" height="42" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.2"/>
-        <text x="75" y="18" font-size="9" font-weight="700" fill="#a5b4fc" text-anchor="middle">AUDIO HOST BANDWIDTH</text>
-        <text x="75" y="33" font-size="12" font-weight="800" fill="#ffffff" text-anchor="middle">0 KB/s (Direct CDN)</text>
-      </g>
-      <!-- Badge 2: 1-Year Cache -->
-      <g transform="translate(160, 0)">
-        <rect x="0" y="0" width="150" height="42" rx="8" fill="#082f49" stroke="#0284c7" stroke-width="1.2"/>
-        <text x="75" y="18" font-size="9" font-weight="700" fill="#7dd3fc" text-anchor="middle">PDF CACHE POLICY</text>
-        <text x="75" y="33" font-size="12" font-weight="800" fill="#38bdf8" text-anchor="middle">max-age=31536000</text>
-      </g>
-      <!-- Badge 3: 1MB Chunks -->
-      <g transform="translate(320, 0)">
-        <rect x="0" y="0" width="150" height="42" rx="8" fill="#3b2308" stroke="#d97706" stroke-width="1.2"/>
-        <text x="75" y="18" font-size="9" font-weight="700" fill="#fcd34d" text-anchor="middle">UPLOAD STITCHING</text>
-        <text x="75" y="33" font-size="12" font-weight="800" fill="#fbbf24" text-anchor="middle">1MB Resilient Slices</text>
-      </g>
-      <!-- Badge 4: Zero Cost -->
-      <g transform="translate(480, 0)">
-        <rect x="0" y="0" width="160" height="42" rx="8" fill="#064e3b" stroke="#059669" stroke-width="1.2"/>
-        <text x="80" y="18" font-size="9" font-weight="700" fill="#6ee7b7" text-anchor="middle">INFRASTRUCTURE COST</text>
-        <text x="80" y="33" font-size="12" font-weight="800" fill="#34d399" text-anchor="middle">100% Free-Tier Zero-Card</text>
-      </g>
+    <!-- Card 1.3: PDF Notes Reader -->
+    <g transform="translate(545, 42)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="220" height="72" rx="6" fill="#1e2027" stroke="#323540" stroke-width="1.2"/>
+      <text x="110" y="30" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">📑 PDF Notes Reader</text>
+      <text x="110" y="50" font-size="10.5" fill="#a1a1aa" text-anchor="middle">(PDF.js Canvas + Text Layer)</text>
+    </g>
+
+    <!-- Card 1.4: Admin Dashboard -->
+    <g transform="translate(790, 42)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="220" height="72" rx="6" fill="#1e2027" stroke="#323540" stroke-width="1.2"/>
+      <text x="110" y="30" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">⚙️ Admin Dashboard</text>
+      <text x="110" y="50" font-size="10.5" fill="#a1a1aa" text-anchor="middle">(Chunked Upload &amp; CMS)</text>
+    </g>
+
+    <!-- Card 1.5: Opportunities & Scholarships -->
+    <g transform="translate(1035, 42)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="245" height="72" rx="6" fill="#1e2027" stroke="#323540" stroke-width="1.2"/>
+      <text x="122" y="30" font-size="12.5" font-weight="700" fill="#ffffff" text-anchor="middle">🎯 Opportunities &amp; Scholarships</text>
+      <text x="122" y="50" font-size="10.5" fill="#a1a1aa" text-anchor="middle">(Category Tabs &amp; Filters)</text>
     </g>
   </g>
 
-  <!-- PIPELINE LEGEND BAR -->
-  <g transform="translate(50, 86)">
-    <rect x="0" y="0" width="1500" height="34" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
-    
-    <!-- Legend 1: PDF Stream -->
-    <g transform="translate(20, 10)">
-      <line x1="0" y1="7" x2="28" y2="7" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
-      <text x="36" y="11" font-size="10.5" font-weight="700" fill="#38bdf8">Flow 1: PDF Streaming &amp; Disk Caching</text>
+  <!-- ====================================================================== -->
+  <!-- 2. LAYER 2: API & SERVERLESS HANDLERS                                 -->
+  <!-- ====================================================================== -->
+  <g transform="translate(30, 275)">
+    <!-- Container -->
+    <rect x="0" y="0" width="1300" height="135" rx="6" fill="#18191e" stroke="#2b2d35" stroke-width="1.2"/>
+    <!-- Top Header Bar -->
+    <path d="M 0 6 Q 0 0 6 0 L 1294 0 Q 1300 0 1300 6 L 1300 28 L 0 28 z" fill="#20222a"/>
+    <text x="16" y="19" font-size="12" font-weight="700" fill="#e4e4e7">2. API &amp; Serverless Handlers (Next.js Route Handlers)</text>
+
+    <!-- Card 2.1: YouTube Audio Engine Bridge -->
+    <g transform="translate(30, 42)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="250" height="72" rx="6" fill="#1e2027" stroke="#323540" stroke-width="1.2"/>
+      <text x="125" y="30" font-size="12.5" font-weight="700" fill="#ffffff" text-anchor="middle">🎵 YouTube Audio Engine Bridge</text>
+      <text x="125" y="50" font-size="10.5" fill="#a1a1aa" text-anchor="middle">(IFrame State &amp; Event Bus)</text>
     </g>
 
-    <!-- Legend 2: Focus Audio -->
-    <g transform="translate(320, 10)">
-      <line x1="0" y1="7" x2="28" y2="7" stroke="#c084fc" stroke-width="2.5" marker-end="url(#arrow-purple)"/>
-      <text x="36" y="11" font-size="10.5" font-weight="700" fill="#c084fc">Flow 2: Focus Audio Control &amp; State Sync</text>
+    <!-- Card 2.2: /api/notes/pdf/[id] -->
+    <g transform="translate(310, 42)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="200" height="72" rx="6" fill="#1e2027" stroke="#323540" stroke-width="1.2"/>
+      <text x="100" y="42" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">⚡ /api/notes/pdf/[id]</text>
     </g>
 
-    <!-- Legend 3: Direct CDN Audio -->
-    <g transform="translate(630, 10)">
-      <line x1="0" y1="7" x2="28" y2="7" stroke="#f43f5e" stroke-width="2.5" stroke-dasharray="4,4" marker-end="url(#arrow-crimson)"/>
-      <text x="36" y="11" font-size="10.5" font-weight="700" fill="#f43f5e">Flow 3: YouTube CDN to Client Audio Hardware (Zero Egress)</text>
+    <!-- Card 2.3: /api/admin/notes/upload -->
+    <g transform="translate(540, 42)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="345" height="72" rx="6" fill="#1e2027" stroke="#323540" stroke-width="1.2"/>
+      <text x="172" y="30" font-size="12.5" font-weight="700" fill="#ffffff" text-anchor="middle">🧩 /api/admin/notes/upload</text>
+      <text x="172" y="50" font-size="10.5" fill="#a1a1aa" text-anchor="middle">(Chunked Upload &amp; Buffer Stitch Engine)</text>
     </g>
 
-    <!-- Legend 4: Chunked Upload -->
-    <g transform="translate(1030, 10)">
-      <line x1="0" y1="7" x2="28" y2="7" stroke="#fbbf24" stroke-width="2.5" marker-end="url(#arrow-amber)"/>
-      <text x="36" y="11" font-size="10.5" font-weight="700" fill="#fbbf24">Flow 4: 1MB Chunk Upload &amp; Stitching</text>
-    </g>
-
-    <!-- Legend 5: DB Query -->
-    <g transform="translate(1310, 10)">
-      <line x1="0" y1="7" x2="28" y2="7" stroke="#34d399" stroke-width="2.5" marker-end="url(#arrow-emerald)"/>
-      <text x="36" y="11" font-size="10.5" font-weight="700" fill="#34d399">Flow 5: Prisma SQL / TLS Query</text>
-    </g>
-  </g>
-
-  <!-- TIER 1: CLIENT LAYER -->
-  <g transform="translate(50, 130)">
-    <rect x="0" y="0" width="265" height="920" rx="16" fill="#0b101d" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="5,5"/>
-    <rect x="16" y="14" width="130" height="24" rx="6" fill="#1e293b"/>
-    <text x="81" y="30" font-size="11" font-weight="800" fill="#94a3b8" text-anchor="middle" letter-spacing="0.5">1. CLIENT LAYER</text>
-
-    <!-- Card 1.1: Student User UI -->
-    <g transform="translate(14, 50)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="237" height="210" rx="12" fill="url(#clientCardGrad)" stroke="#38bdf8" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#0284c7"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">🎓</text>
-      <text x="48" y="26" font-size="13" font-weight="700" fill="#ffffff">Student Web Client</text>
-      <text x="48" y="39" font-size="9.5" fill="#7dd3fc">Desktop &amp; Mobile Web (React 18)</text>
-      <line x1="12" y1="48" x2="225" y2="48" stroke="#1e293b" stroke-width="1"/>
-
-      <text x="12" y="66" font-size="10" font-weight="700" fill="#e2e8f0">• Interactive PDF Notes Reader</text>
-      <text x="22" y="80" font-size="9" fill="#94a3b8">PDF.js Canvas + SVG Text layer annotations</text>
-      
-      <text x="12" y="100" font-size="10" font-weight="700" fill="#e2e8f0">• Focus Audio UI (63 Tracks)</text>
-      <text x="22" y="114" font-size="9" fill="#94a3b8">Mood Pills (Ambient, Focus, Cinema, Sleep)</text>
-      <text x="22" y="126" font-size="9" fill="#94a3b8">2.5px Interactive Scrollbar + Spring pill</text>
-
-      <text x="12" y="146" font-size="10" font-weight="700" fill="#e2e8f0">• Opportunities Hub &amp; Roadmaps</text>
-      <text x="22" y="160" font-size="9" fill="#94a3b8">Dynamic USD ($) / INR (₹) scholarship cards</text>
-
-      <rect x="12" y="174" width="213" height="24" rx="6" fill="#0369a1" fill-opacity="0.3" stroke="#0284c7" stroke-width="0.8"/>
-      <text x="118" y="190" font-size="9.5" font-weight="600" fill="#38bdf8" text-anchor="middle">Zero-Latency State / Framer Motion</text>
-    </g>
-
-    <!-- Card 1.2: Client Storage & Audio Hardware -->
-    <g transform="translate(14, 275)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="237" height="225" rx="12" fill="url(#clientCardGrad)" stroke="#c084fc" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#7e22ce"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">💾</text>
-      <text x="48" y="26" font-size="13" font-weight="700" fill="#ffffff">Client Storage &amp; DAC</text>
-      <text x="48" y="39" font-size="9.5" fill="#d8b4fe">Browser Hardware &amp; Disk Sandbox</text>
-      <line x1="12" y1="48" x2="225" y2="48" stroke="#1e293b" stroke-width="1"/>
-
-      <!-- Disk Cache Sub-box -->
-      <g transform="translate(12, 58)">
-        <rect x="0" y="0" width="213" height="46" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="0.8"/>
-        <text x="8" y="16" font-size="9.5" font-weight="700" fill="#38bdf8">1. Browser Disk Cache (Immutable)</text>
-        <text x="8" y="28" font-size="8.5" fill="#94a3b8">Caches full PDF binary blobs on disk</text>
-        <text x="8" y="39" font-size="8.5" font-weight="600" fill="#34d399">✓ Instant repeat study without network</text>
-      </g>
-
-      <!-- LocalStorage Sub-box -->
-      <g transform="translate(12, 110)">
-        <rect x="0" y="0" width="213" height="46" rx="6" fill="#0f172a" stroke="#c084fc" stroke-width="0.8"/>
-        <text x="8" y="16" font-size="9.5" font-weight="700" fill="#c084fc">2. LocalStorage Persistence</text>
-        <text x="8" y="28" font-size="8.5" fill="#94a3b8">zenvora_music_favorites, recents (30)</text>
-        <text x="8" y="39" font-size="8.5" fill="#94a3b8">Volume level &amp; active categories</text>
-      </g>
-
-      <!-- Hardware DAC Sub-box -->
-      <g transform="translate(12, 162)">
-        <rect x="0" y="0" width="213" height="50" rx="6" fill="#0f172a" stroke="#f43f5e" stroke-width="0.8"/>
-        <text x="8" y="16" font-size="9.5" font-weight="700" fill="#f43f5e">3. Audio Hardware DAC / Speakers</text>
-        <text x="8" y="28" font-size="8.5" fill="#94a3b8">Receives direct Opus/AAC audio stream</text>
-        <text x="8" y="41" font-size="8.5" font-weight="700" fill="#f43f5e">Direct from YouTube Edge CDN</text>
-      </g>
-    </g>
-
-    <!-- Card 1.3: Admin Management CMS -->
-    <g transform="translate(14, 515)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="237" height="200" rx="12" fill="url(#clientCardGrad)" stroke="#fbbf24" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#b45309"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">⚙️</text>
-      <text x="48" y="26" font-size="13" font-weight="700" fill="#ffffff">Admin CMS Studio</text>
-      <text x="48" y="39" font-size="9.5" fill="#fde68a">app/admin/(dashboard)</text>
-      <line x1="12" y1="48" x2="225" y2="48" stroke="#1e293b" stroke-width="1"/>
-
-      <text x="12" y="66" font-size="10" font-weight="700" fill="#e2e8f0">• Client-Side Chunk Slicer Engine</text>
-      <text x="22" y="80" font-size="9" fill="#94a3b8">Slices multi-MB PDFs into 1MB chunks</text>
-      <text x="22" y="92" font-size="9" fill="#94a3b8">Bypasses Vercel 4.5MB request limit</text>
-
-      <text x="12" y="112" font-size="10" font-weight="700" fill="#e2e8f0">• Upload Progress &amp; Retry Manager</text>
-      <text x="22" y="126" font-size="9" fill="#94a3b8">Per-chunk SHA/index verification</text>
-
-      <text x="12" y="146" font-size="10" font-weight="700" fill="#e2e8f0">• Scholarship &amp; Notes CRUD</text>
-      <text x="22" y="160" font-size="9" fill="#94a3b8">Inline USD/INR calculator &amp; verifier</text>
-
-      <rect x="12" y="168" width="213" height="22" rx="6" fill="#78350f" fill-opacity="0.3" stroke="#b45309" stroke-width="0.8"/>
-      <text x="118" y="183" font-size="9" font-weight="600" fill="#fbbf24" text-anchor="middle">RBAC Session Protected</text>
-    </g>
-
-    <!-- Zone 1 Footer Spec -->
-    <g transform="translate(14, 730)">
-      <rect x="0" y="0" width="237" height="175" rx="10" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
-      <text x="12" y="24" font-size="10" font-weight="700" fill="#64748b">CLIENT RUNTIME METRICS</text>
-      <line x1="12" y1="32" x2="225" y2="32" stroke="#1e293b" stroke-width="1"/>
-      <text x="12" y="50" font-size="9.5" fill="#e2e8f0">Framework: React 18 Concurrent</text>
-      <text x="12" y="68" font-size="9.5" fill="#e2e8f0">Styling: Tailwind CSS 3.4 JIT</text>
-      <text x="12" y="86" font-size="9.5" fill="#e2e8f0">Motion: Framer Motion Spring Engine</text>
-      <text x="12" y="104" font-size="9.5" fill="#e2e8f0">PDF Engine: PDF.js 3.11 HTML5 Canvas</text>
-      <text x="12" y="122" font-size="9.5" fill="#e2e8f0">Offline Sync: Web Storage API</text>
-      <text x="12" y="140" font-size="9.5" fill="#34d399">Responsive: Mobile, Tablet, 4K Desktop</text>
-      <text x="12" y="158" font-size="9.5" fill="#38bdf8">Audio Bridge: Invisible IFrame API</text>
+    <!-- Card 2.4: NextAuth / Auth Guard -->
+    <g transform="translate(915, 42)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="355" height="72" rx="6" fill="#1e2027" stroke="#323540" stroke-width="1.2"/>
+      <text x="177" y="30" font-size="12.5" font-weight="700" fill="#ffffff" text-anchor="middle">🔒 NextAuth / Auth Guard</text>
+      <text x="177" y="50" font-size="10.5" fill="#a1a1aa" text-anchor="middle">(Session Management &amp; Protected Endpoints)</text>
     </g>
   </g>
 
-  <!-- TIER 2: EDGE & SECURITY NETWORK -->
-  <g transform="translate(340, 130)">
-    <rect x="0" y="0" width="250" height="920" rx="16" fill="#091427" stroke="#1e3a8a" stroke-width="1.5" stroke-dasharray="5,5"/>
-    <rect x="16" y="14" width="165" height="24" rx="6" fill="#1e3a8a"/>
-    <text x="98" y="30" font-size="11" font-weight="800" fill="#93c5fd" text-anchor="middle" letter-spacing="0.5">2. EDGE &amp; SECURITY TIER</text>
+  <!-- ====================================================================== -->
+  <!-- 3. LAYER 3: PERSISTENCE & STORAGE LAYER                               -->
+  <!-- ====================================================================== -->
+  <g transform="translate(30, 520)">
+    <!-- Container -->
+    <rect x="0" y="0" width="1300" height="275" rx="6" fill="#18191e" stroke="#2b2d35" stroke-width="1.2"/>
+    <!-- Top Header Bar -->
+    <path d="M 0 6 Q 0 0 6 0 L 1294 0 Q 1300 0 1300 6 L 1300 28 L 0 28 z" fill="#20222a"/>
+    <text x="16" y="19" font-size="12" font-weight="700" fill="#e4e4e7">3. Persistence &amp; Storage Layer</text>
 
-    <!-- Card 2.1: Vercel Global Edge Network -->
-    <g transform="translate(14, 50)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="222" height="235" rx="12" fill="url(#edgeCardGrad)" stroke="#3b82f6" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#1d4ed8"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">⚡</text>
-      <text x="48" y="26" font-size="13" font-weight="700" fill="#ffffff">Vercel Global Edge</text>
-      <text x="48" y="39" font-size="9.5" fill="#93c5fd">Global Anycast PoPs (Edge CDN)</text>
-      <line x1="12" y1="48" x2="210" y2="48" stroke="#1e3a8a" stroke-width="1"/>
-
-      <text x="12" y="66" font-size="10" font-weight="700" fill="#e2e8f0">• Global SSL/TLS 1.3 Handshake</text>
-      <text x="22" y="80" font-size="9" fill="#94a3b8">Sub-10ms edge encryption termination</text>
-
-      <text x="12" y="100" font-size="10" font-weight="700" fill="#e2e8f0">• Static Asset CDN &amp; Caching</text>
-      <text x="22" y="114" font-size="9" fill="#94a3b8">Brotli / Gzip compressed JS, CSS, SVG</text>
-      <text x="22" y="126" font-size="9" fill="#94a3b8">99.9% Cache Hit Ratio on static bundles</text>
-
-      <text x="12" y="146" font-size="10" font-weight="700" fill="#e2e8f0">• Anycast DNS &amp; Smart Routing</text>
-      <text x="22" y="160" font-size="9" fill="#94a3b8">Directs requests to closest edge node</text>
-
-      <text x="12" y="180" font-size="10" font-weight="700" fill="#e2e8f0">• DDoS &amp; Layer 7 Mitigation</text>
-      <text x="22" y="194" font-size="9" fill="#94a3b8">Automatic edge bot mitigation</text>
-
-      <rect x="12" y="202" width="198" height="22" rx="6" fill="#1e3a8a" stroke="#3b82f6" stroke-width="0.8"/>
-      <text x="111" y="217" font-size="9" font-weight="700" fill="#93c5fd" text-anchor="middle">Edge Cache Hit Time &amp;lt; 15ms</text>
+    <!-- Card 3.1: Client LocalStorage -->
+    <g transform="translate(30, 42)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="220" height="72" rx="6" fill="#1e2027" stroke="#323540" stroke-width="1.2"/>
+      <text x="110" y="30" font-size="12.5" font-weight="700" fill="#ffffff" text-anchor="middle">💾 Client LocalStorage</text>
+      <text x="110" y="50" font-size="10.5" fill="#a1a1aa" text-anchor="middle">(Favorites, Recents, Volume)</text>
     </g>
 
-    <!-- Card 2.2: NextAuth & RBAC Session Guard -->
-    <g transform="translate(14, 305)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="222" height="205" rx="12" fill="url(#edgeCardGrad)" stroke="#fbbf24" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#78350f"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">🔒</text>
-      <text x="48" y="26" font-size="13" font-weight="700" fill="#ffffff">Auth &amp; Session Guard</text>
-      <text x="48" y="39" font-size="9.5" fill="#fde68a">NextAuth Edge Middleware</text>
-      <line x1="12" y1="48" x2="210" y2="48" stroke="#713f12" stroke-width="1"/>
-
-      <text x="12" y="66" font-size="10" font-weight="700" fill="#e2e8f0">• JWT Token Verification</text>
-      <text x="22" y="80" font-size="9" fill="#94a3b8">Cryptographic HMAC signature validation</text>
-
-      <text x="12" y="100" font-size="10" font-weight="700" fill="#e2e8f0">• Route Access Protection</text>
-      <text x="22" y="114" font-size="9" fill="#94a3b8">Blocks unauthenticated /admin calls</text>
-      <text x="22" y="126" font-size="9" fill="#94a3b8">Guards /api/admin/notes/upload</text>
-
-      <text x="12" y="146" font-size="10" font-weight="700" fill="#e2e8f0">• Anti-CSRF &amp; Secure Cookies</text>
-      <text x="22" y="160" font-size="9" fill="#94a3b8">SameSite=Lax, HttpOnly session store</text>
-
-      <rect x="12" y="172" width="198" height="22" rx="6" fill="#78350f" stroke="#fbbf24" stroke-width="0.8"/>
-      <text x="111" y="187" font-size="9" font-weight="700" fill="#fde68a" text-anchor="middle">Guards Protected Mutations</text>
+    <!-- Card 3.2: YouTube Global CDN -->
+    <g transform="translate(280, 42)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="345" height="72" rx="6" fill="#1e2027" stroke="#323540" stroke-width="1.2"/>
+      <text x="172" y="30" font-size="12.5" font-weight="700" fill="#ffffff" text-anchor="middle">☁️ YouTube Global CDN</text>
+      <text x="172" y="50" font-size="10.5" fill="#a1a1aa" text-anchor="middle">(Streams 63 Audio Tracks at 0 Server Load)</text>
     </g>
 
-    <!-- Card 2.3: Edge Response Policy -->
-    <g transform="translate(14, 530)">
-      <rect x="0" y="0" width="222" height="375" rx="10" fill="#0c1830" stroke="#1d4ed8" stroke-width="1"/>
-      <text x="12" y="24" font-size="10" font-weight="700" fill="#93c5fd">HTTP HEADER &amp; CACHE POLICIES</text>
-      <line x1="12" y1="32" x2="210" y2="32" stroke="#1e3a8a" stroke-width="1"/>
+    <!-- Card 3.3: Prisma ORM 5.21 -->
+    <g transform="translate(655, 42)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="230" height="72" rx="6" fill="#1e2027" stroke="#323540" stroke-width="1.2"/>
+      <text x="115" y="30" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">⚡ Prisma ORM 5.21</text>
+      <text x="115" y="50" font-size="10.5" fill="#a1a1aa" text-anchor="middle">(Type-safe Query Engine)</text>
+    </g>
 
-      <!-- Header 1: PDF Cache -->
-      <g transform="translate(10, 42)">
-        <rect x="0" y="0" width="202" height="60" rx="6" fill="#081427" stroke="#0284c7" stroke-width="0.8"/>
-        <text x="8" y="15" font-size="9" font-weight="700" fill="#38bdf8">PDF Binary Cache Header:</text>
-        <text x="8" y="29" font-size="8" font-family="monospace" fill="#e2e8f0">Cache-Control: public,</text>
-        <text x="8" y="41" font-size="8" font-family="monospace" fill="#34d399">max-age=31536000, immutable</text>
-        <text x="8" y="53" font-size="8" fill="#94a3b8">Never re-downloads identical PDF cuid</text>
-      </g>
-
-      <!-- Header 2: Audio Egress -->
-      <g transform="translate(10, 112)">
-        <rect x="0" y="0" width="202" height="56" rx="6" fill="#081427" stroke="#f43f5e" stroke-width="0.8"/>
-        <text x="8" y="15" font-size="9" font-weight="700" fill="#f43f5e">Audio Egress Policy:</text>
-        <text x="8" y="29" font-size="8.5" fill="#94a3b8">Bypasses host server entirely</text>
-        <text x="8" y="42" font-size="8.5" font-weight="700" fill="#34d399">0 MB Server Bandwidth consumed</text>
-      </g>
-
-      <!-- Header 3: Chunk Upload -->
-      <g transform="translate(10, 178)">
-        <rect x="0" y="0" width="202" height="64" rx="6" fill="#081427" stroke="#fbbf24" stroke-width="0.8"/>
-        <text x="8" y="15" font-size="9" font-weight="700" fill="#fbbf24">Upload Chunking Policy:</text>
-        <text x="8" y="29" font-size="8.5" fill="#94a3b8">1MB slices bypass 4.5MB Vercel limit</text>
-        <text x="8" y="42" font-size="8.5" fill="#94a3b8">Sequential upload + auto retry</text>
-        <text x="8" y="54" font-size="8" font-weight="600" fill="#fde68a">Max File Size: Unlimited</text>
-      </g>
-
-      <!-- Header 4: SSL Security -->
-      <g transform="translate(10, 252)">
-        <rect x="0" y="0" width="202" height="60" rx="6" fill="#081427" stroke="#34d399" stroke-width="0.8"/>
-        <text x="8" y="15" font-size="9" font-weight="700" fill="#34d399">Security Headers:</text>
-        <text x="8" y="28" font-size="8" font-family="monospace" fill="#94a3b8">Strict-Transport-Security: 31536000</text>
-        <text x="8" y="40" font-size="8" font-family="monospace" fill="#94a3b8">X-Content-Type-Options: nosniff</text>
-        <text x="8" y="52" font-size="8" font-family="monospace" fill="#94a3b8">X-Frame-Options: SAMEORIGIN</text>
-      </g>
-
-      <rect x="10" y="322" width="202" height="42" rx="6" fill="#1e293b"/>
-      <text x="111" y="340" font-size="9" font-weight="700" fill="#38bdf8" text-anchor="middle">EDGE SSL CERTIFICATE</text>
-      <text x="111" y="354" font-size="8.5" fill="#94a3b8" text-anchor="middle">Let's Encrypt / Vercel Managed Auto-Renew</text>
+    <!-- Card 3.4: Neon Serverless PostgreSQL Database Node -->
+    <g transform="translate(635, 155)" filter="url(#cardShadow)">
+      <rect x="0" y="0" width="270" height="85" rx="8" fill="#1c1f26" stroke="#383c48" stroke-width="1.5"/>
+      <text x="135" y="28" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">🐘 Neon Serverless PostgreSQL</text>
+      <text x="135" y="48" font-size="10.5" fill="#a1a1aa" text-anchor="middle">- NoteFile (bytea binary data)</text>
+      <text x="135" y="66" font-size="10.5" fill="#a1a1aa" text-anchor="middle">- Scholarship &amp; Settings</text>
     </g>
   </g>
 
-  <!-- TIER 3: NEXT.JS 14 APPLICATION & SERVERLESS ENGINE -->
-  <g transform="translate(615, 130)">
-    <rect x="0" y="0" width="375" height="920" rx="16" fill="#140c2a" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="5,5"/>
-    <rect x="16" y="14" width="240" height="24" rx="6" fill="#7c3aed"/>
-    <text x="136" y="30" font-size="11" font-weight="800" fill="#ede9fe" text-anchor="middle" letter-spacing="0.5">3. NEXT.JS 14 SERVERLESS ENGINE</text>
+  <!-- ====================================================================== -->
+  <!-- ORTHOGONAL CONNECTING ARROWS & STEP BADGES                             -->
+  <!-- ====================================================================== -->
 
-    <!-- Card 3.1: Streaming PDF Route Handler -->
-    <g transform="translate(14, 50)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="347" height="135" rx="12" fill="url(#appCardGrad)" stroke="#38bdf8" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#0369a1"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">📑</text>
-      <text x="48" y="24" font-size="13" font-weight="700" fill="#ffffff">PDF Binary Streaming Route</text>
-      <text x="48" y="37" font-size="9.5" font-family="monospace" fill="#38bdf8">app/api/notes/pdf/[id]/route.ts</text>
-      <line x1="12" y1="46" x2="335" y2="46" stroke="#1e293b" stroke-width="1"/>
-
-      <text x="12" y="64" font-size="9.5" fill="#e2e8f0">• Queries <tspan font-weight="700" fill="#60a5fa">prisma.noteFile.findUnique({{ where: {{ id }} }})</tspan></text>
-      <text x="12" y="80" font-size="9.5" fill="#e2e8f0">• Extracts binary bytea buffer from PostgreSQL</text>
-      <text x="12" y="96" font-size="9.5" fill="#e2e8f0">• Returns <tspan font-weight="700" fill="#34d399">new NextResponse(file.data, {{ headers }})</tspan></text>
-      <text x="12" y="112" font-size="9.5" fill="#e2e8f0">• Content-Type: <tspan fill="#38bdf8">application/pdf</tspan> | Content-Disposition: inline</text>
-
-      <rect x="12" y="118" width="323" height="12" rx="3" fill="#0284c7" fill-opacity="0.15"/>
-    </g>
-
-    <!-- Card 3.2: Focus Audio Controller Engine -->
-    <g transform="translate(14, 200)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="347" height="130" rx="12" fill="url(#appCardGrad)" stroke="#c084fc" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#7e22ce"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">🎧</text>
-      <text x="48" y="24" font-size="13" font-weight="700" fill="#ffffff">Focus Audio Controller Bridge</text>
-      <text x="48" y="37" font-size="9.5" font-family="monospace" fill="#c084fc">context/MusicContext.tsx</text>
-      <line x1="12" y1="46" x2="335" y2="46" stroke="#1e293b" stroke-width="1"/>
-
-      <text x="12" y="64" font-size="9.5" fill="#e2e8f0">• Manages 63 curated ambient, focus, cinema, sleep tracks</text>
-      <text x="12" y="80" font-size="9.5" fill="#e2e8f0">• IFrame bridge: dispatches <tspan fill="#c084fc" font-family="monospace">postMessage</tspan> to hidden YouTube player</text>
-      <text x="12" y="96" font-size="9.5" fill="#e2e8f0">• Zero host audio egress: audio stream is 100% outsourced</text>
-      <text x="12" y="112" font-size="9.5" font-weight="700" fill="#f43f5e">• YouTube Global CDN delivers audio stream direct to Client DAC</text>
-    </g>
-
-    <!-- Card 3.3: Chunked PDF Upload Receiver & Stitcher -->
-    <g transform="translate(14, 345)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="347" height="165" rx="12" fill="url(#appCardGrad)" stroke="#fbbf24" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#b45309"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">🧩</text>
-      <text x="48" y="24" font-size="13" font-weight="700" fill="#ffffff">Chunked PDF Stitching Route</text>
-      <text x="48" y="37" font-size="9.5" font-family="monospace" fill="#fbbf24">app/api/admin/notes/upload/route.ts</text>
-      <line x1="12" y1="46" x2="335" y2="46" stroke="#1e293b" stroke-width="1"/>
-
-      <text x="12" y="64" font-size="9.5" fill="#e2e8f0">• Step 1: Receives 1MB binary slice via multipart FormData</text>
-      <text x="12" y="80" font-size="9.5" fill="#e2e8f0">• Step 2: Writes temporary slice into <tspan fill="#fbbf24">NoteUploadChunk</tspan> table</text>
-      <text x="12" y="96" font-size="9.5" fill="#e2e8f0">• Step 3: When <tspan fill="#fbbf24">chunkIndex === totalChunks - 1</tspan> (last slice):</text>
-      <text x="22" y="112" font-size="9" fill="#94a3b8">Fetches all chunks sorted by index in single transaction</text>
-      <text x="22" y="126" font-size="9" font-weight="700" fill="#34d399">Executes Buffer.concat(chunks.map(c =&gt; c.data))</text>
-      <text x="12" y="146" font-size="9.5" fill="#e2e8f0">• Step 4: Writes unified file to <tspan fill="#38bdf8">NoteFile</tspan> &amp; purges temp chunks</text>
-
-      <rect x="12" y="152" width="323" height="6" rx="3" fill="#b45309" fill-opacity="0.3"/>
-    </g>
-
-    <!-- Card 3.4: Server Components & SSR Engine -->
-    <g transform="translate(14, 525)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="347" height="145" rx="12" fill="url(#appCardGrad)" stroke="#22d3ee" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#0891b2"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">⚛️</text>
-      <text x="48" y="24" font-size="13" font-weight="700" fill="#ffffff">Server Components &amp; SSR Hub</text>
-      <text x="48" y="37" font-size="9.5" font-family="monospace" fill="#22d3ee">app/(site)/opportunities/page.tsx</text>
-      <line x1="12" y1="46" x2="335" y2="46" stroke="#1e293b" stroke-width="1"/>
-
-      <text x="12" y="64" font-size="9.5" fill="#e2e8f0">• Executes server-side Prisma queries during request</text>
-      <text x="12" y="80" font-size="9.5" fill="#e2e8f0">• Real-time currency formatting: USD ($) &amp; INR (₹)</text>
-      <text x="12" y="96" font-size="9.5" fill="#e2e8f0">• Computes application deadlines &amp; eligibility tags</text>
-      <text x="12" y="112" font-size="9.5" fill="#e2e8f0">• Streams React Server Components (RSC) payload</text>
-      <text x="12" y="128" font-size="9.5" fill="#22d3ee">➔ Zero client-side database credentials exposed</text>
-    </g>
-
-    <!-- Card 3.5: App Engine Specs -->
-    <g transform="translate(14, 685)">
-      <rect x="0" y="0" width="347" height="220" rx="10" fill="#0e0a1f" stroke="#5b21b6" stroke-width="1"/>
-      <text x="12" y="24" font-size="10" font-weight="700" fill="#c084fc">NEXT.JS 14 RUNTIME ARCHITECTURE</text>
-      <line x1="12" y1="32" x2="335" y2="32" stroke="#5b21b6" stroke-width="1"/>
-
-      <g transform="translate(12, 44)">
-        <rect x="0" y="0" width="155" height="42" rx="6" fill="#1e1b4b"/>
-        <text x="8" y="16" font-size="9" font-weight="700" fill="#a5b4fc">App Router Architecture</text>
-        <text x="8" y="30" font-size="8.5" fill="#e2e8f0">Nested layouts &amp; RSC</text>
-      </g>
-      <g transform="translate(175, 44)">
-        <rect x="0" y="0" width="155" height="42" rx="6" fill="#1e1b4b"/>
-        <text x="8" y="16" font-size="9" font-weight="700" fill="#a5b4fc">Node.js 20 Serverless</text>
-        <text x="8" y="30" font-size="8.5" fill="#e2e8f0">Dynamic Route Handlers</text>
-      </g>
-      <g transform="translate(12, 94)">
-        <rect x="0" y="0" width="155" height="42" rx="6" fill="#1e1b4b"/>
-        <text x="8" y="16" font-size="9" font-weight="700" fill="#a5b4fc">Incremental Static Reg</text>
-        <text x="8" y="30" font-size="8.5" fill="#e2e8f0">revalidateTag / revalidatePath</text>
-      </g>
-      <g transform="translate(175, 94)">
-        <rect x="0" y="0" width="155" height="42" rx="6" fill="#1e1b4b"/>
-        <text x="8" y="16" font-size="9" font-weight="700" fill="#a5b4fc">TypeScript 5.6 Strict</text>
-        <text x="8" y="30" font-size="8.5" fill="#e2e8f0">Full End-to-End Type Safety</text>
-      </g>
-
-      <rect x="12" y="148" width="318" height="58" rx="6" fill="#1b1238" stroke="#7c3aed" stroke-width="0.8"/>
-      <text x="20" y="168" font-size="9.5" font-weight="700" fill="#d8b4fe">Memory Stitching Advantage:</text>
-      <text x="20" y="182" font-size="8.5" fill="#94a3b8">Bypasses serverless ephemeral disk constraints by assembling</text>
-      <text x="20" y="194" font-size="8.5" fill="#94a3b8">PDF chunks directly in RAM and persisting as native bytea.</text>
-    </g>
-  </g>
-
-  <!-- TIER 4: PERSISTENCE & DATABASE TIER -->
-  <g transform="translate(1015, 130)">
-    <rect x="0" y="0" width="310" height="920" rx="16" fill="#072018" stroke="#059669" stroke-width="1.5" stroke-dasharray="5,5"/>
-    <rect x="16" y="14" width="225" height="24" rx="6" fill="#059669"/>
-    <text x="128" y="30" font-size="11" font-weight="800" fill="#d1fae5" text-anchor="middle" letter-spacing="0.5">4. DATABASE &amp; PERSISTENCE</text>
-
-    <!-- Card 4.1: Prisma ORM 5.21 Engine -->
-    <g transform="translate(14, 50)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="282" height="120" rx="12" fill="url(#dbCardGrad)" stroke="#10b981" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#047857"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">◬</text>
-      <text x="48" y="24" font-size="13" font-weight="700" fill="#ffffff">Prisma ORM 5.21</text>
-      <text x="48" y="37" font-size="9.5" fill="#6ee7b7">Connection Pool &amp; Query Engine</text>
-      <line x1="12" y1="46" x2="270" y2="46" stroke="#065f46" stroke-width="1"/>
-
-      <text x="12" y="64" font-size="9.5" fill="#e2e8f0">• Type-safe schema validation</text>
-      <text x="12" y="78" font-size="9.5" fill="#e2e8f0">• PgBouncer connection pooling integration</text>
-      <text x="12" y="92" font-size="9.5" fill="#e2e8f0">• Handles binary bytea streaming from PostgreSQL</text>
-      <text x="12" y="106" font-size="9.5" font-weight="700" fill="#34d399">• Automated reconnection &amp; retry resilience</text>
-    </g>
-
-    <!-- Card 4.2: Neon Serverless PostgreSQL Database -->
-    <g transform="translate(14, 185)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="282" height="490" rx="12" fill="url(#dbCardGrad)" stroke="#34d399" stroke-width="1.8"/>
-      <rect x="12" y="12" width="30" height="30" rx="8" fill="#065f46"/>
-      <text x="27" y="33" font-size="17" text-anchor="middle">🐘</text>
-      <text x="50" y="24" font-size="13.5" font-weight="800" fill="#ffffff">Neon Serverless PostgreSQL</text>
-      <text x="50" y="38" font-size="9.5" fill="#a7f3d0">AWS us-east-2 · SSL TLS 1.3</text>
-      <line x1="12" y1="48" x2="270" y2="48" stroke="#047857" stroke-width="1"/>
-
-      <!-- Table 1: NoteFile (PDF Binaries) -->
-      <g transform="translate(12, 58)">
-        <rect x="0" y="0" width="258" height="98" rx="8" fill="#0b1726" stroke="#38bdf8" stroke-width="1"/>
-        <rect x="8" y="8" width="242" height="18" rx="4" fill="#0284c7" fill-opacity="0.2"/>
-        <text x="14" y="21" font-size="9.5" font-weight="800" fill="#38bdf8">TABLE: NoteFile (PDF Storage)</text>
-        <text x="14" y="40" font-size="8.5" font-family="monospace" fill="#e2e8f0">id         String   @id @default(cuid())</text>
-        <text x="14" y="54" font-size="8.5" font-family="monospace" fill="#e2e8f0">filename   String</text>
-        <text x="14" y="68" font-size="8.5" font-family="monospace" fill="#e2e8f0">size       Int</text>
-        <text x="14" y="84" font-size="9" font-family="monospace" font-weight="800" fill="#34d399">data       Bytes    // Bytea Raw Binary</text>
-      </g>
-
-      <!-- Table 2: NoteUploadChunk (Temp Uploads) -->
-      <g transform="translate(12, 166)">
-        <rect x="0" y="0" width="258" height="94" rx="8" fill="#1a1407" stroke="#fbbf24" stroke-width="1"/>
-        <rect x="8" y="8" width="242" height="18" rx="4" fill="#b45309" fill-opacity="0.2"/>
-        <text x="14" y="21" font-size="9.5" font-weight="800" fill="#fbbf24">TABLE: NoteUploadChunk (Temp Slices)</text>
-        <text x="14" y="40" font-size="8.5" font-family="monospace" fill="#e2e8f0">id          String  @id @default(cuid())</text>
-        <text x="14" y="54" font-size="8.5" font-family="monospace" fill="#e2e8f0">uploadId    String</text>
-        <text x="14" y="68" font-size="8.5" font-family="monospace" fill="#e2e8f0">chunkIndex  Int     totalChunks Int</text>
-        <text x="14" y="84" font-size="9" font-family="monospace" font-weight="700" fill="#fbbf24">data        Bytes   // 1MB Chunk Slice</text>
-      </g>
-
-      <!-- Table 3: Scholarship -->
-      <g transform="translate(12, 270)">
-        <rect x="0" y="0" width="258" height="88" rx="8" fill="#081e26" stroke="#22d3ee" stroke-width="1"/>
-        <rect x="8" y="8" width="242" height="18" rx="4" fill="#0891b2" fill-opacity="0.2"/>
-        <text x="14" y="21" font-size="9.5" font-weight="800" fill="#22d3ee">TABLE: Scholarship (Opportunities)</text>
-        <text x="14" y="40" font-size="8.5" font-family="monospace" fill="#e2e8f0">id           String  @id @default(cuid())</text>
-        <text x="14" y="54" font-size="8.5" font-family="monospace" fill="#e2e8f0">name         String</text>
-        <text x="14" y="68" font-size="8.5" font-family="monospace" fill="#e2e8f0">amountText   String  // "$2,500" / "₹2 Lakh"</text>
-        <text x="14" y="80" font-size="8.5" font-family="monospace" fill="#e2e8f0">deadline     String  applyUrl String</text>
-      </g>
-
-      <!-- Table 4: Setting -->
-      <g transform="translate(12, 368)">
-        <rect x="0" y="0" width="258" height="66" rx="8" fill="#160d26" stroke="#c084fc" stroke-width="1"/>
-        <rect x="8" y="8" width="242" height="18" rx="4" fill="#7e22ce" fill-opacity="0.2"/>
-        <text x="14" y="21" font-size="9.5" font-weight="800" fill="#c084fc">TABLE: Setting (Dynamic CMS)</text>
-        <text x="14" y="40" font-size="8.5" font-family="monospace" fill="#e2e8f0">key          String  @id</text>
-        <text x="14" y="54" font-size="8.5" font-family="monospace" fill="#e2e8f0">value        String  // JSON Stringified</text>
-      </g>
-
-      <!-- Neon Auto-suspend callout -->
-      <g transform="translate(12, 444)">
-        <rect x="0" y="0" width="258" height="34" rx="6" fill="#042f2e" stroke="#14b8a6" stroke-width="0.8"/>
-        <text x="129" y="16" font-size="9" font-weight="700" fill="#5eead4" text-anchor="middle">Serverless Auto-Suspend on Idle</text>
-        <text x="129" y="28" font-size="8" fill="#99f6e4" text-anchor="middle">Instant 250ms cold-start wake on query</text>
-      </g>
-    </g>
-
-    <!-- Zone 4 Specs -->
-    <g transform="translate(14, 690)">
-      <rect x="0" y="0" width="282" height="215" rx="10" fill="#041a14" stroke="#047857" stroke-width="1"/>
-      <text x="12" y="24" font-size="10" font-weight="700" fill="#34d399">DATABASE ARCHITECTURE SPECS</text>
-      <line x1="12" y1="32" x2="270" y2="32" stroke="#047857" stroke-width="1"/>
-
-      <text x="12" y="50" font-size="9" fill="#e2e8f0">Engine: PostgreSQL 16.2 on Alpine</text>
-      <text x="12" y="66" font-size="9" fill="#e2e8f0">Region: AWS us-east-2 (Ohio)</text>
-      <text x="12" y="82" font-size="9" fill="#e2e8f0">Pooler: PgBouncer Transaction Mode</text>
-      <text x="12" y="98" font-size="9" fill="#e2e8f0">Encryption: AES-256 at Rest &amp; in Transit</text>
-      <text x="12" y="114" font-size="9" fill="#e2e8f0">Backup: Point-in-time WAL Recovery</text>
-      <text x="12" y="130" font-size="9" fill="#34d399">Compute: 0.25 to 2.0 vCPU Autoscaling</text>
-      <text x="12" y="146" font-size="9" fill="#38bdf8">Direct Bytea: Zero external S3 cost</text>
-      
-      <rect x="12" y="160" width="258" height="42" rx="6" fill="#064e3b" stroke="#10b981" stroke-width="0.8"/>
-      <text x="141" y="177" font-size="9" font-weight="700" fill="#ffffff" text-anchor="middle">Unified Storage Strategy</text>
-      <text x="141" y="191" font-size="8" fill="#a7f3d0" text-anchor="middle">Both relational records &amp; PDF files in one DB</text>
-    </g>
-  </g>
-
-  <!-- TIER 5: EXTERNAL CDNs & INTEGRATIONS -->
-  <g transform="translate(1345, 130)">
-    <rect x="0" y="0" width="205" height="920" rx="16" fill="#130917" stroke="#e11d48" stroke-width="1.5" stroke-dasharray="5,5"/>
-    <rect x="16" y="14" width="165" height="24" rx="6" fill="#e11d48"/>
-    <text x="98" y="30" font-size="11" font-weight="800" fill="#fecdd3" text-anchor="middle" letter-spacing="0.5">5. EXTERNAL CDNs</text>
-
-    <!-- Card 5.1: YouTube Audio Streaming CDN -->
-    <g transform="translate(14, 50)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="177" height="255" rx="12" fill="url(#extCardGrad)" stroke="#f43f5e" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#9f1239"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">🎵</text>
-      <text x="48" y="24" font-size="12.5" font-weight="700" fill="#ffffff">YouTube CDN</text>
-      <text x="48" y="37" font-size="9" fill="#fda4af">Audio Delivery Network</text>
-      <line x1="12" y1="46" x2="165" y2="46" stroke="#881337" stroke-width="1"/>
-
-      <text x="12" y="64" font-size="9" font-weight="700" fill="#e2e8f0">• 63 Study Soundtracks</text>
-      <text x="20" y="78" font-size="8.5" fill="#fda4af">Ambient Nature</text>
-      <text x="20" y="90" font-size="8.5" fill="#fda4af">Deep Focus Lofi</text>
-      <text x="20" y="102" font-size="8.5" fill="#fda4af">Cinematic Ambient</text>
-      <text x="20" y="114" font-size="8.5" fill="#fda4af">Sleep &amp; Binaural</text>
-
-      <text x="12" y="132" font-size="9" font-weight="700" fill="#e2e8f0">• High-Fidelity Audio</text>
-      <text x="20" y="146" font-size="8.5" fill="#94a3b8">Opus / AAC 160kbps</text>
-      <text x="20" y="158" font-size="8.5" fill="#94a3b8">Low latency buffering</text>
-
-      <text x="12" y="176" font-size="9" font-weight="700" fill="#e2e8f0">• Global Edge Servers</text>
-      <text x="20" y="190" font-size="8.5" fill="#94a3b8">Google Global Cache</text>
-
-      <rect x="10" y="205" width="157" height="38" rx="6" fill="#881337" stroke="#f43f5e" stroke-width="0.8"/>
-      <text x="88" y="221" font-size="8.5" font-weight="800" fill="#ffffff" text-anchor="middle">0 KB/s HOST LOAD</text>
-      <text x="88" y="234" font-size="8" fill="#fecdd3" text-anchor="middle">Streamed direct to client</text>
-    </g>
-
-    <!-- Card 5.2: External Scholarship Portals -->
-    <g transform="translate(14, 325)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="177" height="230" rx="12" fill="url(#extCardGrad)" stroke="#22d3ee" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#0e7490"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">🎯</text>
-      <text x="48" y="24" font-size="12" font-weight="700" fill="#ffffff">Scholarship Hosts</text>
-      <text x="48" y="37" font-size="9" fill="#a5f3fc">External Apply URLs</text>
-      <line x1="12" y1="46" x2="165" y2="46" stroke="#164e63" stroke-width="1"/>
-
-      <text x="12" y="64" font-size="9" font-weight="700" fill="#e2e8f0">• Google APAC</text>
-      <text x="20" y="78" font-size="8.5" fill="#22d3ee">$2,500 USD Grant</text>
-
-      <text x="12" y="96" font-size="9" font-weight="700" fill="#e2e8f0">• Adobe Women in Tech</text>
-      <text x="20" y="110" font-size="8.5" fill="#22d3ee">$10,000 USD Grant</text>
-
-      <text x="12" y="128" font-size="9" font-weight="700" fill="#e2e8f0">• Reliance Foundation</text>
-      <text x="20" y="142" font-size="8.5" fill="#22d3ee">₹2,00,000 INR Support</text>
-
-      <text x="12" y="160" font-size="9" font-weight="700" fill="#e2e8f0">• Tata Scholarship</text>
-      <text x="20" y="174" font-size="8.5" fill="#22d3ee">₹1,50,000 INR Support</text>
-
-      <rect x="10" y="186" width="157" height="32" rx="6" fill="#083344" stroke="#22d3ee" stroke-width="0.8"/>
-      <text x="88" y="206" font-size="8.5" font-weight="700" fill="#67e8f9" text-anchor="middle">External Linkouts</text>
-    </g>
-
-    <!-- Card 5.3: GitHub CI/CD & Deployments -->
-    <g transform="translate(14, 575)" filter="url(#shadowFilter)">
-      <rect x="0" y="0" width="177" height="195" rx="12" fill="url(#extCardGrad)" stroke="#c084fc" stroke-width="1.5"/>
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#581c87"/>
-      <text x="26" y="31" font-size="15" text-anchor="middle">🐙</text>
-      <text x="48" y="24" font-size="12" font-weight="700" fill="#ffffff">GitHub CI / CD</text>
-      <text x="48" y="37" font-size="8.5" fill="#e9d5ff">samiralam321/zenvora</text>
-      <line x1="12" y1="46" x2="165" y2="46" stroke="#3b0764" stroke-width="1"/>
-
-      <text x="12" y="64" font-size="9" font-weight="700" fill="#e2e8f0">• Git Version Control</text>
-      <text x="20" y="78" font-size="8.5" fill="#94a3b8">Branch: main</text>
-
-      <text x="12" y="96" font-size="9" font-weight="700" fill="#e2e8f0">• Automated Webhook</text>
-      <text x="20" y="110" font-size="8.5" fill="#94a3b8">Triggers Vercel build</text>
-
-      <text x="12" y="128" font-size="9" font-weight="700" fill="#e2e8f0">• Prisma DB Push</text>
-      <text x="20" y="142" font-size="8.5" fill="#94a3b8">Schema sync pipeline</text>
-
-      <rect x="10" y="152" width="157" height="30" rx="6" fill="#3b0764" stroke="#c084fc" stroke-width="0.8"/>
-      <text x="88" y="171" font-size="8.5" font-weight="700" fill="#f3e8ff" text-anchor="middle">Continuous Delivery</text>
-    </g>
-
-    <!-- External Edge Footer Info -->
-    <g transform="translate(14, 785)">
-      <rect x="0" y="0" width="177" height="120" rx="10" fill="#1c0a13" stroke="#881337" stroke-width="1"/>
-      <text x="10" y="22" font-size="9.5" font-weight="700" fill="#fda4af">EXTERNAL TOPOLOGY</text>
-      <line x1="10" y1="30" x2="167" y2="30" stroke="#881337" stroke-width="1"/>
-      <text x="10" y="46" font-size="8.5" fill="#e2e8f0">YouTube: Edge Server Mesh</text>
-      <text x="10" y="60" font-size="8.5" fill="#e2e8f0">Bandwidth: 0 Byte Host Cost</text>
-      <text x="10" y="74" font-size="8.5" fill="#e2e8f0">Portals: External Affiliates</text>
-      <text x="10" y="88" font-size="8.5" fill="#e2e8f0">GitHub: Automations</text>
-      <text x="10" y="104" font-size="8.5" font-weight="700" fill="#f43f5e">100% Stateless Audio</text>
-    </g>
-  </g>
-
-  <!-- REAL DIRECTIONAL CONNECTING ARROWS & LABELED FLOW PIPELINES -->
-
-  <!-- FLOW 1: PDF STREAMING & IMMUTABLE CACHING PIPELINE (CYAN / BLUE) -->
+  <!-- Flow 1: PDF Notes Reader -> /api/notes/pdf/[id] -->
   <g>
-    <!-- Step 1.1: Student requests PDF -> Vercel Edge Gateway -->
-    <path d="M 301 220 L 354 220" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
-    <g transform="translate(305, 198)">
-      <rect x="0" y="0" width="46" height="18" rx="4" fill="#0369a1" stroke="#38bdf8" stroke-width="0.8"/>
-      <text x="23" y="12" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[1] GET</text>
-    </g>
-
-    <!-- Step 1.2: Edge Gateway routes to /api/notes/pdf/[id] -->
-    <path d="M 576 220 L 629 220" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
-    <g transform="translate(578, 198)">
-      <rect x="0" y="0" width="48" height="18" rx="4" fill="#0369a1" stroke="#38bdf8" stroke-width="0.8"/>
-      <text x="24" y="12" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[2] ROUTE</text>
-    </g>
-
-    <!-- Step 1.3: API Route queries Prisma ORM -->
-    <path d="M 976 220 L 1029 220" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
-    <g transform="translate(980, 198)">
-      <rect x="0" y="0" width="48" height="18" rx="4" fill="#0369a1" stroke="#38bdf8" stroke-width="0.8"/>
-      <text x="24" y="12" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[3] QUERY</text>
-    </g>
-
-    <!-- Step 1.4: Prisma executes SQL against Neon DB -->
-    <path d="M 1170 300 L 1170 339" fill="none" stroke="#34d399" stroke-width="2.5" marker-end="url(#arrow-emerald)"/>
-    <g transform="translate(1178, 308)">
-      <rect x="0" y="0" width="80" height="20" rx="4" fill="#065f46" stroke="#34d399" stroke-width="0.8"/>
-      <text x="40" y="14" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[4] SELECT data</text>
-    </g>
-
-    <!-- Step 1.5: Neon DB returns raw bytea binary stream back to API Route -->
-    <path d="M 1029 265 Q 995 265 976 250" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#arrow-emerald)"/>
-    <g transform="translate(970, 268)">
-      <rect x="0" y="0" width="76" height="18" rx="4" fill="#047857" stroke="#34d399" stroke-width="0.8"/>
-      <text x="38" y="12" font-size="7.5" font-weight="800" fill="#ffffff" text-anchor="middle">[5] Bytea Stream</text>
-    </g>
-
-    <!-- Step 1.6: API Route streams application/pdf with Cache-Control header back to Browser -->
-    <path d="M 629 260 C 520 260, 420 340, 301 370" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arrow-blue)"/>
-    <g transform="translate(390, 300)">
-      <rect x="0" y="0" width="190" height="24" rx="5" fill="#0c4a6e" stroke="#38bdf8" stroke-width="0.8"/>
-      <text x="95" y="16" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[6] Stream + Cache-Control: max-age=31536000</text>
-    </g>
-
-    <!-- Step 1.7: Binary saved in Disk Cache -> renders on Canvas -->
-    <path d="M 170 380 L 170 345" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-blue)"/>
-    <g transform="translate(180, 350)">
-      <rect x="0" y="0" width="80" height="18" rx="4" fill="#075985" stroke="#38bdf8" stroke-width="0.8"/>
-      <text x="40" y="12" font-size="7.5" font-weight="800" fill="#ffffff" text-anchor="middle">[7] Render Canvas</text>
+    <!-- PDF Notes center x=685, bottom y=139. /api/notes center x=440, top y=317 -->
+    <path d="M 685 139 L 685 195 L 440 195 L 440 317" fill="none" stroke="#52525b" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <!-- Pill 1 -->
+    <g transform="translate(490, 183)">
+      <rect x="0" y="0" width="145" height="24" rx="4" fill="#181a20" stroke="#3f3f46" stroke-width="1"/>
+      <text x="72" y="16" font-size="11" font-weight="600" fill="#e4e4e7" text-anchor="middle">1. Requests PDF binary</text>
     </g>
   </g>
 
-  <!-- FLOW 2 & 3: FOCUS AUDIO CONTROL & ZERO-EGRESS STREAMING (PURPLE/RED) -->
+  <!-- Flow 2: /api/notes/pdf/[id] -> Prisma ORM 5.21 -->
   <g>
-    <!-- Step 2.1: Student User UI selects Mood Pill / Track -> Audio Controller -->
-    <path d="M 301 245 C 420 245, 520 280, 629 280" fill="none" stroke="#c084fc" stroke-width="2" marker-end="url(#arrow-purple)"/>
-    <g transform="translate(410, 248)">
-      <rect x="0" y="0" width="135" height="20" rx="4" fill="#581c87" stroke="#c084fc" stroke-width="0.8"/>
-      <text x="67" y="13" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[A] Track Select (63 tracks)</text>
-    </g>
-
-    <!-- Step 2.2: Audio Controller writes state to LocalStorage -->
-    <path d="M 629 310 C 500 310, 420 420, 301 420" fill="none" stroke="#c084fc" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrow-purple)"/>
-    <g transform="translate(370, 385)">
-      <rect x="0" y="0" width="155" height="20" rx="4" fill="#4a044e" stroke="#c084fc" stroke-width="0.8"/>
-      <text x="77" y="13" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[B] Sync Volume, Favs, History</text>
-    </g>
-
-    <!-- Step 2.3: Audio Controller dispatches IFrame postMessage to YouTube player -->
-    <path d="M 976 310 C 1120 310, 1220 230, 1359 230" fill="none" stroke="#c084fc" stroke-width="2.5" marker-end="url(#arrow-purple)"/>
-    <g transform="translate(1085, 260)">
-      <rect x="0" y="0" width="190" height="22" rx="4" fill="#581c87" stroke="#c084fc" stroke-width="0.8"/>
-      <text x="95" y="14" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[C] postMessage(loadVideoById, trackId)</text>
-    </g>
-
-    <!-- Step 2.4: HIGH IMPACT ARROW: YouTube CDN DIRECT STREAM TO CLIENT AUDIO HARDWARE -->
-    <path d="M 1359 280 C 1200 450, 600 560, 301 475" fill="none" stroke="#f43f5e" stroke-width="3" stroke-dasharray="6,4" marker-end="url(#arrow-crimson)"/>
-    <g transform="translate(680, 500)">
-      <rect x="0" y="0" width="320" height="26" rx="6" fill="#881337" stroke="#f43f5e" stroke-width="1.2" filter="url(#shadowFilter)"/>
-      <text x="160" y="17" font-size="9.5" font-weight="900" fill="#ffffff" text-anchor="middle">⚡ [D] DIRECT YOUTUBE AUDIO STREAM (0 KB/s SERVER EGRESS)</text>
+    <!-- /api/notes bottom x=440, y=389. Prisma center x=800, top y=562 -->
+    <path d="M 440 389 L 440 450 L 740 450 L 740 562" fill="none" stroke="#52525b" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <!-- Pill 2 -->
+    <g transform="translate(485, 438)">
+      <rect x="0" y="0" width="140" height="24" rx="4" fill="#181a20" stroke="#3f3f46" stroke-width="1"/>
+      <text x="70" y="16" font-size="11" font-weight="600" fill="#e4e4e7" text-anchor="middle">2. Reads Bytea buffer</text>
     </g>
   </g>
 
-  <!-- FLOW 4: ADMIN 1MB CHUNKED UPLOAD & STITCHING ENGINE (AMBER) -->
+  <!-- Flow 3: Admin Dashboard -> /api/admin/notes/upload -->
   <g>
-    <!-- Step 4.1: Admin Client Authenticates -> NextAuth Guard -->
-    <path d="M 301 590 L 354 440" fill="none" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrow-amber)"/>
-    <g transform="translate(290, 505)">
-      <rect x="0" y="0" width="90" height="20" rx="4" fill="#78350f" stroke="#fbbf24" stroke-width="0.8"/>
-      <text x="45" y="13" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[U1] JWT Session</text>
-    </g>
-
-    <!-- Step 4.2: Admin Slicer sends 1MB Slices to /api/admin/notes/upload -->
-    <path d="M 301 640 C 420 640, 520 460, 629 460" fill="none" stroke="#fbbf24" stroke-width="2.5" marker-end="url(#arrow-amber)"/>
-    <g transform="translate(380, 555)">
-      <rect x="0" y="0" width="165" height="22" rx="4" fill="#78350f" stroke="#fbbf24" stroke-width="0.8"/>
-      <text x="82" y="14" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[U2] POST 1MB Multipart Slices</text>
-    </g>
-
-    <!-- Step 4.3: Upload Route writes temporary slices to NoteUploadChunk table -->
-    <path d="M 976 460 C 1010 460, 1020 370, 1029 370" fill="none" stroke="#fbbf24" stroke-width="2.5" marker-end="url(#arrow-amber)"/>
-    <g transform="translate(985, 415)">
-      <rect x="0" y="0" width="115" height="22" rx="4" fill="#78350f" stroke="#fbbf24" stroke-width="0.8"/>
-      <text x="57" y="14" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[U3] Stage NoteUploadChunk</text>
-    </g>
-
-    <!-- Step 4.4: Final Chunk triggers Buffer.concat() and writes finalized NoteFile -->
-    <path d="M 976 490 C 1010 490, 1020 280, 1029 280" fill="none" stroke="#fbbf24" stroke-width="2.5" marker-end="url(#arrow-amber)"/>
-    <g transform="translate(980, 310)">
-      <rect x="0" y="0" width="145" height="24" rx="4" fill="#92400e" stroke="#fbbf24" stroke-width="1"/>
-      <text x="72" y="15" font-size="8.5" font-weight="900" fill="#ffffff" text-anchor="middle">[U4] Buffer.concat() -&gt; NoteFile</text>
+    <!-- Admin center x=930, bottom y=139. Upload center x=742, top y=317 -->
+    <path d="M 930 139 L 930 205 L 742 205 L 742 317" fill="none" stroke="#52525b" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <!-- Pill 3 -->
+    <g transform="translate(755, 193)">
+      <rect x="0" y="0" width="160" height="24" rx="4" fill="#181a20" stroke="#3f3f46" stroke-width="1"/>
+      <text x="80" y="16" font-size="11" font-weight="600" fill="#e4e4e7" text-anchor="middle">3. Uploads multi-MB chunks</text>
     </g>
   </g>
 
-  <!-- FLOW 5: OPPORTUNITIES & EXTERNAL LINKOUTS (CYAN) -->
+  <!-- Flow 4: /api/admin/notes/upload -> Prisma ORM 5.21 -->
   <g>
-    <!-- Step 5.1: Opportunities page queries Scholarship table -->
-    <path d="M 976 610 C 1010 610, 1020 480, 1029 480" fill="none" stroke="#22d3ee" stroke-width="2.5" marker-end="url(#arrow-cyan)"/>
-    <g transform="translate(980, 570)">
-      <rect x="0" y="0" width="135" height="20" rx="4" fill="#0891b2" stroke="#22d3ee" stroke-width="0.8"/>
-      <text x="67" y="13" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[O1] Query Scholarships (Prisma)</text>
-    </g>
-
-    <!-- Step 5.2: Server Component renders SSR cards back to Student UI -->
-    <path d="M 629 610 C 500 610, 420 250, 301 250" fill="none" stroke="#22d3ee" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrow-cyan)"/>
-    <g transform="translate(420, 615)">
-      <rect x="0" y="0" width="145" height="20" rx="4" fill="#0e7490" stroke="#22d3ee" stroke-width="0.8"/>
-      <text x="72" y="13" font-size="8" font-weight="800" fill="#ffffff" text-anchor="middle">[O2] Rendered RSC Cards (USD/INR)</text>
-    </g>
-
-    <!-- Step 5.3: Student clicks apply -> External Scholarship Portal linkout -->
-    <path d="M 301 260 C 500 110, 1100 110, 1359 410" fill="none" stroke="#22d3ee" stroke-width="1.8" stroke-dasharray="4,4" marker-end="url(#arrow-cyan)"/>
-    <g transform="translate(800, 120)">
-      <rect x="0" y="0" width="160" height="22" rx="4" fill="#083344" stroke="#22d3ee" stroke-width="0.8"/>
-      <text x="80" y="14" font-size="8" font-weight="800" fill="#67e8f9" text-anchor="middle">[O3] Apply Linkouts (Google/Adobe)</text>
+    <!-- Upload bottom x=742, y=389. Prisma center x=800, top y=562 -->
+    <path d="M 742 389 L 742 440 L 790 440 L 790 562" fill="none" stroke="#52525b" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <!-- Pill 4 -->
+    <g transform="translate(685, 428)">
+      <rect x="0" y="0" width="175" height="24" rx="4" fill="#181a20" stroke="#3f3f46" stroke-width="1"/>
+      <text x="87" y="16" font-size="11" font-weight="600" fill="#e4e4e7" text-anchor="middle">4. Assembles &amp; writes NoteFile</text>
     </g>
   </g>
 
-  <!-- FLOW 6: GITHUB CI/CD DEPLOYMENT PIPELINE (VIOLET) -->
+  <!-- Flow 5: Focus Audio Player -> YouTube Audio Engine Bridge -->
   <g>
-    <path d="M 1359 670 C 1100 750, 700 750, 576 250" fill="none" stroke="#c084fc" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrow-purple)"/>
-    <g transform="translate(850, 740)">
-      <rect x="0" y="0" width="220" height="22" rx="4" fill="#3b0764" stroke="#c084fc" stroke-width="0.8"/>
-      <text x="110" y="14" font-size="8" font-weight="800" fill="#f3e8ff" text-anchor="middle">[G1] Git Push Webhook -&gt; Vercel Edge Deploy</text>
+    <!-- Focus Audio center x=165, bottom y=139. Bridge center x=185, top y=317 -->
+    <path d="M 165 139 L 165 210 L 185 210 L 185 317" fill="none" stroke="#52525b" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <!-- Pill 5 -->
+    <g transform="translate(195, 198)">
+      <rect x="0" y="0" width="160" height="24" rx="4" fill="#181a20" stroke="#3f3f46" stroke-width="1"/>
+      <text x="80" y="16" font-size="11" font-weight="600" fill="#e4e4e7" text-anchor="middle">5. Triggers audio playback</text>
     </g>
   </g>
 
-  <!-- ARCHITECTURAL ADVANTAGES CALLOUT BAR -->
-  <g transform="translate(50, 995)">
-    <rect x="0" y="0" width="1500" height="60" rx="12" fill="#0b1329" stroke="#1d4ed8" stroke-width="1.2"/>
-
-    <g transform="translate(20, 12)">
-      <circle cx="16" cy="18" r="14" fill="#1e3a8a"/>
-      <text x="16" y="23" font-size="14" text-anchor="middle">💡</text>
-      <text x="40" y="16" font-size="11" font-weight="800" fill="#ffffff">WHY THIS ARCHITECTURE EXCELS ON FREE-TIER INFRASTRUCTURE</text>
-      <text x="40" y="32" font-size="9" fill="#94a3b8">1. YouTube audio bridge avoids gigabytes of bandwidth bills | 2. 1MB chunking bypasses serverless payload caps | 3. Immutable caching cuts database read traffic by 95% | 4. Neon PostgreSQL bytea eliminates AWS S3 bucket fees</text>
+  <!-- Flow 6: YouTube Audio Engine Bridge -> YouTube Global CDN -->
+  <g>
+    <!-- Bridge bottom x=185, y=389. CDN center x=482, top y=562 -->
+    <path d="M 185 389 L 185 450 L 452 450 L 452 562" fill="none" stroke="#52525b" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <!-- Pill 6 -->
+    <g transform="translate(250, 438)">
+      <rect x="0" y="0" width="145" height="24" rx="4" fill="#181a20" stroke="#3f3f46" stroke-width="1"/>
+      <text x="72" y="16" font-size="11" font-weight="600" fill="#e4e4e7" text-anchor="middle">6. Streams audio stream</text>
     </g>
+  </g>
 
-    <g transform="translate(1330, 16)">
-      <rect x="0" y="0" width="150" height="28" rx="6" fill="#10b981" fill-opacity="0.2" stroke="#10b981" stroke-width="1"/>
-      <circle cx="14" cy="14" r="4" fill="#34d399"/>
-      <text x="26" y="18" font-size="9.5" font-weight="800" fill="#34d399">Production Live</text>
+  <!-- Flow 7: Focus Audio Player -> Client LocalStorage (Dashed) -->
+  <g>
+    <!-- Straight vertical line from x=90, y=139 down to x=90, y=562 -->
+    <path d="M 90 139 L 90 562" fill="none" stroke="#71717a" stroke-width="1.4" stroke-dasharray="4,4" marker-end="url(#arrow)"/>
+    <!-- Pill 7 -->
+    <g transform="translate(20, 345)">
+      <rect x="0" y="0" width="165" height="24" rx="4" fill="#181a20" stroke="#3f3f46" stroke-width="1"/>
+      <text x="82" y="16" font-size="11" font-weight="600" fill="#e4e4e7" text-anchor="middle">7. Saves favorites &amp; recents</text>
     </g>
+  </g>
+
+  <!-- Flow 8: Opportunities & Scholarships -> Prisma ORM 5.21 -->
+  <g>
+    <!-- Opps center x=1187, bottom y=139. Path down to y=470, left to x=830, down to y=562 -->
+    <path d="M 1187 139 L 1187 470 L 830 470 L 830 562" fill="none" stroke="#52525b" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <!-- Pill 8 -->
+    <g transform="translate(930, 458)">
+      <rect x="0" y="0" width="170" height="24" rx="4" fill="#181a20" stroke="#3f3f46" stroke-width="1"/>
+      <text x="85" y="16" font-size="11" font-weight="600" fill="#e4e4e7" text-anchor="middle">8. Queries scholarship grants</text>
+    </g>
+  </g>
+
+  <!-- Flow 9: Admin Dashboard -> NextAuth / Auth Guard -->
+  <g>
+    <!-- Admin right edge x=970, y=139. NextAuth center x=1122, top y=317 -->
+    <path d="M 970 139 L 970 195 L 1122 195 L 1122 317" fill="none" stroke="#52525b" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <!-- Pill 9 -->
+    <g transform="translate(995, 183)">
+      <rect x="0" y="0" width="175" height="24" rx="4" fill="#181a20" stroke="#3f3f46" stroke-width="1"/>
+      <text x="87" y="16" font-size="11" font-weight="600" fill="#e4e4e7" text-anchor="middle">9. Admin session verification</text>
+    </g>
+  </g>
+
+  <!-- Flow 10: Prisma ORM 5.21 -> Neon Serverless PostgreSQL -->
+  <g>
+    <path d="M 770 634 L 770 675" fill="none" stroke="#52525b" stroke-width="1.4" marker-end="url(#arrow)"/>
   </g>
 </svg>

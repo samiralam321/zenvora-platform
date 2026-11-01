@@ -21,6 +21,42 @@ Self-taught tech education is cluttered with fragmented playlists and outdated t
 
 ## 🏛️ System Architecture
 
+```mermaid
+flowchart TD
+    subgraph Layer1["1. Client & Presentation Layer (Next.js 14 / React 18)"]
+        Audio["🎧 Focus Audio Player<br/>(63 Study Tracks + Mood Pills)"]
+        Roadmaps["📖 Tech Roadmaps & System Design<br/>(Curated Resource Hub)"]
+        PDF["📑 PDF Notes Reader<br/>(PDF.js Canvas + Text Layer)"]
+        Admin["⚙️ Admin Dashboard<br/>(Chunked Upload & CMS)"]
+        Opps["🎯 Opportunities & Scholarships<br/>(Category Tabs & Filters)"]
+    end
+
+    subgraph Layer2["2. API & Serverless Handlers (Next.js Route Handlers)"]
+        YouTubeBridge["🎵 YouTube Audio Engine Bridge<br/>(IFrame State & Event Bus)"]
+        PDFRoute["⚡ /api/notes/pdf/[id]"]
+        UploadRoute["🧩 /api/admin/notes/upload<br/>(Chunked Upload & Buffer Stitch Engine)"]
+        AuthGuard["🔒 NextAuth / Auth Guard<br/>(Session Management & Protected Endpoints)"]
+    end
+
+    subgraph Layer3["3. Persistence & Storage Layer"]
+        LocalStorage["💾 Client LocalStorage<br/>(Favorites, Recents, Volume)"]
+        YouTubeCDN["☁️ YouTube Global CDN<br/>(Streams 63 Audio Tracks at 0 Server Load)"]
+        Prisma["⚡ Prisma ORM 5.21<br/>(Type-safe Query Engine)"]
+        NeonDB[("🐘 Neon Serverless PostgreSQL<br/>- NoteFile (bytea binary data)<br/>- Scholarship & Settings")]
+    end
+
+    PDF -->|"1. Requests PDF binary"| PDFRoute
+    PDFRoute -->|"2. Reads Bytea buffer"| Prisma
+    Admin -->|"3. Uploads multi-MB chunks"| UploadRoute
+    UploadRoute -->|"4. Assembles & writes NoteFile"| Prisma
+    Audio -->|"5. Triggers audio playback"| YouTubeBridge
+    YouTubeBridge -->|"6. Streams audio stream"| YouTubeCDN
+    Audio -.->|"7. Saves favorites & recents"| LocalStorage
+    Opps -->|"8. Queries scholarship grants"| Prisma
+    Admin -->|"9. Admin session verification"| AuthGuard
+    Prisma -->|"10. SQL TLS Connection Pool"| NeonDB
+```
+
 ![ZenVora Platform Architecture](public/images/zenvora-architecture.svg)
 
 ### 🔄 End-to-End Request Pipelines
