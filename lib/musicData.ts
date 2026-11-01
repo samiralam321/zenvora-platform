@@ -11,15 +11,6 @@ export interface Track {
 export const STUDY_TRACKS: Track[] = [
   // ── Ambient & Nature (19 Tracks) ──
   {
-    id: "healing-sufi-rumi",
-    title: "Come Closer to the Divine",
-    artist: "Roni Healing Music (Sufi · Rumi)",
-    category: "Ambient & Nature",
-    youtubeId: "fv0rXRM3LGA",
-    icon: "🕌",
-    coverUrl: "/images/music/come-closer-divine.svg",
-  },
-  {
     id: "relaxing-rain-sound",
     title: "Relaxing Rain Sound",
     artist: "Ambient Nature Sounds",
@@ -61,6 +52,15 @@ export const STUDY_TRACKS: Track[] = [
     category: "Ambient & Nature",
     youtubeId: "4IiL6yPUJjQ",
     icon: "🌫️",
+  },
+  {
+    id: "healing-sufi-rumi",
+    title: "Come Closer to the Divine",
+    artist: "Roni Healing Music (Sufi · Rumi)",
+    category: "Ambient & Nature",
+    youtubeId: "fv0rXRM3LGA",
+    icon: "🕌",
+    coverUrl: "/images/music/come-closer-divine.svg",
   },
   {
     id: "constellation-oneheart",
