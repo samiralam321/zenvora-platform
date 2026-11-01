@@ -502,41 +502,50 @@ export default function FocusAudioPopover({
         </div>
 
         {/* ── 5. Playlist Navigation Tabs (All Study Tracks, Favourites, Recently Played) ── */}
-        <div className="bg-[#0E1224]/90 border border-slate-800/90 rounded-2xl p-1 flex items-center gap-1 z-10">
+        <div
+          data-lenis-prevent="true"
+          data-lenis-prevent-touch="true"
+          style={{
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+          className="bg-[#0E1224]/90 border border-slate-800/80 rounded-2xl p-1 flex items-center gap-1 overflow-x-auto scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] w-full z-10"
+        >
           <button
             onClick={() => setActiveTab("all")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-semibold transition-all ${
+            className={`flex items-center justify-center gap-1.5 h-8 sm:h-8.5 px-3 rounded-xl text-[11px] sm:text-xs font-semibold whitespace-nowrap shrink-0 sm:flex-1 transition-all duration-200 ${
               activeTab === "all"
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold shadow-[0_0_15px_rgba(124,58,237,0.4)]"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                ? "bg-gradient-to-r from-blue-600/90 via-indigo-600/90 to-purple-600/90 text-white shadow-[0_2px_10px_rgba(79,70,229,0.3)] border border-white/10"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/40 border border-transparent"
             }`}
           >
             <ListMusic className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">All Study Tracks ({filteredTracks.length})</span>
+            <span className="whitespace-nowrap">All Study Tracks ({filteredTracks.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab("favorites")}
-            className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`flex items-center justify-center gap-1.5 h-8 sm:h-8.5 px-3 rounded-xl text-[11px] sm:text-xs font-semibold whitespace-nowrap shrink-0 sm:flex-1 transition-all duration-200 ${
               activeTab === "favorites"
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold shadow-[0_0_15px_rgba(124,58,237,0.4)]"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                ? "bg-gradient-to-r from-blue-600/90 via-indigo-600/90 to-purple-600/90 text-white shadow-[0_2px_10px_rgba(79,70,229,0.3)] border border-white/10"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/40 border border-transparent"
             }`}
           >
             <Heart className="w-3.5 h-3.5 shrink-0" />
-            <span>Favourites</span>
+            <span className="whitespace-nowrap">Favourites</span>
           </button>
 
           <button
             onClick={() => setActiveTab("recents")}
-            className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`flex items-center justify-center gap-1.5 h-8 sm:h-8.5 px-3 rounded-xl text-[11px] sm:text-xs font-semibold whitespace-nowrap shrink-0 sm:flex-1 transition-all duration-200 ${
               activeTab === "recents"
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold shadow-[0_0_15px_rgba(124,58,237,0.4)]"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                ? "bg-gradient-to-r from-blue-600/90 via-indigo-600/90 to-purple-600/90 text-white shadow-[0_2px_10px_rgba(79,70,229,0.3)] border border-white/10"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/40 border border-transparent"
             }`}
           >
             <Clock className="w-3.5 h-3.5 shrink-0" />
-            <span>Recently Played</span>
+            <span className="whitespace-nowrap">Recently Played</span>
           </button>
         </div>
 
