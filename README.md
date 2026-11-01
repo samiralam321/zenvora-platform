@@ -11,8 +11,25 @@ Self-taught tech education is cluttered with fragmented playlists and outdated t
 
 - 🧭 **Interactive 3D Domain Explorer:** Intuitive 3D perspective carousel with inertia physics and touch-drag navigation.
 - 🎯 **Curated Engineering Tracks:** Structured roadmaps for **DSA**, **Web Dev**, **Backend Engineering**, **Full Stack**, **CS Fundamentals**, **Machine Learning**, **Generative AI**, **Competitive Programming**, and **System Design**.
+- 📑 **Interactive PDF Notes Reader:** In-browser PDF reader with fast streaming, text layer annotations, and distraction-free study mode.
+- 🎧 **Focus Audio Music Player:** Curated distraction-free study soundscapes (63 tracks, mood pills, sliding animation, 2.5px interactive scrollbar) streamed via YouTube CDN.
+- 🎓 **Verified Opportunities & Scholarships:** Financial aid and international opportunities for engineering students with USD/INR conversion.
 - 🎬 **Integrated Masterclasses:** Handpicked lecture series and video courses organized into structured chapters.
 - 🛠️ **Developer Toolkit & Opportunities:** Essential developer software, campus ambassador programs, and curated student opportunities.
+
+---
+
+## 🏛️ System Architecture
+
+![ZenVora Platform Architecture](public/images/zenvora-architecture.svg)
+
+### 🔑 Architectural Highlights
+
+1. **Zero-Bandwidth Focus Audio Engine:** All 63 study tracks are streamed via YouTube's global CDN through an invisible IFrame event bridge, requiring **0 MB/s** audio transfer on your web server.
+2. **Chunked PDF Uploads with Dynamic Stitching:** Uploads bypass serverless file-size limits by sending slice chunks to `/api/admin/notes/upload`, where `Buffer.concat` merges them before writing to PostgreSQL.
+3. **Immutable Caching on PDF Streams:** PDFs are served with `Cache-Control: public, max-age=31536000, immutable`, enabling instant repeat loads straight from the user's browser disk cache.
+4. **Neon Serverless PostgreSQL + Prisma ORM:** Houses relational data, scholarships, application settings, and PDF binaries in a single unified schema.
+5. **Client-Side Persistence:** Volume levels, track favorites, and recently played songs persist in `localStorage` for zero-latency instant offline state retrieval.
 
 ---
 
@@ -25,9 +42,10 @@ Built with a modern, high-performance web stack:
 | **Framework** | [Next.js 14](https://nextjs.org/) (App Router, Server & Client Components) |
 | **Language** | [TypeScript](https://www.typescriptlang.org/) |
 | **Styling** | [Tailwind CSS](https://tailwindcss.com/) with hardware-accelerated 3D transforms |
-| **Animations** | Framer Motion & CSS 3D Perspective Engine |
-| **Database & ORM** | [Prisma](https://www.prisma.io/) (SQLite for local dev / PostgreSQL for production) |
+| **Animations** | [Framer Motion](https://www.framer.com/motion/) & CSS 3D Perspective Engine |
+| **Database & ORM** | [Prisma 5.21](https://www.prisma.io/) + [Neon Serverless PostgreSQL](https://neon.tech/) |
 | **Authentication** | [NextAuth.js](https://next-auth.js.org/) |
+| **Audio Engine** | YouTube IFrame Audio Controller |
 | **Icons** | [Lucide React](https://lucide.dev/) |
 
 ---
