@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useLayoutEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play,
@@ -103,6 +103,40 @@ export default function FocusAudioPopover({
     return () => observer.disconnect();
   }, [updateCatPill]);
 
+  // 1. Always reset category row to initial position (All fully visible) when opened
+  useEffect(() => {
+    if (catContainerRef.current) {
+      catContainerRef.current.scrollLeft = 0;
+      updateCatPill();
+    }
+  }, [updateCatPill]);
+
+  // 2. Ensure active category is always smoothly scrolled into full view if necessary
+  useEffect(() => {
+    if (!catContainerRef.current) return;
+    if (activeCategory === "All") {
+      catContainerRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      return;
+    }
+    const btn = catBtnRefs.current.get(activeCategory);
+    if (!btn) return;
+    const container = catContainerRef.current;
+    const cRect = container.getBoundingClientRect();
+    const bRect = btn.getBoundingClientRect();
+
+    if (bRect.left < cRect.left) {
+      container.scrollTo({
+        left: container.scrollLeft + (bRect.left - cRect.left) - 8,
+        behavior: "smooth",
+      });
+    } else if (bRect.right > cRect.right) {
+      container.scrollTo({
+        left: container.scrollLeft + (bRect.right - cRect.right) + 8,
+        behavior: "smooth",
+      });
+    }
+  }, [activeCategory]);
+
   // Tab tracks calculation
   const displayedTracks = useMemo(() => {
     if (activeTab === "favorites") {
@@ -203,17 +237,20 @@ export default function FocusAudioPopover({
         {/* ── 2. Category Filter Pills (All, Ambient, Focus, Cinema, Sleep) ── */}
         <div
           ref={catContainerRef}
+          onScroll={updateCatPill}
           data-lenis-prevent="true"
           data-lenis-prevent-touch="true"
           style={{
             WebkitOverflowScrolling: "touch",
             touchAction: "pan-x",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
           }}
-          className="relative flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-hide z-10"
+          className="relative flex items-center gap-1.5 overflow-x-auto py-1 px-1 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] z-10 w-full"
         >
           {/* Animated sliding pill */}
           <motion.div
-            className="absolute top-0 h-[34px] rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-[0_0_15px_rgba(99,102,241,0.55)] pointer-events-none"
+            className="absolute top-1 h-[32px] rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-[0_0_15px_rgba(99,102,241,0.55)] pointer-events-none"
             animate={{ left: catPillStyle.left, width: catPillStyle.width }}
             transition={{ type: "spring", stiffness: 450, damping: 35, mass: 0.6 }}
           />
@@ -233,7 +270,7 @@ export default function FocusAudioPopover({
                   setActiveCategory(item.id);
                   if (activeTab !== "all") setActiveTab("all");
                 }}
-                className={`relative z-10 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-colors duration-200 ${
+                className={`relative z-10 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-colors duration-200 shrink-0 ${
                   isActive
                     ? "text-white font-bold"
                     : "bg-slate-900/80 text-slate-300 hover:text-white hover:bg-slate-800/70 border border-slate-800/80"
