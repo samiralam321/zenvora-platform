@@ -78,6 +78,16 @@ export default function FocusAudioPopover({
   const catContainerRef = useRef<HTMLDivElement>(null);
   const catBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const [catPillStyle, setCatPillStyle] = useState({ left: 0, width: 0 });
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScrollLimits = useCallback(() => {
+    const el = catContainerRef.current;
+    if (!el) return;
+    const hasOverflow = el.scrollWidth > el.clientWidth + 2;
+    setCanScrollLeft(el.scrollLeft > 6);
+    setCanScrollRight(hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 6);
+  }, []);
 
   const updateCatPill = useCallback(() => {
     const activeBtn = catBtnRefs.current.get(activeCategory);
@@ -91,51 +101,63 @@ export default function FocusAudioPopover({
     });
   }, [activeCategory]);
 
+  const handleCategoryScroll = useCallback(() => {
+    updateCatPill();
+    checkScrollLimits();
+  }, [updateCatPill, checkScrollLimits]);
+
   useLayoutEffect(() => {
     updateCatPill();
-  }, [updateCatPill]);
+    checkScrollLimits();
+  }, [updateCatPill, checkScrollLimits]);
 
   useLayoutEffect(() => {
     const container = catContainerRef.current;
     if (!container) return;
-    const observer = new ResizeObserver(updateCatPill);
+    const observer = new ResizeObserver(() => {
+      updateCatPill();
+      checkScrollLimits();
+    });
     observer.observe(container);
     return () => observer.disconnect();
-  }, [updateCatPill]);
+  }, [updateCatPill, checkScrollLimits]);
 
   // 1. Always reset category row to initial position (All fully visible) when opened
   useEffect(() => {
     if (catContainerRef.current) {
       catContainerRef.current.scrollLeft = 0;
       updateCatPill();
+      checkScrollLimits();
     }
-  }, [updateCatPill]);
+  }, [updateCatPill, checkScrollLimits]);
 
   // 2. Ensure active category is always smoothly scrolled into full view if necessary
   useEffect(() => {
-    if (!catContainerRef.current) return;
+    const container = catContainerRef.current;
+    if (!container) return;
     if (activeCategory === "All") {
-      catContainerRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      container.scrollTo({ left: 0, behavior: "smooth" });
+      setTimeout(checkScrollLimits, 250);
       return;
     }
     const btn = catBtnRefs.current.get(activeCategory);
     if (!btn) return;
-    const container = catContainerRef.current;
     const cRect = container.getBoundingClientRect();
     const bRect = btn.getBoundingClientRect();
 
-    if (bRect.left < cRect.left) {
+    if (bRect.left < cRect.left + 8) {
       container.scrollTo({
-        left: container.scrollLeft + (bRect.left - cRect.left) - 8,
+        left: Math.max(0, container.scrollLeft + (bRect.left - cRect.left) - 12),
         behavior: "smooth",
       });
-    } else if (bRect.right > cRect.right) {
+    } else if (bRect.right > cRect.right - 8) {
       container.scrollTo({
-        left: container.scrollLeft + (bRect.right - cRect.right) + 8,
+        left: container.scrollLeft + (bRect.right - cRect.right) + 12,
         behavior: "smooth",
       });
     }
-  }, [activeCategory]);
+    setTimeout(checkScrollLimits, 250);
+  }, [activeCategory, checkScrollLimits]);
 
   // Tab tracks calculation
   const displayedTracks = useMemo(() => {
@@ -235,52 +257,70 @@ export default function FocusAudioPopover({
         </div>
 
         {/* ── 2. Category Filter Pills (All, Ambient, Focus, Cinema, Sleep) ── */}
-        <div
-          ref={catContainerRef}
-          onScroll={updateCatPill}
-          data-lenis-prevent="true"
-          data-lenis-prevent-touch="true"
-          style={{
-            WebkitOverflowScrolling: "touch",
-            touchAction: "pan-x",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
-          className="relative flex items-center gap-1.5 overflow-x-auto py-1 px-1 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] z-10 w-full"
-        >
-          {/* Animated sliding pill */}
-          <motion.div
-            className="absolute top-1 h-[32px] rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-[0_0_15px_rgba(99,102,241,0.55)] pointer-events-none"
-            animate={{ left: catPillStyle.left, width: catPillStyle.width }}
-            transition={{ type: "spring", stiffness: 450, damping: 35, mass: 0.6 }}
+        <div className="relative w-full z-10 overflow-hidden">
+          {/* Subtle Left-Edge Fade Indicator */}
+          <div
+            className={`absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[#0A0D18] to-transparent pointer-events-none z-20 transition-opacity duration-300 ${
+              canScrollLeft ? "opacity-100" : "opacity-0"
+            }`}
           />
 
-          {CATEGORY_ITEMS.map((item) => {
-            const isActive = activeCategory === item.id;
-            const Icon = item.Icon;
+          {/* Subtle Right-Edge Fade Indicator (indicates off-screen categories like Sleep) */}
+          <div
+            className={`absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0A0D18] via-[#0A0D18]/85 to-transparent pointer-events-none z-20 transition-opacity duration-300 ${
+              canScrollRight ? "opacity-100" : "opacity-0"
+            }`}
+          />
 
-            return (
-              <button
-                key={item.id}
-                ref={(el) => {
-                  if (el) catBtnRefs.current.set(item.id, el);
-                  else catBtnRefs.current.delete(item.id);
-                }}
-                onClick={() => {
-                  setActiveCategory(item.id);
-                  if (activeTab !== "all") setActiveTab("all");
-                }}
-                className={`relative z-10 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-colors duration-200 shrink-0 ${
-                  isActive
-                    ? "text-white font-bold"
-                    : "bg-slate-900/80 text-slate-300 hover:text-white hover:bg-slate-800/70 border border-slate-800/80"
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+          <div
+            ref={catContainerRef}
+            onScroll={handleCategoryScroll}
+            data-lenis-prevent="true"
+            data-lenis-prevent-touch="true"
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            style={{
+              WebkitOverflowScrolling: "touch",
+              touchAction: "pan-x",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
+            className="relative flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-1 px-1 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] w-full overscroll-contain"
+          >
+            {/* Animated sliding pill */}
+            <motion.div
+              className="absolute top-1 h-[32px] rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-[0_0_15px_rgba(99,102,241,0.55)] pointer-events-none"
+              animate={{ left: catPillStyle.left, width: catPillStyle.width }}
+              transition={{ type: "spring", stiffness: 450, damping: 35, mass: 0.6 }}
+            />
+
+            {CATEGORY_ITEMS.map((item) => {
+              const isActive = activeCategory === item.id;
+              const Icon = item.Icon;
+
+              return (
+                <button
+                  key={item.id}
+                  ref={(el) => {
+                    if (el) catBtnRefs.current.set(item.id, el);
+                    else catBtnRefs.current.delete(item.id);
+                  }}
+                  onClick={() => {
+                    setActiveCategory(item.id);
+                    if (activeTab !== "all") setActiveTab("all");
+                  }}
+                  className={`relative z-10 px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold whitespace-nowrap flex items-center gap-1 sm:gap-1.5 transition-colors duration-200 shrink-0 select-none ${
+                    isActive
+                      ? "text-white font-bold"
+                      : "bg-slate-900/80 text-slate-300 hover:text-white hover:bg-slate-800/70 border border-slate-800/80"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* ── 3. Featured Now Playing Card (Matching Screenshot 2 Exactly) ── */}
