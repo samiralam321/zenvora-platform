@@ -23,6 +23,16 @@ Self-taught tech education is cluttered with fragmented playlists and outdated t
 
 ![ZenVora Platform Architecture](public/images/zenvora-architecture.svg)
 
+### 🔄 End-to-End Request Pipelines
+
+| Flow | Pathway | Description |
+|---|---|---|
+| **Flow 1: PDF Notes Streaming & Disk Caching** | `Student UI ➔ Vercel Edge ➔ /api/notes/pdf/[id] ➔ Prisma ORM ➔ Neon PostgreSQL (bytea) ➔ Browser Disk Cache` | Queries the raw binary buffer from PostgreSQL bytea column, attaches `Cache-Control: public, max-age=31536000, immutable`, and caches the PDF on the user's disk for instant zero-network re-reads. |
+| **Flow 2 & 3: Zero-Egress Focus Audio Engine** | `Audio UI ➔ MusicContext ➔ LocalStorage Sync ➔ Invisible IFrame ➔ YouTube CDN ➔ Client DAC` | Audio playback is decoupled from the web server. When a student chooses from 63 curated tracks, an IFrame event bridge instructs YouTube's CDN to stream audio directly to the student's hardware audio DAC — resulting in **0 KB/s** server egress. |
+| **Flow 4: Chunked PDF Upload & Stitching** | `Admin CMS ➔ Client Chunk Slicer (1MB) ➔ /api/admin/notes/upload ➔ NoteUploadChunk ➔ Buffer.concat() ➔ NoteFile` | Bypasses Vercel's 4.5MB serverless payload limit by slicing large PDF notes into 1MB chunks on the client side. On the final slice, the server stitches the buffers in RAM and saves the complete file to PostgreSQL. |
+| **Flow 5: Dynamic Opportunities & Scholarships** | `Student UI ➔ RSC Server Component ➔ Prisma ORM ➔ Neon PostgreSQL ➔ External Portal Linkouts` | Dynamically queries scholarships, formats amounts with real-time USD ($) and INR (₹) conversions, tags deadlines, and provides direct links to Google APAC and Adobe WIT portals. |
+| **Flow 6: GitHub CI/CD & Production Edge** | `git push origin main ➔ GitHub Webhooks ➔ Vercel Edge Build ➔ Prisma Schema Sync ➔ Global Edge PoPs` | Continuous deployment pipeline automatically synchronizes database schema, builds optimized static bundles, and distributes edge serverless functions globally. |
+
 ### 🔑 Architectural Highlights
 
 1. **Zero-Bandwidth Focus Audio Engine:** All 63 study tracks are streamed via YouTube's global CDN through an invisible IFrame event bridge, requiring **0 MB/s** audio transfer on your web server.
