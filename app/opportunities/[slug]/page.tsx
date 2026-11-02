@@ -491,15 +491,13 @@ export default async function OpportunityDetailPage({ params }: Props) {
                 )}
               </div>
 
-              {/* Calendar Action for Hackathons */}
-              {opportunity.category === "Hackathons" && (
-                <DetailCalendarButton
-                  slug={opportunity.slug}
-                  title={opportunity.title}
-                  organization={opportunity.organization}
-                  officialPortal={opportunity.applicationUrl || opportunity.sourceUrl || "https://unstop.com/"}
-                />
-              )}
+              {/* Add to Calendar & Set Reminders (Matching Screenshot 2) */}
+              <DetailCalendarButton
+                slug={opportunity.slug}
+                title={opportunity.title}
+                organization={opportunity.organization}
+                officialPortal={opportunity.applicationUrl || opportunity.sourceUrl || "https://unstop.com/"}
+              />
 
               {/* Apply CTA */}
               {opportunity.applicationUrl && (
