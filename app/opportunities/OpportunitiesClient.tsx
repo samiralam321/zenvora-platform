@@ -24,7 +24,10 @@ import {
   Zap,
   BookOpen,
   GraduationCap,
+  Calendar,
 } from "lucide-react";
+import AddToCalendarModal from "@/components/hackathons/AddToCalendarModal";
+import HackathonCalendarView from "@/components/hackathons/HackathonCalendarView";
 
 export interface OpportunityItem {
   id: string;
@@ -180,6 +183,7 @@ export default function OpportunitiesClient({
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [showHistorical, setShowHistorical] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [calendarModalOpp, setCalendarModalOpp] = useState<OpportunityItem | null>(null);
   const restoredRef = useRef(false);
 
   // Refs for the separate-pill animation — pill is a standalone element, text never moves
@@ -635,6 +639,13 @@ export default function OpportunitiesClient({
           </div>
         ) : (
           <>
+            {/* Hackathon Calendar & Annual Schedule Section */}
+            {deferredCategory === "Hackathons" && !hasFilters && (
+              <div className="mb-10">
+                <HackathonCalendarView />
+              </div>
+            )}
+
             {/* Featured grid */}
             {featured.length > 0 && deferredCategory === "All Opportunities" && (
               <div className="mb-10">
@@ -644,7 +655,7 @@ export default function OpportunitiesClient({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {featured.map((opp) => (
-                    <OpportunityCard key={opp.id} opp={opp} featured />
+                    <OpportunityCard key={opp.id} opp={opp} featured onCalendarClick={(o) => setCalendarModalOpp(o)} />
                   ))}
                 </div>
               </div>
@@ -656,9 +667,20 @@ export default function OpportunitiesClient({
                 {featured.length > 0 && deferredCategory === "All Opportunities" && (
                   <h2 className="text-lg font-extrabold text-slate-900 mb-5">All Programs</h2>
                 )}
+                {deferredCategory === "Hackathons" && (
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-orange-500" />
+                      All Hackathon Challenges ({filtered.length})
+                    </h2>
+                    <span className="text-xs text-slate-400 font-medium hidden sm:inline">
+                      Verified National &amp; Global Competitions
+                    </span>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {(deferredCategory !== "All Opportunities" ? filtered : regular).map((opp) => (
-                    <OpportunityCard key={opp.id} opp={opp} />
+                    <OpportunityCard key={opp.id} opp={opp} onCalendarClick={(o) => setCalendarModalOpp(o)} />
                   ))}
                 </div>
               </div>
@@ -666,13 +688,33 @@ export default function OpportunitiesClient({
           </>
         )}
       </section>
+
+      {/* Add to Calendar Modal */}
+      {calendarModalOpp && (
+        <AddToCalendarModal
+          isOpen={!!calendarModalOpp}
+          onClose={() => setCalendarModalOpp(null)}
+          hackathonSlug={calendarModalOpp.slug}
+          hackathonTitle={calendarModalOpp.title}
+          organization={calendarModalOpp.organization}
+          officialPortal={calendarModalOpp.applicationUrl || calendarModalOpp.sourceUrl || "https://unstop.com/"}
+        />
+      )}
     </div>
   );
 }
 
 // ─── Opportunity Card ─────────────────────────────────────────────────────────
 
-const OpportunityCard = React.memo(function OpportunityCard({ opp, featured }: { opp: OpportunityItem; featured?: boolean }) {
+const OpportunityCard = React.memo(function OpportunityCard({
+  opp,
+  featured,
+  onCalendarClick,
+}: {
+  opp: OpportunityItem;
+  featured?: boolean;
+  onCalendarClick?: (opp: OpportunityItem) => void;
+}) {
   const academicYears = parseJsonArray(opp.academicYears);
   const availStatus = opp.availabilityStatus || "Information Available";
   const statusClass = AVAILABILITY_COLORS[availStatus] || AVAILABILITY_COLORS["Information Available"];
@@ -803,6 +845,18 @@ const OpportunityCard = React.memo(function OpportunityCard({ opp, featured }: {
             View Details
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
+
+          {opp.category === "Hackathons" && onCalendarClick && (
+            <button
+              type="button"
+              onClick={() => onCalendarClick(opp)}
+              className="flex items-center justify-center gap-1 px-3 py-2.5 border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold rounded-xl transition shrink-0"
+              title="Add to Calendar & Set Reminders"
+            >
+              <Calendar className="w-3.5 h-3.5 text-[#1D64EC]" />
+              <span className="hidden sm:inline">Calendar</span>
+            </button>
+          )}
 
           {opp.applicationUrl && (
             <a

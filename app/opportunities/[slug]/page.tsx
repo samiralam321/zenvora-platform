@@ -28,6 +28,7 @@ import {
   Star,
 } from "lucide-react";
 import DetailScrollRestorer from "./DetailScrollRestorer";
+import DetailCalendarButton from "@/components/hackathons/DetailCalendarButton";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -489,6 +490,16 @@ export default async function OpportunityDetailPage({ params }: Props) {
                   </p>
                 )}
               </div>
+
+              {/* Calendar Action for Hackathons */}
+              {opportunity.category === "Hackathons" && (
+                <DetailCalendarButton
+                  slug={opportunity.slug}
+                  title={opportunity.title}
+                  organization={opportunity.organization}
+                  officialPortal={opportunity.applicationUrl || opportunity.sourceUrl || "https://unstop.com/"}
+                />
+              )}
 
               {/* Apply CTA */}
               {opportunity.applicationUrl && (
