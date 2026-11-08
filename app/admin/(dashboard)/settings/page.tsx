@@ -245,28 +245,6 @@ export default function AdminSettingsPage() {
                 className="w-full px-4 py-2 rounded-xl bg-ink/70 border border-gold/20 text-ivory text-sm focus:outline-none focus:border-gold font-mono"
               />
             </div>
-
-            <div>
-              <label className="block text-xs font-medium text-ivory/80 mb-1.5">Buy Me a Coffee URL</label>
-              <input
-                type="url"
-                placeholder="https://buymeacoffee.com/yourname"
-                value={settings.buyMeACoffeeUrl || ""}
-                onChange={(e) => handleChange("buyMeACoffeeUrl", e.target.value)}
-                className="w-full px-4 py-2 rounded-xl bg-ink/70 border border-gold/20 text-ivory text-sm focus:outline-none focus:border-gold font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-ivory/80 mb-1.5">UPI ID (Google Pay / PhonePe / Paytm)</label>
-              <input
-                type="text"
-                placeholder="username@okaxis"
-                value={settings.upiId || ""}
-                onChange={(e) => handleChange("upiId", e.target.value)}
-                className="w-full px-4 py-2 rounded-xl bg-ink/70 border border-gold/20 text-ivory text-sm focus:outline-none focus:border-gold font-mono"
-              />
-            </div>
           </div>
         </div>
 
