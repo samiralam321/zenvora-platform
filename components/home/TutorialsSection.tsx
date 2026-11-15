@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Youtube, Plus, Folder, Tv, ArrowRight, Play, Film, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 interface CategoryItem {
   id: string;
@@ -278,11 +279,10 @@ export default function TutorialsSection({
                             rel="noopener noreferrer"
                             className="relative aspect-video w-full overflow-hidden block bg-slate-100"
                           >
-                            <Image
-                              src={video.thumbnail}
-                              alt={video.title}
-                              fill
-                              className="object-cover transition-transform duration-300 group-hover:scale-102"
+                            <VideoThumbnail
+                              thumbnail={video.thumbnail}
+                              youtubeId={video.youtubeId}
+                              title={video.title}
                             />
                             {video.duration && (
                               <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-mono">
@@ -361,11 +361,10 @@ export default function TutorialsSection({
                           rel="noopener noreferrer"
                           className="relative aspect-video w-full overflow-hidden block bg-slate-100"
                         >
-                          <Image
-                            src={video.thumbnail}
-                            alt={video.title}
-                            fill
-                            className="object-cover transition-transform duration-300 group-hover:scale-102"
+                          <VideoThumbnail
+                            thumbnail={video.thumbnail}
+                            youtubeId={video.youtubeId}
+                            title={video.title}
                           />
                           {video.duration && (
                             <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-mono">

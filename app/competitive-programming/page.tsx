@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import Link from "next/link";
 import Image from "next/image";
+import VideoThumbnail from "@/components/VideoThumbnail";
 import {
   Trophy,
   ExternalLink,
@@ -350,12 +351,11 @@ export default async function CompetitiveProgrammingPage() {
                             <div>
                               {/* Thumbnail Container (No numbered badges!) */}
                               <div className="relative aspect-video w-full bg-slate-900 overflow-hidden">
-                                <Image
-                                  src={video.thumbnail}
-                                  alt={video.title}
-                                  fill
+                                <VideoThumbnail
+                                  thumbnail={video.thumbnail}
+                                  youtubeId={video.youtubeId}
+                                  title={video.title}
                                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                                  className="object-cover group-hover:scale-102 transition-transform duration-300"
                                 />
                                 {video.duration && (
                                   <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-mono font-semibold px-2 py-0.5 rounded-sm">

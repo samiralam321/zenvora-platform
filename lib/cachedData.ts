@@ -61,15 +61,33 @@ export const getCachedCategoriesWithPlaylists = unstable_cache(
           where: { visible: true },
           include: {
             category: true,
-            videos: { where: { visible: true }, orderBy: { order: "asc" } },
           },
           orderBy: { order: "asc" },
         }),
       ]);
-      return { categories, playlists };
+      if (categories && categories.length > 0) {
+        return { categories, playlists };
+      }
+      throw new Error("Categories query returned 0 rows");
     } catch (e) {
-      console.error("Error loading cached categories and playlists:", e);
-      return { categories: [], playlists: [] };
+      console.warn("Cached categories fetch failed, retrying once...", e);
+      // Retry once for serverless Neon cold start
+      try {
+        const [categories, playlists] = await Promise.all([
+          prisma.category.findMany({ orderBy: { order: "asc" } }),
+          prisma.playlist.findMany({
+            where: { visible: true },
+            include: { category: true },
+            orderBy: { order: "asc" },
+          }),
+        ]);
+        if (categories && categories.length > 0) {
+          return { categories, playlists };
+        }
+      } catch (retryErr) {
+        console.error("Retry failed:", retryErr);
+      }
+      throw e; // Do NOT cache empty results!
     }
   },
   ["categories_playlists"],
@@ -85,14 +103,31 @@ export const getCachedCategoriesWithPlaylists = unstable_cache(
 export const getCachedVideos = unstable_cache(
   async () => {
     try {
-      return await prisma.video.findMany({
+      const videos = await prisma.video.findMany({
         where: { visible: true },
         include: { category: true, playlist: true },
         orderBy: [{ featured: "desc" }, { order: "asc" }, { publishedAt: "desc" }],
       });
+      if (videos && videos.length > 0) {
+        return videos;
+      }
+      throw new Error("Videos query returned 0 rows");
     } catch (e) {
-      console.error("Error loading cached videos:", e);
-      return [];
+      console.warn("Cached videos fetch failed, retrying once...", e);
+      // Retry once for serverless Neon cold start
+      try {
+        const videos = await prisma.video.findMany({
+          where: { visible: true },
+          include: { category: true, playlist: true },
+          orderBy: [{ featured: "desc" }, { order: "asc" }, { publishedAt: "desc" }],
+        });
+        if (videos && videos.length > 0) {
+          return videos;
+        }
+      } catch (retryErr) {
+        console.error("Retry videos failed:", retryErr);
+      }
+      throw e; // Do NOT cache empty results!
     }
   },
   ["tutorial_videos"],

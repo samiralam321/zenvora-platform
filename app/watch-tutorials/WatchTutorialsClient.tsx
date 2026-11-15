@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, X, Filter, Youtube, Plus, Folder, Tv, ExternalLink, Film } from "lucide-react";
 import { motion } from "framer-motion";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 interface Category {
   id: string;
@@ -76,13 +77,11 @@ const VideoCard = React.memo(function VideoCard({
         rel="noopener noreferrer"
         className="relative aspect-video w-full overflow-hidden block bg-slate-100"
       >
-        <Image
-          src={video.thumbnail}
-          alt={video.title}
-          fill
+        <VideoThumbnail
+          thumbnail={video.thumbnail}
+          youtubeId={video.youtubeId}
+          title={video.title}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          loading="lazy"
-          className="object-cover transition-transform duration-300 group-hover:scale-102"
         />
         {video.duration && (
           <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-mono">
